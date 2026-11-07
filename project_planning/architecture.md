@@ -145,7 +145,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 
 | 대상 | 경로 | 용도 | 보호 장치 |
 |---|---|---|---|
-| 엘리스 ML API (OpenAI 호환) | Query, Eval | 답변 생성, Judge, Gold 초안 | 타임아웃 30초, 지수 백오프 재시도 3회, 키는 `SecretStr` 환경변수 |
+| 엘리스 ML API (OpenAI 호환) | Query, Eval | 답변 생성, Judge, Gold 초안 | 타임아웃 60초, 재시도 3회, 키는 `SecretStr` 환경변수. 확인된 제약: `gpt-6.1-terra`는 temperature 기본값(1)만 허용, 비스트리밍 호출은 `max_completion_tokens` 2000 이하, `max_tokens` 대신 `max_completion_tokens` 사용, JSON Schema 구조화 출력 지원 |
 | Embedding 엔드포인트 | Ingest, Query | Chunk와 질의 벡터화 | 배치 호출, 같은 재시도 정책. 미제공 시 로컬 오픈소스 모델 |
 | 벡터 DB | Ingest(쓰기), Query(읽기) | 벡터 저장과 검색 | compose 내부 네트워크, Ingest 시 `ensure_collection` |
 | Corpus 원천 | Ingest | 다운로드 | 허용 URL은 manifest에만. 사용자 입력 URL 호출 없음 |

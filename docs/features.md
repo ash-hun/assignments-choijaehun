@@ -20,7 +20,7 @@
 |---|---|---|---|---|
 | `corpus_fetch` | Ingest | manifest에 고정된 원문 다운로드와 해시 검증 | `make corpus` | 구현됨 |
 | `eval_run` | Eval | test set 전체 채점과 Report 생성 | `make eval CONFIG=...` | 미구현 |
-| `gold_draft` | Eval | 문서에서 Gold Set 초안 생성(사람 검토 전) | `make gold-draft` | 미구현 |
+| `gold_draft` | Eval | 문서에서 Gold Set 초안 생성, 번역 묶음 생성, Gold 파일 검증 | `make gold-draft`, `make gold-translate`, `make gold-check` | 구현됨(dev) |
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 미구현 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 미구현 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make agreement` | 미구현 |
@@ -100,22 +100,38 @@
 
 ### gold_draft: Gold Set 초안 생성
 
-**설명**: Chunk를 골라 유형별 질문, 기대 근거, 수용 기준 초안을 LLM으로 만든다. 사람이 검토한 뒤 `data/gold/dev_set.jsonl`, `test_set.jsonl`에 반영한다. 문항마다 origin(초안 후 수정, 직접 작성)을 기록한다.
+**설명**: 확정된 Corpus에서 유형별(factual, multi_doc, summary, trap, unanswerable) 원문을 seed로 고정해 고르고, LLM 구조화 출력으로 질문, 정답, 근거 인용 초안을 만든다. 근거 인용은 원문과 공백 차이만 허용해 대조하고, 실패하면 1회 재시도 후 버린다. 초안은 `data/gold/drafts/<split>_draft.jsonl`에 쓰고, 검수를 거친 정본(`data/gold/<split>_set.jsonl`)은 건드리지 않는다. `gold-check`는 정본의 스키마, id 중복, 근거 인용의 원문 일치를 검사한다.
+
+**입력과 결과**
+
+| 입력 | 결과 |
+|---|---|
+| `make gold-draft SPLIT=dev` | 유형별 개수(factual 12, multi_doc 8, summary 5, trap 5, unanswerable 8)의 초안. 다시 실행하면 초안 파일만 덮어씀(LLM 출력은 매번 다를 수 있음) |
+| 근거 인용이 원문에 없음 | 피드백과 함께 재시도, 두 번째도 실패하면 그 문항을 버리고 수를 로그로 남김 |
+| `make gold-translate SPLIT=dev` | 검수된 영어 정본의 질문을 한국어로 옮긴 초안. 근거와 정답은 원문 행 그대로, `translation_of`로 짝을 기록. 빠진 번역이 있으면 실패 |
+| `make gold-check SPLIT=dev LANG_CODE=en\|ko` | 문제가 없으면 종료 코드 0, 있으면 문제 목록과 종료 코드 1. 번역 묶음은 원문 행과의 짝도 검사 |
 
 **구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/eval_cli.py` | cli | `gold-draft` 하위 명령 |
-| `app/service/eval/gold_drafter.py` | service | 초안 생성 |
+| `app/cli/eval_cli.py` | cli | `gold-draft`, `gold-check` 하위 명령 |
+| `app/service/eval/gold_sampler.py` | service | 유형별 원문 표집, 내부 링크 해석, 목차 생성 |
+| `app/service/eval/gold_drafter.py` | service | 초안 생성, 근거 대조, 재시도 |
+| `app/service/eval/gold_translator.py` | service | 질문 번역 묶음 생성(8문항씩) |
+| `app/service/eval/evidence_matcher.py` | service | 근거 인용 위치 찾기(검색 지표에서도 재사용) |
+| `app/schema/gold_schema.py` | schema | Gold 문항 모델, 답 있음과 근거의 일관성 검증 |
+| `app/client/llm_client.py` | client | JSON Schema 구조화 출력 |
 
 **테스트**
 
 | 종류 | 파일 |
 |---|---|
+| 단위 | `tests/unit/test_gold_draft_gold_sampler.py` |
 | 단위 | `tests/unit/test_gold_draft_gold_drafter.py` |
+| 단위 | `tests/unit/test_gold_draft_gold_translator.py` |
 
-**제약과 미구현**: 전부 미구현.
+**제약과 미구현**: test split 계획(SPLIT_PLANS)은 미정의. 행 스키마는 `data/gold/README.md`, 구축 기록은 `research/dev_set_construction.md`.
 
 ### health: 상태 확인
 

@@ -70,7 +70,7 @@ Ingest를 질의 요청 경로 밖에서 돌리는 이유: 질의마다 정제�
 | 순서 | 단계 | 고정한 값 | 주 지표 | 기록 |
 |---|---|---|---|---|
 | 1 | 데이터셋 선정 | closed-book 모델(기록에 명시) | 적합성 기준, closed-book 오답률 | `research/dataset_selection.md` |
-| 2 | dev set 작성(38문항) | Corpus | 없음 | `data/gold/dev_set.jsonl` |
+| 2 | dev set 작성(38문항) | Corpus | 없음 | `research/dev_set_construction.md`, `data/gold/dev_set.jsonl` |
 | 3 | 데이터베이스 선정 | 임시 임베딩, 고정 길이 청크 | 기능 통과 여부(sparse 적재 포함), ANN 재현율, 지연, 메모리 | `research/database_selection.md` |
 | 4 | Embedding 선정 | DB, 고정 문자 길이 청크, dense 검색 | 근거 단위 Hit@5, MRR | `research/embedding_selection.md` |
 | 5 | 토크나이저 선정 | DB, 임베딩, 고정 길이 청크 | 잘림 비율, BM25 Hit@5 | `research/tokenizer_selection.md` |

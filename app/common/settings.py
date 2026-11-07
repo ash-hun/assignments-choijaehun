@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     github_token: SecretStr | None = None
     http_timeout_seconds: float = 30.0
     download_concurrency: int = 8
+    # 데이터셋 선정 실험(research/dataset_selection.md)에서 확정한 Corpus.
+    corpus_name: str = "uv_docs"
+    gold_seed: int = 2026
 
     # 엘리스 ML API는 모델마다 엔드포인트가 달라 base URL과 모델명을 함께 받는다.
     elice_serverless_api_key: SecretStr | None = None
