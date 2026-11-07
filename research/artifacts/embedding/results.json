@@ -1,0 +1,494 @@
+[
+  {
+    "model": "BAAI/bge-small-en-v1.5",
+    "language": "en",
+    "dim": 384,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.6939,
+      "ci_low": 0.5661,
+      "ci_high": 0.8189
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.765,
+      "ci_low": 0.6356,
+      "ci_high": 0.8833
+    },
+    "doc_recall_at_5": {
+      "mean": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 1.0,
+      "summary": 0.8,
+      "trap": 0.8
+    },
+    "index_seconds": 16.8,
+    "query_ms_mean": 5.7,
+    "max_chunk_tokens": 471,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "BAAI/bge-small-en-v1.5",
+    "language": "ko",
+    "dim": 384,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.3667,
+      "ci_low": 0.2,
+      "ci_high": 0.5333
+    },
+    "hit_at_10": {
+      "mean": 0.4667,
+      "ci_low": 0.3,
+      "ci_high": 0.6333
+    },
+    "mrr_at_10": {
+      "mean": 0.3117,
+      "ci_low": 0.1659,
+      "ci_high": 0.4556
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.3656,
+      "ci_low": 0.2133,
+      "ci_high": 0.5278
+    },
+    "doc_recall_at_5": {
+      "mean": 0.5667,
+      "ci_low": 0.4,
+      "ci_high": 0.7333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.25,
+      "multi_doc": 0.25,
+      "summary": 0.4,
+      "trap": 0.8
+    },
+    "index_seconds": 16.8,
+    "query_ms_mean": 17.8,
+    "max_chunk_tokens": 471,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "BAAI/bge-base-en-v1.5",
+    "language": "en",
+    "dim": 768,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.717,
+      "ci_low": 0.5959,
+      "ci_high": 0.827
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.8261,
+      "ci_low": 0.7189,
+      "ci_high": 0.9183
+    },
+    "doc_recall_at_5": {
+      "mean": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 1.0,
+      "summary": 1.0,
+      "trap": 0.8
+    },
+    "index_seconds": 48.6,
+    "query_ms_mean": 17.5,
+    "max_chunk_tokens": 471,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "BAAI/bge-base-en-v1.5",
+    "language": "ko",
+    "dim": 768,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.4333,
+      "ci_low": 0.2667,
+      "ci_high": 0.6333
+    },
+    "hit_at_10": {
+      "mean": 0.4667,
+      "ci_low": 0.3,
+      "ci_high": 0.6667
+    },
+    "mrr_at_10": {
+      "mean": 0.3209,
+      "ci_low": 0.1725,
+      "ci_high": 0.4698
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.3589,
+      "ci_low": 0.2067,
+      "ci_high": 0.5144
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6333,
+      "ci_low": 0.4667,
+      "ci_high": 0.8
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.5,
+      "multi_doc": 0.5,
+      "summary": 0.2,
+      "trap": 0.4
+    },
+    "index_seconds": 48.6,
+    "query_ms_mean": 53.6,
+    "max_chunk_tokens": 471,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "snowflake/snowflake-arctic-embed-m",
+    "language": "en",
+    "dim": 768,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.8333,
+      "ci_low": 0.7,
+      "ci_high": 0.9333
+    },
+    "hit_at_10": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7593,
+      "ci_low": 0.6259,
+      "ci_high": 0.8833
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.7828,
+      "ci_low": 0.6567,
+      "ci_high": 0.8972
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 0.75,
+      "summary": 0.8,
+      "trap": 0.8
+    },
+    "index_seconds": 77.5,
+    "query_ms_mean": 36.4,
+    "max_chunk_tokens": 471,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "snowflake/snowflake-arctic-embed-m",
+    "language": "ko",
+    "dim": 768,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.4333,
+      "ci_low": 0.2667,
+      "ci_high": 0.6
+    },
+    "hit_at_10": {
+      "mean": 0.5,
+      "ci_low": 0.3333,
+      "ci_high": 0.6667
+    },
+    "mrr_at_10": {
+      "mean": 0.2862,
+      "ci_low": 0.1578,
+      "ci_high": 0.4259
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.4056,
+      "ci_low": 0.2522,
+      "ci_high": 0.5678
+    },
+    "doc_recall_at_5": {
+      "mean": 0.5667,
+      "ci_low": 0.4,
+      "ci_high": 0.7333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.5,
+      "multi_doc": 0.375,
+      "summary": 0.4,
+      "trap": 0.4
+    },
+    "index_seconds": 77.5,
+    "query_ms_mean": 90.3,
+    "max_chunk_tokens": 471,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "nomic-ai/nomic-embed-text-v1.5",
+    "language": "en",
+    "dim": 768,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.8333,
+      "ci_low": 0.7,
+      "ci_high": 0.9667
+    },
+    "hit_at_10": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7168,
+      "ci_low": 0.5753,
+      "ci_high": 0.8444
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.7844,
+      "ci_low": 0.6533,
+      "ci_high": 0.9011
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.8333,
+      "multi_doc": 1.0,
+      "summary": 0.6,
+      "trap": 0.8
+    },
+    "index_seconds": 89.7,
+    "query_ms_mean": 40.9,
+    "max_chunk_tokens": 475,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "nomic-ai/nomic-embed-text-v1.5",
+    "language": "ko",
+    "dim": 768,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.3667,
+      "ci_low": 0.2,
+      "ci_high": 0.5333
+    },
+    "hit_at_10": {
+      "mean": 0.4333,
+      "ci_low": 0.2667,
+      "ci_high": 0.6
+    },
+    "mrr_at_10": {
+      "mean": 0.2633,
+      "ci_low": 0.13,
+      "ci_high": 0.3978
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.3389,
+      "ci_low": 0.1889,
+      "ci_high": 0.5
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6667,
+      "ci_low": 0.5,
+      "ci_high": 0.8333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.4167,
+      "multi_doc": 0.375,
+      "summary": 0.2,
+      "trap": 0.4
+    },
+    "index_seconds": 89.7,
+    "query_ms_mean": 97.6,
+    "max_chunk_tokens": 475,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "intfloat/multilingual-e5-large",
+    "language": "en",
+    "dim": 1024,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.8,
+      "ci_low": 0.6333,
+      "ci_high": 0.9333
+    },
+    "hit_at_10": {
+      "mean": 0.9,
+      "ci_low": 0.8,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.6778,
+      "ci_low": 0.5294,
+      "ci_high": 0.82
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.7811,
+      "ci_low": 0.6422,
+      "ci_high": 0.9022
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 0.625,
+      "summary": 0.8,
+      "trap": 0.8
+    },
+    "index_seconds": 200.6,
+    "query_ms_mean": 87.9,
+    "max_chunk_tokens": 450,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "intfloat/multilingual-e5-large",
+    "language": "ko",
+    "dim": 1024,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.7333,
+      "ci_low": 0.5667,
+      "ci_high": 0.8667
+    },
+    "hit_at_10": {
+      "mean": 0.8333,
+      "ci_low": 0.7,
+      "ci_high": 0.9667
+    },
+    "mrr_at_10": {
+      "mean": 0.6103,
+      "ci_low": 0.4659,
+      "ci_high": 0.75
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.7244,
+      "ci_low": 0.5744,
+      "ci_high": 0.8578
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.8333,
+      "multi_doc": 0.75,
+      "summary": 0.4,
+      "trap": 0.8
+    },
+    "index_seconds": 200.6,
+    "query_ms_mean": 103.5,
+    "max_chunk_tokens": 450,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "Qwen/Qwen3-Embedding-0.6B",
+    "language": "en",
+    "dim": 1024,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.8333,
+      "ci_low": 0.7,
+      "ci_high": 0.9667
+    },
+    "hit_at_10": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7114,
+      "ci_low": 0.5706,
+      "ci_high": 0.8403
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.8528,
+      "ci_low": 0.7361,
+      "ci_high": 0.95
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.8333,
+      "multi_doc": 0.875,
+      "summary": 0.8,
+      "trap": 0.8
+    },
+    "index_seconds": 259.4,
+    "query_ms_mean": 135.2,
+    "max_chunk_tokens": 480,
+    "truncated_chunks": 0
+  },
+  {
+    "model": "Qwen/Qwen3-Embedding-0.6B",
+    "language": "ko",
+    "dim": 1024,
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.7667,
+      "ci_low": 0.6,
+      "ci_high": 0.9
+    },
+    "hit_at_10": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.5809,
+      "ci_low": 0.4398,
+      "ci_high": 0.7173
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.8194,
+      "ci_low": 0.6917,
+      "ci_high": 0.9278
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.75,
+      "multi_doc": 0.75,
+      "summary": 0.8,
+      "trap": 0.8
+    },
+    "index_seconds": 259.4,
+    "query_ms_mean": 198.5,
+    "max_chunk_tokens": 480,
+    "truncated_chunks": 0
+  }
+]
