@@ -49,7 +49,7 @@
 
 | 경로 | 성격 | 흐름 | 진입점 |
 |---|---|---|---|
-| Ingest | 쓰기, 오프라인 배치 | 문서, 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (compose 일회성 서비스 `docker compose run --rm ingest`) |
+| Ingest | 쓰기, 오프라인 배치 | 문서, 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (compose 일회성 서비스 `docker compose run --rm batch`) |
 | Query | 읽기, 온라인 요청 | 질문, 검색, LLM 답변 생성, Citation 반환 | FastAPI 서버 `POST /v1/query`, `POST /v1/query/stream` |
 
 Ingest를 질의 요청 경로 밖에서 돌리는 이유: 질의마다 정제와 임베딩을 하면 지연과 비용이 Corpus 크기에 비례해 늘어난다. Ingest를 HTTP로 열지 않는 이유: 과제가 API로 요구하는 것은 질의뿐이고, 평가 중 인덱스가 바뀌면 Before/After 비교가 무너지며, 쓰기 엔드포인트는 인증과 비동기 작업 관리를 새로 요구한다. 문서 단위 증분 Ingest API는 README 향후 과제에 설계로 남긴다. "오프라인"은 로컬에서 손으로 돌린다는 뜻이 아니다. API 서버와 같은 이미지를 쓰는 compose 일회성 서비스로 실행해 재현 절차를 compose 하나로 끝낸다.

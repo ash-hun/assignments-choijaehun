@@ -22,7 +22,7 @@
 | `eval_run` | Eval | test set 전체 채점과 Report 생성 | `make eval CONFIG=...` | 미구현 |
 | `gold_draft` | Eval | 문서에서 Gold Set 초안 생성(사람 검토 전) | `make gold-draft` | 미구현 |
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 미구현 |
-| `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm ingest ingest`) | 미구현 |
+| `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 미구현 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make agreement` | 미구현 |
 | `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` | 미구현 |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 미구현 |

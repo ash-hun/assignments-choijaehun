@@ -38,10 +38,10 @@
 
 | 명령 | 실제 실행 | 설명 | 실패 시 |
 |---|---|---|---|
-| `make corpus` | `docker compose run --rm ingest corpus` | manifest 기준 원문 다운로드와 sha256 검증 | 해시 불일치 파일 이름을 출력하고 종료 코드 1 |
-| `make ingest` | `docker compose run --rm ingest ingest` | 정제부터 인덱스 저장까지 | 실패한 단계와 문서를 출력하고 종료 코드 1. 이미 저장된 Chunk는 유지 |
+| `make corpus` | `docker compose run --rm batch app.cli.corpus_cli fetch` | manifest 기준 원문 다운로드와 sha256 검증 | 해시 불일치 파일 이름을 출력하고 종료 코드 1 |
+| `make ingest` | `docker compose run --rm batch app.cli.ingest_cli` | 정제부터 인덱스 저장까지 | 실패한 단계와 문서를 출력하고 종료 코드 1. 이미 저장된 Chunk는 유지 |
 
-`ingest` 서비스는 API 서버와 같은 이미지를 쓰고 `profiles: [batch]`로 묶여 `docker compose up`에서는 뜨지 않는다. HTTP로는 노출하지 않는다. 문서 단위 증분 Ingest API는 미구현이며 README 향후 과제에 설계만 둔다.
+`batch` 서비스는 API 서버와 같은 이미지를 쓰고 `profiles: [batch]`로 묶여 `docker compose up`에서는 뜨지 않는다. HTTP로는 노출하지 않는다. 문서 단위 증분 Ingest API는 미구현이며 README 향후 과제에 설계만 둔다.
 
 ### 재실행하면
 

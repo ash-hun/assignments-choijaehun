@@ -36,9 +36,10 @@
 |---|---|---|---|
 | 벡터 DB | 데이터베이스 선정 실험 결과의 공식 이미지(버전 고정) | 상시 | 기본. 두 번째 실험에서 확정 후 추가 |
 | `api` | 프로젝트 이미지 | 상시 | `uvicorn app.main:app` |
-| `ingest` | 프로젝트 이미지(api와 같음) | 일회성, `profiles: [batch]` | `make corpus`는 `corpus` 하위 명령, `make ingest`는 `ingest` 하위 명령 |
+| `batch` | 프로젝트 이미지 `runtime` 단계(api와 같음) | 일회성, `profiles: [batch]` | `python -m <모듈>`. `make corpus`, `make ingest`, `make eval` 등이 감싼다 |
+| `dev` | 프로젝트 이미지 `dev` 단계(개발 의존성 포함) | 일회성, `profiles: [dev]`, 네트워크 없음 | `make test`, `make typecheck` |
 
-`ingest`는 profile로 묶어 `docker compose up`에서 뜨지 않게 하고 `docker compose run --rm ingest ...`로만 실행한다. api와 같은 이미지를 써서 두 경로의 토크나이저와 임베딩 클라이언트 버전이 갈라지지 않게 한다. Eval도 같은 방식(`docker compose run --rm ingest eval ...`) 또는 로컬 `uv run`으로 실행할 수 있다.
+`batch`는 profile로 묶어 `docker compose up`에서 뜨지 않게 하고 `docker compose run --rm batch <모듈> ...`로만 실행한다. Ingest, 선정 실험, Eval이 모두 이 서비스를 쓴다. api와 같은 이미지 단계를 써서 두 경로의 토크나이저와 임베딩 클라이언트 버전이 갈라지지 않게 한다. `data/`와 `research/`는 호스트 디렉토리를 마운트해 결과가 저장소에 남는다. `dev`는 네트워크를 끊어 테스트가 외부 API를 호출하지 못하게 한다.
 
 ## API 서버
 
@@ -57,7 +58,7 @@
 
 ```
 .
-├── compose.yaml                 # 벡터 DB(선정 후 추가), api, ingest(일회성, profile batch)
+├── compose.yaml                 # 벡터 DB(선정 후 추가), api(Query 구현 후 추가), batch(일회성), dev(테스트)
 ├── Dockerfile
 ├── Makefile                     # corpus, ingest, serve, eval, select, test 별칭
 ├── pyproject.toml / uv.lock
