@@ -1,0 +1,42 @@
+[
+  {
+    "name": "uv_docs",
+    "repo": "astral-sh/uv",
+    "commit": "5ce34500b8a3d16d24bc7576bd8ac64879091cea",
+    "include_prefix": "docs/",
+    "extensions": [".md"],
+    "license": "Apache-2.0 OR MIT",
+    "language": "en",
+    "description": "Python 패키지 관리자 uv 공식 문서. 출시 2년 남짓에 릴리스가 잦아 모델 사전 지식이 낡았을 가능성이 높다"
+  },
+  {
+    "name": "k8s_ko_concepts",
+    "repo": "kubernetes/website",
+    "commit": "3ce2ad7b7a23560bc16e0f8d32d654a75bb98063",
+    "include_prefix": "content/ko/docs/concepts/",
+    "extensions": [".md"],
+    "license": "CC-BY-4.0",
+    "language": "ko",
+    "description": "Kubernetes 공식 문서 한국어판 개념(concepts) 절. 구조가 깊고 버전별 기능 상태 표기가 많다"
+  },
+  {
+    "name": "es_toolkit_ko",
+    "repo": "toss/es-toolkit",
+    "commit": "c70e15eab45a4b6e34a3c29041ded945266a20d7",
+    "include_prefix": "docs/ko/",
+    "extensions": [".md"],
+    "license": "MIT",
+    "language": "ko",
+    "description": "토스의 JavaScript 유틸리티 라이브러리 es-toolkit 한국어 문서. 2024년 공개로 모델 사전 지식이 적을 가능성이 높다"
+  },
+  {
+    "name": "fastapi_ko",
+    "repo": "fastapi/fastapi",
+    "commit": "1ca09c13584ca45aa0921e5e40b31d49c5e3135a",
+    "include_prefix": "docs/ko/docs/",
+    "extensions": [".md"],
+    "license": "MIT",
+    "language": "ko",
+    "description": "FastAPI 공식 문서 한국어 번역. 모델이 잘 아는 주제라 closed-book 대조군 성격"
+  }
+]

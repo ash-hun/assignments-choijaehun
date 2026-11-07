@@ -1,0 +1,103 @@
+[
+  {
+    "name": "uv_docs",
+    "language": "en",
+    "license": "Apache-2.0 OR MIT",
+    "commit": "5ce34500b8a3d16d24bc7576bd8ac64879091cea",
+    "documents": 81,
+    "total_chars": 542179,
+    "estimated_pages": 180.7,
+    "median_doc_chars": 4053,
+    "stub_documents": 3,
+    "heading_depth_counts": {
+      "1": 81,
+      "2": 356,
+      "3": 106,
+      "4": 5
+    },
+    "max_heading_depth": 4,
+    "code_char_ratio": 0.199,
+    "table_line_ratio": 0.001,
+    "markup_noise_per_doc": 3.53,
+    "version_mentions_per_doc": 3.58,
+    "internal_links_per_doc": 4.88,
+    "linked_doc_ratio": 0.877,
+    "duplicate_title_ratio": 0.0
+  },
+  {
+    "name": "k8s_ko_concepts",
+    "language": "ko",
+    "license": "CC-BY-4.0",
+    "commit": "3ce2ad7b7a23560bc16e0f8d32d654a75bb98063",
+    "documents": 155,
+    "total_chars": 1175370,
+    "estimated_pages": 783.6,
+    "median_doc_chars": 4574,
+    "stub_documents": 7,
+    "heading_depth_counts": {
+      "2": 742,
+      "3": 653,
+      "4": 161,
+      "5": 10
+    },
+    "max_heading_depth": 5,
+    "code_char_ratio": 0.118,
+    "table_line_ratio": 0.01,
+    "markup_noise_per_doc": 15.42,
+    "version_mentions_per_doc": 2.31,
+    "internal_links_per_doc": 10.55,
+    "linked_doc_ratio": 0.923,
+    "duplicate_title_ratio": 0.026
+  },
+  {
+    "name": "es_toolkit_ko",
+    "language": "ko",
+    "license": "MIT",
+    "commit": "c70e15eab45a4b6e34a3c29041ded945266a20d7",
+    "documents": 685,
+    "total_chars": 932360,
+    "estimated_pages": 621.6,
+    "median_doc_chars": 1228,
+    "stub_documents": 8,
+    "heading_depth_counts": {
+      "1": 682,
+      "2": 705,
+      "3": 634,
+      "4": 1381
+    },
+    "max_heading_depth": 4,
+    "code_char_ratio": 0.518,
+    "table_line_ratio": 0.002,
+    "markup_noise_per_doc": 1.96,
+    "version_mentions_per_doc": 0.02,
+    "internal_links_per_doc": 0.81,
+    "linked_doc_ratio": 0.39,
+    "duplicate_title_ratio": 0.035
+  },
+  {
+    "name": "fastapi_ko",
+    "language": "ko",
+    "license": "MIT",
+    "commit": "1ca09c13584ca45aa0921e5e40b31d49c5e3135a",
+    "documents": 125,
+    "total_chars": 523763,
+    "estimated_pages": 349.2,
+    "median_doc_chars": 2839,
+    "stub_documents": 4,
+    "heading_depth_counts": {
+      "1": 124,
+      "2": 580,
+      "3": 359,
+      "4": 53,
+      "5": 1
+    },
+    "max_heading_depth": 5,
+    "code_char_ratio": 0.096,
+    "table_line_ratio": 0.001,
+    "markup_noise_per_doc": 3.69,
+    "version_mentions_per_doc": 1.82,
+    "internal_links_per_doc": 1.09,
+    "linked_doc_ratio": 0.512,
+    "duplicate_title_ratio": 0.0
+  }
+]

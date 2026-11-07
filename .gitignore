@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project Custom
+elice_project_2026.pdf
+
+# Corpus 원문은 manifest로 재현한다
+data/corpus/raw/
+.cache/
+CLAUDE.md

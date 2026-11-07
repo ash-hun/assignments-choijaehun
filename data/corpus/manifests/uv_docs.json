@@ -1,0 +1,421 @@
+{
+  "source": {
+    "name": "uv_docs",
+    "repo": "astral-sh/uv",
+    "commit": "5ce34500b8a3d16d24bc7576bd8ac64879091cea",
+    "include_prefix": "docs/",
+    "extensions": [
+      ".md"
+    ],
+    "license": "Apache-2.0 OR MIT",
+    "language": "en",
+    "description": "Python 패키지 관리자 uv 공식 문서. 출시 2년 남짓에 릴리스가 잦아 모델 사전 지식이 낡았을 가능성이 높다"
+  },
+  "files": [
+    {
+      "path": "concepts/authentication/certificates.md",
+      "sha256": "567627381cb2d816b1b968e8e3e176c6d04d4fe507db01b1e129bfdf92ea57a4",
+      "bytes": 4154
+    },
+    {
+      "path": "concepts/authentication/cli.md",
+      "sha256": "bafbcac4983b6110ec6c66d44e2867ea34e92ded27beb077a5ea70e75bd8d318",
+      "bytes": 2981
+    },
+    {
+      "path": "concepts/authentication/git.md",
+      "sha256": "fcb882e24185dbc717cd97a12e60cbbea3555f91748284e68a82486840b7446c",
+      "bytes": 2974
+    },
+    {
+      "path": "concepts/authentication/http.md",
+      "sha256": "9c2a3e7748c9609748932dd8afa0f0f695e108497e03646940e9d60284132aa0",
+      "bytes": 3618
+    },
+    {
+      "path": "concepts/authentication/index.md",
+      "sha256": "2655d86e26a56a77790498cc8a963108a90a44fb074201007faf53a6b0e12036",
+      "bytes": 334
+    },
+    {
+      "path": "concepts/authentication/third-party.md",
+      "sha256": "78dfb72d04964aa9cf6acb463efba43efe3a61bbcb6bc210231db42cc1ef0d3a",
+      "bytes": 1016
+    },
+    {
+      "path": "concepts/build-backend.md",
+      "sha256": "430ddec4ff24a9b70958d1591ccf3542e3e246ef9d9ec7b6fd4028c2df4a6af3",
+      "bytes": 10029
+    },
+    {
+      "path": "concepts/cache.md",
+      "sha256": "4048052dbf39b3208d757919a3c2a830268104fc99378e712659193609a2f35b",
+      "bytes": 11562
+    },
+    {
+      "path": "concepts/configuration-files.md",
+      "sha256": "1838a7360ad4a83d56b2eb13648041667dda582d8736f38cf4b73a08535a7b0b",
+      "bytes": 5779
+    },
+    {
+      "path": "concepts/index.md",
+      "sha256": "fe858e73a4689319231baf9d108c1da9e93a5270b9164ed1d82cda2661b49d03",
+      "bytes": 545
+    },
+    {
+      "path": "concepts/indexes.md",
+      "sha256": "a5ebc0bf975241358ddfc1c1e07673dd932f4a717cd2da456076910d0d69756c",
+      "bytes": 14605
+    },
+    {
+      "path": "concepts/preview.md",
+      "sha256": "538d3a42c31e597da5f6313b87a8c8f0300858001e2992280da1702cac899523",
+      "bytes": 2133
+    },
+    {
+      "path": "concepts/projects/build.md",
+      "sha256": "6e75090c45d3f5b11bfb0b42ecaf74618e4903eb91e20c57f20851b21ae157f6",
+      "bytes": 4635
+    },
+    {
+      "path": "concepts/projects/config.md",
+      "sha256": "2cf31612ffe09aba04c64659d51828e872aa2f019b58ddac6ed2f5b16adeb161",
+      "bytes": 24290
+    },
+    {
+      "path": "concepts/projects/dependencies.md",
+      "sha256": "c97457891ea4f9dd5bdcc8a9fcab630c303baa10018292f2e3b21980f2535e46",
+      "bytes": 29234
+    },
+    {
+      "path": "concepts/projects/export.md",
+      "sha256": "2d74c77651d396576a51db568417c220b7c18dc260b37771347b5c35535c542e",
+      "bytes": 4143
+    },
+    {
+      "path": "concepts/projects/index.md",
+      "sha256": "1f479134613d6051b7ef7cf9b6f56e6a49d201e3d676d9a7b505a71e44a2686c",
+      "bytes": 815
+    },
+    {
+      "path": "concepts/projects/init.md",
+      "sha256": "5fc42bfb825c5afe0f7586740a61b3380efa2083fd1bcbe550b5ae2886071ee3",
+      "bytes": 9399
+    },
+    {
+      "path": "concepts/projects/layout.md",
+      "sha256": "39a4e523e58410f02fd0a6e0cb31d59bf17dd08097f5457aded8b6b7c7ec5b08",
+      "bytes": 5649
+    },
+    {
+      "path": "concepts/projects/run.md",
+      "sha256": "e8b7e0b76a4aedeaf5cd0e19d115da7fe3ddf14161e14386a1d8c925fc39bf72",
+      "bytes": 3440
+    },
+    {
+      "path": "concepts/projects/sync.md",
+      "sha256": "b5cb70256ca739e0a7c17fd1d317d537c8e325dbd8f61e2c49102f305b70ea99",
+      "bytes": 8388
+    },
+    {
+      "path": "concepts/projects/workspaces.md",
+      "sha256": "44c67ffb1e5e0f4f35c86a3e0047518e3d919047e7316f41703b6dea533f3f01",
+      "bytes": 8320
+    },
+    {
+      "path": "concepts/python-versions.md",
+      "sha256": "69e6526c79575bd40133ffc25d4464d013e8afacbe425fdc45f563aa5f944ff4",
+      "bytes": 19573
+    },
+    {
+      "path": "concepts/resolution.md",
+      "sha256": "b8cb824210c2fa5634d8c307afed2ed9a5bbd0dbe6463488cea4b6fe08f3711f",
+      "bytes": 42233
+    },
+    {
+      "path": "concepts/tools.md",
+      "sha256": "81335dc0289cbe2e39291907db09bd9748b379e415d4253121f3de466aa4aeba",
+      "bytes": 9715
+    },
+    {
+      "path": "getting-started/features.md",
+      "sha256": "d388437318967ff364318d94b6d14dab960a950db849cbe3a8121e94aa6f60c1",
+      "bytes": 4420
+    },
+    {
+      "path": "getting-started/first-steps.md",
+      "sha256": "71ccc31832388ea19cdfe98bdfd8a2a7652a8d10a8f208b0c73f60910e55394f",
+      "bytes": 527
+    },
+    {
+      "path": "getting-started/help.md",
+      "sha256": "19708f72711b34fa7706451ba208eba4478ce393ab870cc51819a0346a7eb225",
+      "bytes": 2093
+    },
+    {
+      "path": "getting-started/index.md",
+      "sha256": "04e39dc5fe9695abb6b82637f2b57a8cf61ab74c612aad82ff88653e89276597",
+      "bytes": 548
+    },
+    {
+      "path": "getting-started/installation.md",
+      "sha256": "053dacc4af12a37c9336ee45f970499abd8eafa1bb19dd110411f3a60058b976",
+      "bytes": 6962
+    },
+    {
+      "path": "guides/index.md",
+      "sha256": "f096848203a00f9960987b4a3cc32e006bc7c0341b9ed0eebae01a74b54e9c06",
+      "bytes": 558
+    },
+    {
+      "path": "guides/install-python.md",
+      "sha256": "e2a06c0d84da7e8e49bd15b02cf7ea0bf8b30e6c9c5ba4b8406637fc8a87a653",
+      "bytes": 4712
+    },
+    {
+      "path": "guides/integration/aws-lambda.md",
+      "sha256": "a6e5167d053f5e36ce611aaf878fd328ba682d3482c4fc218325f0ddecbcc6c5",
+      "bytes": 19446
+    },
+    {
+      "path": "guides/integration/aws.md",
+      "sha256": "c48c49e417c33b9cb0366a9396f6da5091d21bae2ba96a3bcc2d29245ebdb302",
+      "bytes": 4176
+    },
+    {
+      "path": "guides/integration/azure.md",
+      "sha256": "e3218db8aaa4f5fd1f8f04a2e363328dc9c3fc40eed56cb44e30fe64364461ef",
+      "bytes": 4370
+    },
+    {
+      "path": "guides/integration/bazel.md",
+      "sha256": "853d9934ce1e0b7b6ec2fa579c986fcd804afb62ea63c79fe32c897ff84ecfe2",
+      "bytes": 1382
+    },
+    {
+      "path": "guides/integration/coiled.md",
+      "sha256": "4daa6557e5a37ee2cd168d1f427b71754cccbdb7907b2c9cda7cf4bfaa70563e",
+      "bytes": 4623
+    },
+    {
+      "path": "guides/integration/dependabot.md",
+      "sha256": "c214a0fd60e6610134d8a54cf7dd0f25ff7928a01ba8c28f27da2c55678ead1d",
+      "bytes": 1449
+    },
+    {
+      "path": "guides/integration/docker.md",
+      "sha256": "7afa60702bfe1c691c5750dbb45f83387a2459a0f53dc30765036f4a4da99b84",
+      "bytes": 20558
+    },
+    {
+      "path": "guides/integration/fastapi.md",
+      "sha256": "dfbe75439567284b830fc1888744673d123acaaf0ac7887ca6e2a00c35234018",
+      "bytes": 3347
+    },
+    {
+      "path": "guides/integration/github.md",
+      "sha256": "cf616374ad27d7ea06c49dea70f17356a2f61ad31bd37d7c9446f05405f6f124",
+      "bytes": 13634
+    },
+    {
+      "path": "guides/integration/gitlab.md",
+      "sha256": "8e1ed6a64c503961f92238fed89de3f45f8d4ecef587986bb8cc17d2f6c6defd",
+      "bytes": 2261
+    },
+    {
+      "path": "guides/integration/google.md",
+      "sha256": "5064f9b92d5a002fc7df1b7986ed175d65b7498083872c9e423dfdf61dfed7a7",
+      "bytes": 4195
+    },
+    {
+      "path": "guides/integration/index.md",
+      "sha256": "5af069759068210d1db1193e468797a8391f1def207b5fc5bff9ae490e35bd5a",
+      "bytes": 900
+    },
+    {
+      "path": "guides/integration/jfrog.md",
+      "sha256": "85437bcd4dae1e8d36d1beec84678b163e750d07fa8cb22cc0e3cc888f44694b",
+      "bytes": 1956
+    },
+    {
+      "path": "guides/integration/jupyter.md",
+      "sha256": "ab915ff69795ab1a1380adaa059371568ca5a4718a20d556a6271bf2781231df",
+      "bytes": 6695
+    },
+    {
+      "path": "guides/integration/marimo.md",
+      "sha256": "7db3d1b2cd324a92db92fde88592db0d203e5c92d1ae5ac7a364440fcd268522",
+      "bytes": 3509
+    },
+    {
+      "path": "guides/integration/pre-commit.md",
+      "sha256": "5b35a3aeebea94310348575d103d62ef958845283d94d3ed6afadd128b474ecd",
+      "bytes": 2171
+    },
+    {
+      "path": "guides/integration/pytorch.md",
+      "sha256": "ed2efdd402b3062794c77c71e24e7b01e3e3de28287b3bbe91a665f47e3acc03",
+      "bytes": 16034
+    },
+    {
+      "path": "guides/integration/renovate.md",
+      "sha256": "cd471397c4564e323d64dc93805ef27d94d39b62fc6e27742df77f935906cf4d",
+      "bytes": 2863
+    },
+    {
+      "path": "guides/migration/index.md",
+      "sha256": "57ca37adacbd9dd86198cf9a7bf2e30605ce22eae88499c1d8bf9da1e86ea278",
+      "bytes": 446
+    },
+    {
+      "path": "guides/migration/pip-to-project.md",
+      "sha256": "476b13264b0173c2c375d6a86d7fe80ac9dbfd7ec553256a89d3d1694c218475",
+      "bytes": 15604
+    },
+    {
+      "path": "guides/package.md",
+      "sha256": "f463f0232e1af6fc2b98c466d010e2eb504d45184932f4d65b035b8fdca7fd65",
+      "bytes": 8044
+    },
+    {
+      "path": "guides/projects.md",
+      "sha256": "70c7648a1dcd1463ec8df2567e9045177f26abc80f755df0bda471625243505d",
+      "bytes": 8114
+    },
+    {
+      "path": "guides/scripts.md",
+      "sha256": "36ce4d3f869ed057ae2f69f1476ad8d256392842e61792895b2220a5b5e8443f",
+      "bytes": 10929
+    },
+    {
+      "path": "guides/tools.md",
+      "sha256": "a32cdb0fa876aec3fafc34ae66ea5bf58f546f44da0048e0baf2eebc50f59237",
+      "bytes": 7996
+    },
+    {
+      "path": "index.md",
+      "sha256": "ec5621ac4593267c2032bcdc178004cc183ea1dc2cfb49d768a752e0c8c3ba38",
+      "bytes": 6709
+    },
+    {
+      "path": "pip/compatibility.md",
+      "sha256": "23a8c75ec825c31aa6b44a7c5df6fc41b6d976665c29bc16c8be2f7e4345047f",
+      "bytes": 25000
+    },
+    {
+      "path": "pip/compile.md",
+      "sha256": "44a72202bec55ec8d178a73db66308e5be3744c1614bb7066f10fa920e664b9e",
+      "bytes": 8097
+    },
+    {
+      "path": "pip/dependencies.md",
+      "sha256": "20498646aad0c1e4542a53f5a34bf6941afcde37039a2b6813f5d153f1bc179e",
+      "bytes": 1680
+    },
+    {
+      "path": "pip/environments.md",
+      "sha256": "1da0fd0a0effca5db5bcaceb92d3084d94314a49060eaa209be3019c56ebd07b",
+      "bytes": 6270
+    },
+    {
+      "path": "pip/index.md",
+      "sha256": "d8402b8ea57ee63c0c66c2f2a83df79f834c440ce1124f4694db735c435bde14",
+      "bytes": 1330
+    },
+    {
+      "path": "pip/inspection.md",
+      "sha256": "bb0c0b59b9847a31eb3f967c574ae8470e671b4373aaa378f87e97707ba3f53b",
+      "bytes": 742
+    },
+    {
+      "path": "pip/packages.md",
+      "sha256": "b250a5a5c9265ec3d174db1778143025474ae2c5dfaf50a14f7a62f23678e6a0",
+      "bytes": 3304
+    },
+    {
+      "path": "reference/benchmarks.md",
+      "sha256": "bc7584ccb1fd7c976f69b6aab7effcf6d354816817dcb8e4cbeeaf96c00ab8aa",
+      "bytes": 319
+    },
+    {
+      "path": "reference/contributing.md",
+      "sha256": "e6872f1e4c41a31120d8fefbdaa4be9f6cef9ed0331bb45044a8fe0d4f131f82",
+      "bytes": 25
+    },
+    {
+      "path": "reference/index.md",
+      "sha256": "8d7291898a3e427bf59f1733a4a0c2b77b4cbf74a52997c92c76b61374bd93c5",
+      "bytes": 654
+    },
+    {
+      "path": "reference/installer.md",
+      "sha256": "ebf56db7014a059a3860e6bbdc4919245127e3a39eb4b676e30a7fe89d269dd7",
+      "bytes": 1957
+    },
+    {
+      "path": "reference/internals/index.md",
+      "sha256": "0178c73e689cb11b1dc27c585b4fb49f4ecd4de5d7f00f35353768a2665a4da5",
+      "bytes": 157
+    },
+    {
+      "path": "reference/internals/metadata.md",
+      "sha256": "4e63e94e5d346ed96f63fcda2fd283e3d6ad490ed7bffd9f06d58e5d44469d50",
+      "bytes": 19110
+    },
+    {
+      "path": "reference/internals/resolver.md",
+      "sha256": "ba7eef3400c2a09c9e61d73a00c4b749018bc7527cd6f85d6682bc811d92f87e",
+      "bytes": 22477
+    },
+    {
+      "path": "reference/policies/index.md",
+      "sha256": "08c803aa68862de78b298e665ebc8fb9b00871985eaf99690c8e5487c718cadc",
+      "bytes": 229
+    },
+    {
+      "path": "reference/policies/license.md",
+      "sha256": "f2036b67208439a49e516cecba970ac4b2c261addffaeaebc222d341308d9b56",
+      "bytes": 575
+    },
+    {
+      "path": "reference/policies/platforms.md",
+      "sha256": "8b7bad0b8a231d051cbf394cb1bba51c76dae58caf1c4f3d11f8154a876e46d9",
+      "bytes": 3286
+    },
+    {
+      "path": "reference/policies/python.md",
+      "sha256": "0ea203370211ada871569f681b11353157d451587cc398d7aa8333dd2b006a64",
+      "bytes": 1270
+    },
+    {
+      "path": "reference/policies/rust.md",
+      "sha256": "0ec859ac540895f84aa4e30a53d43971d37828a8c2c0663c766c9a6a418bc46a",
+      "bytes": 587
+    },
+    {
+      "path": "reference/policies/versioning.md",
+      "sha256": "5971cabb80aeff6d813737d0c1d3dc45fb5fa8e3b6bd488d199f40cf56c7f2e2",
+      "bytes": 1699
+    },
+    {
+      "path": "reference/storage.md",
+      "sha256": "4e5d1782fc9e3513969e0c4c3f259083d06c975399d9db4e4b54d432643d2a16",
+      "bytes": 6442
+    },
+    {
+      "path": "reference/troubleshooting/build-failures.md",
+      "sha256": "819e71100e38a02f827c8ae8f5f43d31dfa30543526c45eec48d90138787aa5a",
+      "bytes": 15166
+    },
+    {
+      "path": "reference/troubleshooting/index.md",
+      "sha256": "67d7f4a978f19b535aab515adc203beb32d0ac0b497a2de45c8c1948f652bea7",
+      "bytes": 318
+    },
+    {
+      "path": "reference/troubleshooting/reproducible-examples.md",
+      "sha256": "95cb33eafa4baf01087f072217779090a4c7e88ac82a34ac151972669605c2d3",
+      "bytes": 5435
+    }
+  ]
+}

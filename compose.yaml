@@ -1,0 +1,37 @@
+# 벡터 DB와 API 서버는 각각 데이터베이스 선정 실험, Query 경로 구현 뒤에 추가한다.
+name: elice-rag-qa
+
+x-app: &app
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    LOG_FORMAT: ${LOG_FORMAT:-console}
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+services:
+  # 일회성 배치: Corpus 수집, 선정 실험, Ingest, Eval. `docker compose up`에서는 뜨지 않는다.
+  batch:
+    <<: *app
+    build:
+      context: .
+      target: runtime
+    image: elice-rag-qa:runtime
+    profiles: [batch]
+    entrypoint: ["python", "-m"]
+    volumes:
+      - ./data:/workspace/data
+      - ./research:/workspace/research
+
+  # 테스트와 타입 검사. 외부 API는 mock이라 네트워크와 .env가 필요 없다.
+  dev:
+    build:
+      context: .
+      target: dev
+    image: elice-rag-qa:dev
+    profiles: [dev]
+    network_mode: none
+    volumes:
+      - ./app:/workspace/app:ro
+      - ./tests:/workspace/tests:ro
+      - ./pyproject.toml:/workspace/pyproject.toml:ro

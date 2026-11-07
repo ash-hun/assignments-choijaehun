@@ -1,0 +1,120 @@
+{"blind_id": "2f5f6e4fe7", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "6d7d859e8a", "grade": "abstain", "reason": "States it is unsure whether pipe fuses lazy steps."}
+{"blind_id": "a27d56aa09", "grade": "abstain", "reason": "Says it does not know the version."}
+{"blind_id": "49b22ac481", "grade": "abstain", "reason": "Says it does not know the timeout or variable."}
+{"blind_id": "a54876fed1", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "46b684d141", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "d6772d295d", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "0dea031785", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "e16dcfbabe", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "1a73b4d472", "grade": "abstain", "reason": "Says it does not know the timeout or variable."}
+{"blind_id": "bdb562f845", "grade": "abstain", "reason": "Declines to give either version."}
+{"blind_id": "8245539927", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "b41ad6a8c1", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "f49ac3c583", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "16b756fce1", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "b33d94bc6b", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "2462995606", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "472bd3c968", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "de674f1a3b", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "ecf50ce9bf", "grade": "incorrect", "reason": "Describes the explicit/all-prerelease rule instead of the if-necessary fallback when all stable candidates are rejected."}
+{"blind_id": "fdff925e75", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "756b218336", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "a85b7c7c9c", "grade": "abstain", "reason": "Says it is unsure and defers to docs."}
+{"blind_id": "f60ac1b7db", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "d17e07b8df", "grade": "abstain", "reason": "Says it does not know and defers to docs."}
+{"blind_id": "fc0831663e", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "0e4b29feab", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "1cc87622bc", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "c48678405e", "grade": "abstain", "reason": "Suggests a generic df check but admits not knowing the uv feature or platforms."}
+{"blind_id": "59e07aa6e6", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "4c8845bbfb", "grade": "incorrect", "reason": "Describes the explicit/all-prerelease rule instead of the if-necessary fallback."}
+{"blind_id": "1e62306ea8", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "71894a406c", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "7430f8aa6a", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "0fc3da9411", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "ea4c0b878f", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "e4c57434cf", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "b7e6ed8860", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "d9aa60bbdb", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "ed9681d2aa", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "c6704ab5d4", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "d22ecd0c3e", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "032dabc75d", "grade": "abstain", "reason": "Says it does not know; only offers --no-config workaround."}
+{"blind_id": "e754c0b691", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "8c03403929", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "cb706f22b7", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "24fd15130d", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "a74a85a186", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "d38821c128", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "23c1dcf057", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "05f995ef82", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "3c06a06a6f", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "8fd70e3844", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "7e34ac59aa", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "a125e8b3a6", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "478d40bc92", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "93c702a17e", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "eb7431bd20", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "2b973832af", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "6f186df7e1", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "56a7a1901c", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "e09c5b45ed", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "3ebc409826", "grade": "abstain", "reason": "Says it does not know either version."}
+{"blind_id": "6753042188", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "11d2540f60", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "e6f6ba6c78", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "63b3c8611a", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "fd67be140b", "grade": "incorrect", "reason": "Claims main es-toolkit needs Node.js 18, contradicting 20.12."}
+{"blind_id": "6758e3d317", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "85e5d6edaa", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "6dd8a15781", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "9de4156a1a", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "d9c1212647", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "24489f395a", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "49922a08c7", "grade": "abstain", "reason": "Says it does not know; only offers --no-config workaround."}
+{"blind_id": "6927e24833", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "a326ed8387", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "2c4579070c", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "e7d810422e", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "dd9c474ed4", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "3d9f682765", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "1605320902", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "8b25f504d9", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "efd44de853", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "0fa2f5110b", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "9024c76e1f", "grade": "incorrect", "reason": "Describes the explicit/all-prerelease rule instead of the if-necessary fallback."}
+{"blind_id": "11becac65a", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "39735c5923", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "e3db167ad3", "grade": "abstain", "reason": "Says it does not know the version."}
+{"blind_id": "11327e402d", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "29e9ba58f5", "grade": "incorrect", "reason": "Claims retries default is 3, contradicting Infinity."}
+{"blind_id": "a8be5dacea", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "547be882e2", "grade": "incorrect", "reason": "Claims retries default is 3, contradicting Infinity."}
+{"blind_id": "37b02675a2", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "f26c7dca56", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "10abfd18d2", "grade": "abstain", "reason": "Says it does not know the version."}
+{"blind_id": "a07cc32c61", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "377eda9dcf", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "c74b851d4f", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "7a79f7d725", "grade": "abstain", "reason": "Says it does not know the timeout or variable."}
+{"blind_id": "42028ea3a5", "grade": "incorrect", "reason": "Confidently proposes du instead of the cache-physical-space preview feature."}
+{"blind_id": "a6f1531084", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "eda0184d44", "grade": "abstain", "reason": "Suggests a generic df check but admits not knowing the uv feature or platforms."}
+{"blind_id": "eb4c72a304", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "996a0dd923", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "ffc2216b14", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "c1143ceb64", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "443d69d871", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "b6ee548942", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "fb9a2b4a07", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "6ec1a758e6", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "78e9b82f56", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "3b5c75a5ee", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "2877fca63d", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "4716aa44e6", "grade": "abstain", "reason": "Admits not knowing how to clear only exclude-newer; offers --no-config workaround."}
+{"blind_id": "bc14340782", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "1fae5e72b5", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "5b0c8c613d", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "a5c4465345", "grade": "correct", "reason": "Core claim matches the reference."}
+{"blind_id": "1751d1222d", "grade": "correct", "reason": "Core claim matches the reference."}

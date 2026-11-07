@@ -1,0 +1,791 @@
+{
+  "source": {
+    "name": "k8s_ko_concepts",
+    "repo": "kubernetes/website",
+    "commit": "3ce2ad7b7a23560bc16e0f8d32d654a75bb98063",
+    "include_prefix": "content/ko/docs/concepts/",
+    "extensions": [
+      ".md"
+    ],
+    "license": "CC-BY-4.0",
+    "language": "ko",
+    "description": "Kubernetes 공식 문서 한국어판 개념(concepts) 절. 구조가 깊고 버전별 기능 상태 표기가 많다"
+  },
+  "files": [
+    {
+      "path": "_index.md",
+      "sha256": "a8e419087a0ba1d469ebfd15a76c9053e1c653e5c2e69406e63c7267b67808a2",
+      "bytes": 411
+    },
+    {
+      "path": "architecture/_index.md",
+      "sha256": "f75e8cdec7c6b49c83945f0b0a98ca6864fca75141274e70c26d65ea5f1a42a0",
+      "bytes": 12410
+    },
+    {
+      "path": "architecture/cgroups.md",
+      "sha256": "8dee4f77b00c35ddafe98f7d28af544690ae250d5111017640fa156fdd4a462c",
+      "bytes": 6659
+    },
+    {
+      "path": "architecture/cloud-controller.md",
+      "sha256": "26774c1d571a82a34dfb7863f943f1236b7af85c615c9a7e377298a25c304ed4",
+      "bytes": 8164
+    },
+    {
+      "path": "architecture/control-plane-node-communication.md",
+      "sha256": "15b863124333098f8d8cc90453cce55d64a98d5ba19e36976118fd708579afa4",
+      "bytes": 8302
+    },
+    {
+      "path": "architecture/controller.md",
+      "sha256": "1040653a5125f4a06231a1d9f917c2df85315fdeb5ee14dd1c0d0ec631adbbef",
+      "bytes": 8673
+    },
+    {
+      "path": "architecture/garbage-collection.md",
+      "sha256": "26799c703305e11c4a9c5aaa08e194148354b5fe775f3bbd3608c7de8d214d8a",
+      "bytes": 11469
+    },
+    {
+      "path": "architecture/leases.md",
+      "sha256": "d63ca8ae791418609a7254cc3ff1b2e049abbcf64d8d9543916886b60c3ffd01",
+      "bytes": 6684
+    },
+    {
+      "path": "architecture/nodes.md",
+      "sha256": "8d9cf77de85bfcf36188cde896a78966144357f38cdc157d1dcf0addcf7264a4",
+      "bytes": 17008
+    },
+    {
+      "path": "architecture/self-healing.md",
+      "sha256": "0c77da498e8baa4d81a865fd16fadc75db040e4edfda9b696bb3f1cceffed488",
+      "bytes": 3486
+    },
+    {
+      "path": "cluster-administration/_index.md",
+      "sha256": "ca442692000cad83a673dc7e9408e68f171153680a92957620a99f40b6ab99b4",
+      "bytes": 5082
+    },
+    {
+      "path": "cluster-administration/addons.md",
+      "sha256": "c75baf4ede66926e659a3491e443b213a8ae5f52d47ba54e957daf2dcba1469f",
+      "bytes": 8847
+    },
+    {
+      "path": "cluster-administration/certificates.md",
+      "sha256": "ed0686e799006b15996e7ed0650683112266a839b06d98c8dcfa330382ceee09",
+      "bytes": 219
+    },
+    {
+      "path": "cluster-administration/compatibility-version.md",
+      "sha256": "6d7cfe014e4e242e30f7b0849bd7bff8cd9cd62328b11a41c24ac3dc39f7bece",
+      "bytes": 1643
+    },
+    {
+      "path": "cluster-administration/coordinated-leader-election.md",
+      "sha256": "32e61c647d64857080f5608aa1ef1cfdf5ed189f9460966edad6fa1849250d1e",
+      "bytes": 1903
+    },
+    {
+      "path": "cluster-administration/kube-state-metrics.md",
+      "sha256": "f9c7d5da218fdf237b906592c8d5ccb3650f22e5ea83aad05e2a2cdad41cdc53",
+      "bytes": 2877
+    },
+    {
+      "path": "cluster-administration/logging.md",
+      "sha256": "5e963be1fba4342f339568e11b1277098761f3a8c07439518074770d1b5376b7",
+      "bytes": 21033
+    },
+    {
+      "path": "cluster-administration/manage-deployment.md",
+      "sha256": "729a5a56906357cdfb9781c331e69221fd0e4197cdda651b8d74ff864e72525e",
+      "bytes": 20351
+    },
+    {
+      "path": "cluster-administration/networking.md",
+      "sha256": "f2725ec4aa82ba03cb27b1b4e942bc607726c041f1464240e5b5d6046595a549",
+      "bytes": 5208
+    },
+    {
+      "path": "cluster-administration/node-autoscaling.md",
+      "sha256": "87184234727e3d91819d9fd69bb6b83ea50f75480e80d64af1275cdd2569e1bf",
+      "bytes": 18392
+    },
+    {
+      "path": "cluster-administration/node-shutdown.md",
+      "sha256": "8e0ae0a3f8856af55becc372bb2b127b9d2d554d309e15e901401664e5e07078",
+      "bytes": 16986
+    },
+    {
+      "path": "cluster-administration/observability.md",
+      "sha256": "a7375f4fd5f46a8751a7003eef79df2b9c6e99e76fd02fe4ddb0e6cca5113ae6",
+      "bytes": 13709
+    },
+    {
+      "path": "cluster-administration/proxies.md",
+      "sha256": "e49e1035260f93cfbd5f9c3cf6c6e429f95f88a5bbb60f5f0d7a366e9fa6d4a4",
+      "bytes": 2861
+    },
+    {
+      "path": "cluster-administration/system-logs.md",
+      "sha256": "64c78215703e44005c46fdbfa6c258fd40888abcb365194f32e1390eebac27b7",
+      "bytes": 16931
+    },
+    {
+      "path": "cluster-administration/system-metrics.md",
+      "sha256": "6848db495a6339be12f207bdf0cce04cd6a8f3b52a73f5565d40f73c37b406db",
+      "bytes": 12277
+    },
+    {
+      "path": "cluster-administration/system-traces.md",
+      "sha256": "da3365a933b1f784532e9b43629f58feb9db0c7dd80e0a0849b1e67c23b7f6a7",
+      "bytes": 5332
+    },
+    {
+      "path": "configuration/_index.md",
+      "sha256": "cb94bc7e94ce19416b144e04f13f1181b7104d331756fde8706f7e239d9fe1d5",
+      "bytes": 118
+    },
+    {
+      "path": "configuration/configmap.md",
+      "sha256": "631ee11e4147e8e466aa97a13d0ab7db60ebb6394878c2750e5ca6011865820d",
+      "bytes": 11893
+    },
+    {
+      "path": "configuration/liveness-readiness-startup-probes.md",
+      "sha256": "22ad909ca8b9f1d2d9ab3933276f592605d5df7897971968fa5cb045147ae96e",
+      "bytes": 2374
+    },
+    {
+      "path": "configuration/manage-resources-containers.md",
+      "sha256": "13615d1bc7e65145699dff5a2a99400f7376ba2e2952b0562d459260c99e0c5f",
+      "bytes": 39872
+    },
+    {
+      "path": "configuration/organize-cluster-access-kubeconfig.md",
+      "sha256": "3e99045125b9736d6b08be05aba378e3fe12d5dfb5781c26e4988ff881607dfa",
+      "bytes": 7922
+    },
+    {
+      "path": "configuration/overview.md",
+      "sha256": "e04514973cc9c47dae9e0eecec4e3dfa140f8d87da44e55884487897cb805a9b",
+      "bytes": 9568
+    },
+    {
+      "path": "configuration/secret.md",
+      "sha256": "279866a1c7d10b932f3c1c0363cd4e5c68dbf06d4bd3fbac24e1a3e62ff80d86",
+      "bytes": 55510
+    },
+    {
+      "path": "configuration/windows-resource-management.md",
+      "sha256": "5c1b4493bca8217394370259d8c450d14f8fc560aad0fb1818fdf5715f014ae0",
+      "bytes": 4742
+    },
+    {
+      "path": "containers/_index.md",
+      "sha256": "fd0b5fa62b85846608ca1deb5159a27693e3117f8ab72b69e094ea8732ee9820",
+      "bytes": 2538
+    },
+    {
+      "path": "containers/container-environment.md",
+      "sha256": "293fa02b6bd78c9735f31342fa1a83a2f83b6a07b3d00d5607ea247f7d0c8a73",
+      "bytes": 2476
+    },
+    {
+      "path": "containers/container-lifecycle-hooks.md",
+      "sha256": "78841fc257272d44f8aea1501321be1af2ad68b637a8c2c17d8221241212fc26",
+      "bytes": 7640
+    },
+    {
+      "path": "containers/cri.md",
+      "sha256": "f8b2ccf2343b8d38f908e34fa2bd9a0857451cef7a2b4d81d11056aedf14881d",
+      "bytes": 3431
+    },
+    {
+      "path": "containers/images.md",
+      "sha256": "ebb68dddc29b09f7cedffdb1fc420ce90f71215bb621665ced1c836a1bfd0f73",
+      "bytes": 34008
+    },
+    {
+      "path": "containers/runtime-class.md",
+      "sha256": "becd6c56ba82b8f8b20b28dba8c7e6647e6b3507b19e6c3dfa743f1ce279e562",
+      "bytes": 8223
+    },
+    {
+      "path": "extend-kubernetes/_index.md",
+      "sha256": "aa09f891ba756dedeb4502d60d16e7b07a90d5bbbb7e6652e1b03d7e7ca8ac67",
+      "bytes": 20635
+    },
+    {
+      "path": "extend-kubernetes/api-extension/_index.md",
+      "sha256": "5c10f2fadec1218edff2a03903cfe4927f3d3c139dae547cff034b11ff13ce7f",
+      "bytes": 59
+    },
+    {
+      "path": "extend-kubernetes/api-extension/apiserver-aggregation.md",
+      "sha256": "befde37dd08ac412228982e4df623710a5d723e78fe5f255a78f9a6da10d5edd",
+      "bytes": 3118
+    },
+    {
+      "path": "extend-kubernetes/api-extension/custom-resources.md",
+      "sha256": "74907c28edf99ff5670df28fffd3ab305fabdc90797d6316fa60e2c7bd9462f3",
+      "bytes": 26353
+    },
+    {
+      "path": "extend-kubernetes/compute-storage-net/_index.md",
+      "sha256": "d0dd241735033a57b2210d779412b19d9200a377b6fa791d40c4aca0c0cffaed",
+      "bytes": 2945
+    },
+    {
+      "path": "extend-kubernetes/compute-storage-net/device-plugins.md",
+      "sha256": "3d94c9438f18b311f7bbcbc426ba9a62420269534d9b0cf93964d07a4f43c16e",
+      "bytes": 27138
+    },
+    {
+      "path": "extend-kubernetes/compute-storage-net/network-plugins.md",
+      "sha256": "dd237d389d0cc1ee63bc8a318eef5384bee8327f0be42d2ad32b0e3441ba1390",
+      "bytes": 6476
+    },
+    {
+      "path": "extend-kubernetes/operator.md",
+      "sha256": "408e2bfb44b6b0daae837cdeb646bd55fee4b33820d912d5c4168b9f8f26c4ec",
+      "bytes": 8022
+    },
+    {
+      "path": "overview/_index.md",
+      "sha256": "0aedae73619cbee2c810b41ac3a1a41b74173a7e499d1b7f10b0098281de1417",
+      "bytes": 12941
+    },
+    {
+      "path": "overview/components.md",
+      "sha256": "a2e494a0853f102c99d1dde39227866e8560c1ccbff6f8f883b948cbb202a64d",
+      "bytes": 3821
+    },
+    {
+      "path": "overview/kubectl.md",
+      "sha256": "f26a7e6d4182991c08fda196586959eb49fcd1e4d50ce594c0a3162894a31aed",
+      "bytes": 6670
+    },
+    {
+      "path": "overview/kubernetes-api.md",
+      "sha256": "574a44e3345c19d8770c88720cbed3e27072af94ed6bf3fe7c0a2a1261555278",
+      "bytes": 17923
+    },
+    {
+      "path": "overview/working-with-objects/_index.md",
+      "sha256": "e709aafb8ef7d31206dd7258c79498a13e5a1b886dadfbfb137d9377ff5f5f18",
+      "bytes": 10011
+    },
+    {
+      "path": "overview/working-with-objects/annotations.md",
+      "sha256": "e9a6aa8012270213c195d3449bcc8bbebc896ac7c89aa2d61b7f38c65158a762",
+      "bytes": 4692
+    },
+    {
+      "path": "overview/working-with-objects/common-labels.md",
+      "sha256": "e6ac8d52307399c688373b825a7648d7e7f4b5443f30c5d3dd01fdd89ca02c45",
+      "bytes": 6761
+    },
+    {
+      "path": "overview/working-with-objects/field-selectors.md",
+      "sha256": "37db91c34bfc41b3cb10295c68960aea290c48effc684da138b26a41012ff1dc",
+      "bytes": 7071
+    },
+    {
+      "path": "overview/working-with-objects/finalizers.md",
+      "sha256": "a9af9cb8ccb5beaf7e12b4997677e1bfab58c87a7d9dbbeda154c51bab883892",
+      "bytes": 6281
+    },
+    {
+      "path": "overview/working-with-objects/kubernetes-objects.md",
+      "sha256": "996d857dd64816fa0dd560cd9a8876e4e5710614b9310c6b98059bbc3995e077",
+      "bytes": 7826
+    },
+    {
+      "path": "overview/working-with-objects/labels.md",
+      "sha256": "cb8a30dadc7882f4c81218037547b46ad6cbc5bed87e79184cbac1607526bd4e",
+      "bytes": 17128
+    },
+    {
+      "path": "overview/working-with-objects/names.md",
+      "sha256": "82457fe1f258f2176b1bc89fee03f7adee21e4140e4a988bb6747fab3b533a15",
+      "bytes": 5977
+    },
+    {
+      "path": "overview/working-with-objects/namespaces.md",
+      "sha256": "7af70025c214e6788c0d4097df6591249bf439fae3d672342159e0d08399c021",
+      "bytes": 8139
+    },
+    {
+      "path": "overview/working-with-objects/object-management.md",
+      "sha256": "201161139ede0e967298e785c97c9872318456d1d64deab78d7f606fd3c2005b",
+      "bytes": 7959
+    },
+    {
+      "path": "policy/_index.md",
+      "sha256": "1272e8124bc6af7e5afec9802f8d538923bd57e4e6e039e8cc7448bb24db2004",
+      "bytes": 4879
+    },
+    {
+      "path": "policy/limit-range.md",
+      "sha256": "14ba30ebf9d02198cd6701bbf2f8438f3410cdf72399a8bea07820d0ada5ffdf",
+      "bytes": 8124
+    },
+    {
+      "path": "policy/node-resource-managers.md",
+      "sha256": "52aad9d861b9f76ef25322107551765a335788b0592571ceeac2b38c384093b9",
+      "bytes": 1094
+    },
+    {
+      "path": "policy/pid-limiting.md",
+      "sha256": "49be02ff76ddeb41589d3c697408a3388f114388056b06d060504d4b0c73ceea",
+      "bytes": 6776
+    },
+    {
+      "path": "policy/resource-quotas.md",
+      "sha256": "23230a30aefd7f9766d416773196ec3389b0383e0db9449385701a65cc2b51de",
+      "bytes": 28442
+    },
+    {
+      "path": "resource-management/_index.md",
+      "sha256": "f9d070b793e282f098a54a981e2a6c7e924136687a663293fccbb401467c5418",
+      "bytes": 456
+    },
+    {
+      "path": "resource-management/dynamic-resource-allocation/_index.md",
+      "sha256": "18f03af32ac6ac225f952c2c01eedf9ffc92342e7eb6dce4f9bbf1f03eaa7af4",
+      "bytes": 5906
+    },
+    {
+      "path": "resource-management/dynamic-resource-allocation/dra-api.md",
+      "sha256": "821938cd7fc2813c7d2b7da0188eec6e47e58b9cb32e3b31bb6ac0e4e4dcc6d5",
+      "bytes": 33419
+    },
+    {
+      "path": "scheduling-eviction/_index.md",
+      "sha256": "9a6b6fb7b55f761c51075188ad5dc4dfc67b85cb71f981b15efae77d483b1fff",
+      "bytes": 2598
+    },
+    {
+      "path": "scheduling-eviction/api-eviction.md",
+      "sha256": "8805d84461a228002a225cc99c95e761a85fe5d444d86a56a214670f3de00f3e",
+      "bytes": 6002
+    },
+    {
+      "path": "scheduling-eviction/assign-pod-node.md",
+      "sha256": "1789add9d8370182ae766be66915641f80df1a61a35e75f9e6e44eb09223c630",
+      "bytes": 38972
+    },
+    {
+      "path": "scheduling-eviction/kube-scheduler.md",
+      "sha256": "6cab3c95829f257472da3af6ce73568d4252293b491b779c523118cea6c74fc6",
+      "bytes": 5730
+    },
+    {
+      "path": "scheduling-eviction/node-declared-features.md",
+      "sha256": "936ac081b53d0d7aeee27d3051d343ce0d86d6b64235622e50e6cafd3b919205",
+      "bytes": 3234
+    },
+    {
+      "path": "scheduling-eviction/node-pressure-eviction.md",
+      "sha256": "fd8e6acc841d1eb93e6c8b89d2f84b0d7f732dc314ecae032f257c3d9429698a",
+      "bytes": 24381
+    },
+    {
+      "path": "scheduling-eviction/pod-overhead.md",
+      "sha256": "bd70f4335c35cb32e7357dbbb5ead60c404ec2aa43606bc38c59783ea4039ec3",
+      "bytes": 8063
+    },
+    {
+      "path": "scheduling-eviction/pod-priority-preemption.md",
+      "sha256": "96cfe5ea6a991503abc9819ba7b1c6aec24ba0c1eea01cf76d98fc587009c701",
+      "bytes": 20983
+    },
+    {
+      "path": "scheduling-eviction/pod-scheduling-readiness.md",
+      "sha256": "2f5b5b8330fa6ed8867f1d2236edf7f9aa1623fd7b303de0cc46ea568d5cc65b",
+      "bytes": 4124
+    },
+    {
+      "path": "scheduling-eviction/podgroup-scheduling.md",
+      "sha256": "378d0e546134a1a4310575e85981b2510cd732be0fdb0aedd148fda2200e87da",
+      "bytes": 10746
+    },
+    {
+      "path": "scheduling-eviction/resource-bin-packing.md",
+      "sha256": "d86f03bc821e56afd5de66bb9fd8f06dde5763e632fc5badb48c43b98a66a96b",
+      "bytes": 7740
+    },
+    {
+      "path": "scheduling-eviction/scheduler-perf-tuning.md",
+      "sha256": "d4757e0a9a004da5fb5e7e5f4ac55025c3a0d7c1473e9d915d4c21cf1d48a83a",
+      "bytes": 7653
+    },
+    {
+      "path": "scheduling-eviction/taint-and-toleration.md",
+      "sha256": "48a213f698b58d93dc9b02aaac929f45b6f6cc453bbc5023c268c4e2937881c8",
+      "bytes": 15850
+    },
+    {
+      "path": "scheduling-eviction/topology-spread-constraints.md",
+      "sha256": "8f7263640003799b319cb846e08f52e9a2e838e59ba38c3a1ee76795787fe970",
+      "bytes": 31767
+    },
+    {
+      "path": "security/_index.md",
+      "sha256": "9bb0165f5a93fcd2fde0d04c25203a41201c742b26b32090f78dda2363b64aa2",
+      "bytes": 134
+    },
+    {
+      "path": "security/cloud-native-security.md",
+      "sha256": "adc20d7962c88532e49231389d10e6055fab3d28dc60ae2506d3c02925c30cdb",
+      "bytes": 13515
+    },
+    {
+      "path": "security/controlling-access.md",
+      "sha256": "674da87a375d32324facd15de4fff3346d4be706ab0624a581abe4dbea96406c",
+      "bytes": 9241
+    },
+    {
+      "path": "security/linux-security.md",
+      "sha256": "edcb3984c62baa130587f155ba0cc8948534ccdc07d1a267ca4411c71f8e920c",
+      "bytes": 1236
+    },
+    {
+      "path": "security/multi-tenancy.md",
+      "sha256": "c2dae02641fbe9c54132ecebe9af167b0e35d7bd6a16578bc677a9ff8e4bf8fa",
+      "bytes": 37742
+    },
+    {
+      "path": "security/overview.md",
+      "sha256": "6a94eebbd30568cdf13ebc00fa458fb0afbd9ed58e4ee6d097154147f972e7fb",
+      "bytes": 11265
+    },
+    {
+      "path": "security/pod-security-admission.md",
+      "sha256": "bc73c90700ae8717cb9c675d0a36ca6d44176ab466f3d8095d11c15665a6e8af",
+      "bytes": 9091
+    },
+    {
+      "path": "security/pod-security-policy.md",
+      "sha256": "002211d735bc59a3dfdb7c7198d0d5d4ff7ec90aec3dfa5aea391f263f4d11ac",
+      "bytes": 1460
+    },
+    {
+      "path": "security/pod-security-standards.md",
+      "sha256": "0d05a1bce7480f6ab09a33b25e6b94d479972d54baef9c7e68939cb74771664f",
+      "bytes": 23882
+    },
+    {
+      "path": "security/rbac-good-practices.md",
+      "sha256": "478180b1b978a89c7ce52f4172a4701c570500d3ee63050693232e6ef0094925",
+      "bytes": 15297
+    },
+    {
+      "path": "security/secrets-good-practices.md",
+      "sha256": "b7b6dd58f79d9f171d11a36b2fdc467c33aa4e8616c9f22edd5f31f2657a4ca9",
+      "bytes": 6207
+    },
+    {
+      "path": "security/service-accounts.md",
+      "sha256": "769ff6cbcc920babc8de358fd3e51b3c66664b6558a3551c596e69591465a88a",
+      "bytes": 22926
+    },
+    {
+      "path": "security/windows-security.md",
+      "sha256": "9a9247bf7b075fe4f38be0210106c412bc75b483668df9217a40efc9e51234a0",
+      "bytes": 3001
+    },
+    {
+      "path": "services-networking/_index.md",
+      "sha256": "40ed828e0925bd80a9cebd02597faa2f21a111810f1e5135f7d55574a8e0ec3c",
+      "bytes": 7037
+    },
+    {
+      "path": "services-networking/cluster-ip-allocation.md",
+      "sha256": "93380df1cba4efd3985443a8fa13d0a9bd06b3665bfec63e106f75d4626b4f30",
+      "bytes": 5240
+    },
+    {
+      "path": "services-networking/dns-pod-service.md",
+      "sha256": "d60278a4dee3fc6cae3bbfe5425daa9671309a7d0bba482b1075d0d61ffdc8f9",
+      "bytes": 17472
+    },
+    {
+      "path": "services-networking/dual-stack.md",
+      "sha256": "dc8e60a363a7f63b6cf0f5cae29fe49748d6770764d51889285090db8df7c194",
+      "bytes": 14251
+    },
+    {
+      "path": "services-networking/endpoint-slices.md",
+      "sha256": "e6bf5e3f9dd3cb53d7e5dcf973f52ed003af6cbee4ac4d73f17d00228c6bc7a0",
+      "bytes": 12226
+    },
+    {
+      "path": "services-networking/gateway.md",
+      "sha256": "baeeb2e5a591d6cd6bc9daaf5d4efd9149c8c485a6526cbe0bfb5493e077d3fe",
+      "bytes": 14580
+    },
+    {
+      "path": "services-networking/ingress-controllers.md",
+      "sha256": "734589125e290946e7e55c198ed991b76396636a00cd738b38f733ebc8f82cf3",
+      "bytes": 9666
+    },
+    {
+      "path": "services-networking/ingress.md",
+      "sha256": "7d6f90bbfa00e4726afe6f5a87c8b6b3588fb1d4c2a3df88cdb7106c5a0c71b4",
+      "bytes": 32897
+    },
+    {
+      "path": "services-networking/network-policies.md",
+      "sha256": "13a517642383c474f2105ba2d7ac737ecbcdd158e82202424d2e50ef4eef7ccd",
+      "bytes": 27615
+    },
+    {
+      "path": "services-networking/service-topology.md",
+      "sha256": "f85a5efa5c5dc9b69dc23cee43d994676f893dff78d3d27e6c908ad1f3bc3466",
+      "bytes": 7872
+    },
+    {
+      "path": "services-networking/service-traffic-policy.md",
+      "sha256": "12bd4a8c71295b088e5c165f6941ac51e232b7f9ec12b0a5bf3c4a1bdd81a23c",
+      "bytes": 2709
+    },
+    {
+      "path": "services-networking/service.md",
+      "sha256": "4a9bd8b819c7fe8c7c3b0597c72b6fe66e982f38c51638eb197928f4812d07e7",
+      "bytes": 53887
+    },
+    {
+      "path": "services-networking/topology-aware-hints.md",
+      "sha256": "17b59f63e0c7f348d3c2e7e6d860b41be7736f042b0f29bb1938dafcc4fad045",
+      "bytes": 9010
+    },
+    {
+      "path": "services-networking/windows-networking.md",
+      "sha256": "2b8359408ff31089e1a474938d5ba49a9f80aa1d45a01334447c1d053ffa9161",
+      "bytes": 14856
+    },
+    {
+      "path": "storage/_index.md",
+      "sha256": "4fb0ec72d9b458b181a93a57cbdadf430dcc493a62e4c6cc0f8a52ce950c695e",
+      "bytes": 156
+    },
+    {
+      "path": "storage/dynamic-provisioning.md",
+      "sha256": "5503e6b8f6386a8fecd805d65692524474fecdbbf13ab0e66815e883aa3df160",
+      "bytes": 6174
+    },
+    {
+      "path": "storage/ephemeral-storage.md",
+      "sha256": "201d0f0bba73b6e71f973d2f2f19885e5a06f4ee399591aa455b871400560e01",
+      "bytes": 15674
+    },
+    {
+      "path": "storage/ephemeral-volumes.md",
+      "sha256": "7efe7ac38e75ec0c7ea544d5f57c51fbaffca52cfe6dca3d9ad36fc65531e9f5",
+      "bytes": 14148
+    },
+    {
+      "path": "storage/persistent-volumes.md",
+      "sha256": "909336be8f08f3599b53d82b270e2ab6f986fbaadcf635a35eb024d7444c4823",
+      "bytes": 61692
+    },
+    {
+      "path": "storage/projected-volumes.md",
+      "sha256": "da068d7e2f69334e83ef84af25bd82cd6b4441d7f73455762eef55dd3d8447bb",
+      "bytes": 7661
+    },
+    {
+      "path": "storage/storage-capacity.md",
+      "sha256": "bb2e2e29c667c46a970bf4b228674b689c6b0d95ac1d5ae7bb748b7bde0830dd",
+      "bytes": 5614
+    },
+    {
+      "path": "storage/storage-classes.md",
+      "sha256": "23523891ec1e8baf70372b1589038a8468a2e32f8806e35efa91d61d8e7460ef",
+      "bytes": 26232
+    },
+    {
+      "path": "storage/storage-limits.md",
+      "sha256": "ce999abcb5fe61fd5471f4534a161a52215f5a933750910ee802aa62a6ffa5c6",
+      "bytes": 3643
+    },
+    {
+      "path": "storage/volume-health-monitoring.md",
+      "sha256": "25d31fe4a7964909929475fc227a78e536e6c0b1650de6fa14984fe1bac244ab",
+      "bytes": 2897
+    },
+    {
+      "path": "storage/volume-pvc-datasource.md",
+      "sha256": "b8f6ceaa470c5141a37d2e8c12a3283589e7fc972b46e7b92c272f2f136b2fa2",
+      "bytes": 3557
+    },
+    {
+      "path": "storage/volume-snapshot-classes.md",
+      "sha256": "ced75fd22f776e23c4a5ebbd739d7ff76b14ab3e81183cc13cbef829822c7435",
+      "bytes": 3282
+    },
+    {
+      "path": "storage/volume-snapshots.md",
+      "sha256": "3190e2c32456e451cdc79ca33a3b37705d2788ec1a451033c7cc5f68acd873f5",
+      "bytes": 11801
+    },
+    {
+      "path": "storage/volumes.md",
+      "sha256": "91e748a8cc850e2d8cc29e90321a69cd1504327c24b1d2e4b72d539f6544f423",
+      "bytes": 61246
+    },
+    {
+      "path": "storage/windows-storage.md",
+      "sha256": "b56d97b9bd91ff55edc76b222fce10c3dbcd68e9990a6c37cddc45724038dbb1",
+      "bytes": 3913
+    },
+    {
+      "path": "windows/_index.md",
+      "sha256": "094356c2e7fc36015fc311fcf9b133950838f8eceb290e6e388c9f93d389f8ef",
+      "bytes": 1883
+    },
+    {
+      "path": "windows/intro.md",
+      "sha256": "bb93a2888421cfce1d32f22d68db72b855f67b430f2a056436698b45f9ea16b3",
+      "bytes": 23356
+    },
+    {
+      "path": "windows/user-guide.md",
+      "sha256": "a3691ca39cbd77406484ca922f9354dc165fa444c4652dbdc95be6f909a282fb",
+      "bytes": 15341
+    },
+    {
+      "path": "workloads/_index.md",
+      "sha256": "0f21feb5757eec798daaecf024fa3f652e79a293f23762f496541ec45d5e8c28",
+      "bytes": 7541
+    },
+    {
+      "path": "workloads/autoscaling.md",
+      "sha256": "f263dc9bee5e66893a3f9ede52e632a19c63eabfa3a8a9ff73d62cda7e6947aa",
+      "bytes": 7809
+    },
+    {
+      "path": "workloads/autoscaling/horizontal-pod-autoscale.md",
+      "sha256": "36e4724ac51f81e8876659c9c61e7e72343e889a8a979be1dae9dc1620dcd535",
+      "bytes": 37984
+    },
+    {
+      "path": "workloads/controllers/_index.md",
+      "sha256": "9237fe938abc125c1540fbd68dbf0c78569281237b0e58e747011ade8768e866",
+      "bytes": 4278
+    },
+    {
+      "path": "workloads/controllers/cron-jobs.md",
+      "sha256": "068cd79ee7bca1f8c37652accba0286943c64aef3f573bf198f884642608722b",
+      "bytes": 15920
+    },
+    {
+      "path": "workloads/controllers/daemonset.md",
+      "sha256": "042ac0fd42acbe877818fcf91fbb133f16fd239317cf19a79d0bf24015f7e7ea",
+      "bytes": 17479
+    },
+    {
+      "path": "workloads/controllers/deployment.md",
+      "sha256": "774f6fdf2d5894571eff9725617b6b8af6c8ee647f1c22b1928aa7b5982fde88",
+      "bytes": 68390
+    },
+    {
+      "path": "workloads/controllers/job.md",
+      "sha256": "ec0428081a4ee235fe3c64596435f403f760a398aff3533166006b78fe3b8c66",
+      "bytes": 65478
+    },
+    {
+      "path": "workloads/controllers/replicaset.md",
+      "sha256": "d069dc6465470d505365dd6bb920c7faadf4ecc71d330e5b249d78edc09c1248",
+      "bytes": 21548
+    },
+    {
+      "path": "workloads/controllers/replicationcontroller.md",
+      "sha256": "5ae7e256976468f2857f973a2414b4603efa552637d0ea6083e059951259c2e6",
+      "bytes": 21413
+    },
+    {
+      "path": "workloads/controllers/statefulset.md",
+      "sha256": "1268dd460791fba8cbe0ce9e75512a104d52e8c6d00992b74f45b231bd92cb5c",
+      "bytes": 32355
+    },
+    {
+      "path": "workloads/controllers/ttlafterfinished.md",
+      "sha256": "8179da5fc70b9bb74a8d4e1492f5bed248278cdac012bd979f9b044c2cd952bd",
+      "bytes": 3576
+    },
+    {
+      "path": "workloads/management.md",
+      "sha256": "afffa83a3b32323e9eb942b72581177bd8b7d126204e621d1539172d3b6a3712",
+      "bytes": 17870
+    },
+    {
+      "path": "workloads/pods/_index.md",
+      "sha256": "63cc1fd9c7cc2c354c23811c8615c3dca0cd156b6251689d8281738244226e6f",
+      "bytes": 31044
+    },
+    {
+      "path": "workloads/pods/disruptions.md",
+      "sha256": "9d1529ee2aab52556d96c73d7688b723f0ba50ff84f29919efbebb72a224d84a",
+      "bytes": 18641
+    },
+    {
+      "path": "workloads/pods/downward-api.md",
+      "sha256": "0e1e4009fdf4958137a92e96f967085b645f9c98fec69240561921d9b8aefb9c",
+      "bytes": 5820
+    },
+    {
+      "path": "workloads/pods/ephemeral-containers.md",
+      "sha256": "8830146a327e1a5e99e11bda1444616e44662f5768a56913dcc482757c3b89c8",
+      "bytes": 3938
+    },
+    {
+      "path": "workloads/pods/init-containers.md",
+      "sha256": "490725f991f463ee3cc23bc13cfdfc00d117dea2a9c4c4d3992d515cada25fea",
+      "bytes": 18894
+    },
+    {
+      "path": "workloads/pods/pod-hostname.md",
+      "sha256": "006965bc7869570785bb553089d2c9a9aa7a66d0a5329bb486850c9af41ca3cf",
+      "bytes": 5697
+    },
+    {
+      "path": "workloads/pods/pod-lifecycle.md",
+      "sha256": "86dc1d5c2ae1fd891789b7f36f4fb7420cc437d87aea3421ddf668ddfeaf016e",
+      "bytes": 32310
+    },
+    {
+      "path": "workloads/pods/pod-qos.md",
+      "sha256": "341e1991c2d328d73a77bf210b228782edcb06a30a6a124383c2336186b60454",
+      "bytes": 8367
+    },
+    {
+      "path": "workloads/pods/scheduling-group.md",
+      "sha256": "2522a7a510a2456bf59b836f0e68d22044fe85b6c652726a259c4d2f0941a54f",
+      "bytes": 3760
+    },
+    {
+      "path": "workloads/pods/sidecar-containers.md",
+      "sha256": "8c2307b4740928cd950867543f4081904dd6c8b505750a1c9ce108b0f2696b3c",
+      "bytes": 10622
+    },
+    {
+      "path": "workloads/pods/user-namespaces.md",
+      "sha256": "43d64dd01778724ae52b9901e4ed004b2d7891888ffe3138f88dd180c992c277",
+      "bytes": 8658
+    },
+    {
+      "path": "workloads/workload-api/_index.md",
+      "sha256": "0001b5f139e799ef2edf14673110d8c6e5da5d9fac2cc2faabe89a8a660862a7",
+      "bytes": 3242
+    },
+    {
+      "path": "workloads/workload-api/policies.md",
+      "sha256": "33ea93e0937c91f8b953ff60d0a393c72faf35f6b23fec54dd1be5847debdc56",
+      "bytes": 3512
+    }
+  ]
+}
