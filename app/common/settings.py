@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     corpus_name: str = "uv_docs"
     gold_seed: int = 2026
 
+    # 데이터베이스 선정 실험 후보. compose 내부 네트워크 주소이고 외부로 포트를 열지 않는다.
+    qdrant_url: str = "http://qdrant:6333"
+    postgres_dsn: str = "postgresql://postgres@pgvector:5432/postgres"
+    chroma_host: str = "chroma"
+    chroma_port: int = 8000
+    model_cache_dir: Path = Path(".cache/models")
+    # Embedding 선정 전 임시 모델. 로컬 ONNX라 API 비용이 없다.
+    bench_embedding_model: str = "BAAI/bge-small-en-v1.5"
+
     # 엘리스 ML API는 모델마다 엔드포인트가 달라 base URL과 모델명을 함께 받는다.
     elice_serverless_api_key: SecretStr | None = None
     llm_base_url: str | None = None

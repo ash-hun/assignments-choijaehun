@@ -34,7 +34,7 @@
 
 | compose 서비스 | 이미지 | 수명 | 명령 |
 |---|---|---|---|
-| 벡터 DB | 데이터베이스 선정 실험 결과의 공식 이미지(버전 고정) | 상시 | 기본. 두 번째 실험에서 확정 후 추가 |
+| `qdrant` | `qdrant/qdrant:v1.20.0` | 상시 | 기본. 데이터베이스 선정 실험에서 확정. 지금은 실험 profile(`dbbench`)에만 있고 Ingest 구현 때 운영 구성으로 옮김 |
 | `api` | 프로젝트 이미지 | 상시 | `uvicorn app.main:app` |
 | `batch` | 프로젝트 이미지 `runtime` 단계(api와 같음) | 일회성, `profiles: [batch]` | `python -m <모듈>`. `make corpus`, `make ingest`, `make eval` 등이 감싼다 |
 | `dev` | 프로젝트 이미지 `dev` 단계(개발 의존성 포함) | 일회성, `profiles: [dev]`, 네트워크 없음 | `make test`, `make typecheck` |
@@ -58,7 +58,7 @@
 
 ```
 .
-├── compose.yaml                 # 벡터 DB(선정 후 추가), api(Query 구현 후 추가), batch(일회성), dev(테스트)
+├── compose.yaml                 # qdrant, api(Query 구현 후 추가), batch(일회성), dev(테스트), 선정 실험 후보 DB(profile dbbench)
 ├── Dockerfile
 ├── Makefile                     # corpus, ingest, serve, eval, select, test 별칭
 ├── pyproject.toml / uv.lock
@@ -147,7 +147,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 |---|---|---|---|
 | 엘리스 ML API (OpenAI 호환) | Query, Eval | 답변 생성, Judge, Gold 초안 | 타임아웃 60초, 재시도 3회, 키는 `SecretStr` 환경변수. 확인된 제약: `gpt-6.1-terra`는 temperature 기본값(1)만 허용, 비스트리밍 호출은 `max_completion_tokens` 2000 이하, `max_tokens` 대신 `max_completion_tokens` 사용, JSON Schema 구조화 출력 지원 |
 | Embedding 엔드포인트 | Ingest, Query | Chunk와 질의 벡터화 | 배치 호출, 같은 재시도 정책. 미제공 시 로컬 오픈소스 모델 |
-| 벡터 DB | Ingest(쓰기), Query(읽기) | 벡터 저장과 검색 | compose 내부 네트워크, Ingest 시 `ensure_collection` |
+| Qdrant | Ingest(쓰기), Query(읽기) | dense, sparse(IDF) 저장과 검색, RRF 결합 검색 | gRPC 연결(REST는 응답마다 약 45ms 지연 관찰), compose 내부 네트워크, Ingest 시 `ensure_collection` |
 | Corpus 원천 | Ingest | 다운로드 | 허용 URL은 manifest에만. 사용자 입력 URL 호출 없음 |
 
 ## 핵심 설계 결정
@@ -168,7 +168,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 | `document_loader` 파서 | 데이터셋 |
 | `common/text_tokenizer.py` 청크 길이 단위, BM25 토큰화 | 토크나이저 |
 | `chunk_splitter` 분할 방식, 크기, 겹침 | Chunking 전략 |
-| `chunk_repository` 구현, compose 벡터 DB 서비스, 컬렉션 명명 방식 | 데이터베이스 |
+| `chunk_repository` 구현, compose 벡터 DB 서비스, 컬렉션 명명 방식 | 데이터베이스(확정: Qdrant, `app/repository/qdrant_chunk_repository.py`) |
 | `embedding_client` 모델과 호출 방식(API 또는 로컬) | Embedding |
 | `llm_client` 생성 모델 | LLM |
 | `llm_client` Judge 모델 | Gold Set 및 Metric(Part B) |

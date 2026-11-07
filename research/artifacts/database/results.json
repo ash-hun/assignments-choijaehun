@@ -1,0 +1,335 @@
+[
+  {
+    "database": "qdrant",
+    "dim": 384,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": true,
+        "detail": "client-side sparse vector self-query returns itself first"
+      },
+      "hybrid_fusion": {
+        "passed": true,
+        "detail": "server-side fusion returned 10 hits"
+      },
+      "exact_search": {
+        "passed": true,
+        "detail": "matches numpy brute force on 5 queries"
+      }
+    },
+    "load_seconds": 0.05,
+    "reload_seconds": 0.046,
+    "latency_ms_p50": 0.49,
+    "latency_ms_p95": 0.57,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "pgvector",
+    "dim": 384,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": true,
+        "detail": "client-side sparse vector self-query returns itself first"
+      },
+      "hybrid_fusion": {
+        "passed": true,
+        "detail": "server-side fusion returned 10 hits"
+      },
+      "exact_search": {
+        "passed": true,
+        "detail": "matches numpy brute force on 5 queries"
+      }
+    },
+    "load_seconds": 0.361,
+    "reload_seconds": 0.097,
+    "latency_ms_p50": 0.36,
+    "latency_ms_p95": 0.4,
+    "queries_timed": 114,
+    "ann_recall_at_10": 0.9974
+  },
+  {
+    "database": "chroma",
+    "dim": 384,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": false,
+        "detail": "SparseSearchUnsupported: Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local"
+      },
+      "hybrid_fusion": {
+        "passed": false,
+        "detail": "SparseSearchUnsupported: Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local"
+      },
+      "exact_search": {
+        "passed": false,
+        "detail": "ExactSearchUnsupported: chroma has no exact (brute-force) query mode"
+      }
+    },
+    "load_seconds": 0.38,
+    "reload_seconds": 0.481,
+    "latency_ms_p50": 1.92,
+    "latency_ms_p95": 2.19,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "qdrant",
+    "dim": 1024,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": true,
+        "detail": "client-side sparse vector self-query returns itself first"
+      },
+      "hybrid_fusion": {
+        "passed": true,
+        "detail": "server-side fusion returned 10 hits"
+      },
+      "exact_search": {
+        "passed": true,
+        "detail": "matches numpy brute force on 5 queries"
+      }
+    },
+    "load_seconds": 0.091,
+    "reload_seconds": 0.077,
+    "latency_ms_p50": 0.7,
+    "latency_ms_p95": 1.34,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "pgvector",
+    "dim": 1024,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": true,
+        "detail": "client-side sparse vector self-query returns itself first"
+      },
+      "hybrid_fusion": {
+        "passed": true,
+        "detail": "server-side fusion returned 10 hits"
+      },
+      "exact_search": {
+        "passed": true,
+        "detail": "matches numpy brute force on 5 queries"
+      }
+    },
+    "load_seconds": 0.735,
+    "reload_seconds": 0.15,
+    "latency_ms_p50": 0.73,
+    "latency_ms_p95": 1.26,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "chroma",
+    "dim": 1024,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": false,
+        "detail": "SparseSearchUnsupported: Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local"
+      },
+      "hybrid_fusion": {
+        "passed": false,
+        "detail": "SparseSearchUnsupported: Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local"
+      },
+      "exact_search": {
+        "passed": false,
+        "detail": "ExactSearchUnsupported: chroma has no exact (brute-force) query mode"
+      }
+    },
+    "load_seconds": 0.421,
+    "reload_seconds": 0.667,
+    "latency_ms_p50": 1.99,
+    "latency_ms_p95": 3.98,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "qdrant",
+    "dim": 1536,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": true,
+        "detail": "client-side sparse vector self-query returns itself first"
+      },
+      "hybrid_fusion": {
+        "passed": true,
+        "detail": "server-side fusion returned 10 hits"
+      },
+      "exact_search": {
+        "passed": true,
+        "detail": "matches numpy brute force on 5 queries"
+      }
+    },
+    "load_seconds": 0.092,
+    "reload_seconds": 0.087,
+    "latency_ms_p50": 0.56,
+    "latency_ms_p95": 2.32,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "pgvector",
+    "dim": 1536,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": true,
+        "detail": "client-side sparse vector self-query returns itself first"
+      },
+      "hybrid_fusion": {
+        "passed": true,
+        "detail": "server-side fusion returned 10 hits"
+      },
+      "exact_search": {
+        "passed": true,
+        "detail": "matches numpy brute force on 5 queries"
+      }
+    },
+    "load_seconds": 1.036,
+    "reload_seconds": 0.209,
+    "latency_ms_p50": 0.38,
+    "latency_ms_p95": 0.96,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  },
+  {
+    "database": "chroma",
+    "dim": 1536,
+    "chunks": 587,
+    "features": {
+      "natural_key_upsert": {
+        "passed": true,
+        "detail": "count stays 587 after upserting twice"
+      },
+      "collection_metadata": {
+        "passed": true,
+        "detail": "contract round-trips"
+      },
+      "metadata_filter": {
+        "passed": true,
+        "detail": "5 hits, all from concepts/authentication/certificates.md"
+      },
+      "client_sparse_vectors": {
+        "passed": false,
+        "detail": "SparseSearchUnsupported: Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local"
+      },
+      "hybrid_fusion": {
+        "passed": false,
+        "detail": "SparseSearchUnsupported: Failed to reconcile schema: Invalid schema input: Sparse vector indexing is not enabled in local"
+      },
+      "exact_search": {
+        "passed": false,
+        "detail": "ExactSearchUnsupported: chroma has no exact (brute-force) query mode"
+      }
+    },
+    "load_seconds": 0.442,
+    "reload_seconds": 0.752,
+    "latency_ms_p50": 2.26,
+    "latency_ms_p95": 4.45,
+    "queries_timed": 114,
+    "ann_recall_at_10": 1.0
+  }
+]

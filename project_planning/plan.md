@@ -58,7 +58,7 @@ Ingest를 질의 요청 경로 밖에서 돌리는 이유: 질의마다 정제�
 
 - 언어와 도구: Python, FastAPI, pydantic, uv, Docker Compose, pytest, mypy, structlog
 - LLM과 Embedding 호출: OpenAI SDK로 엘리스 ML API Serverless 엔드포인트 직접 호출. LangChain 미사용
-- Vector DB: 데이터베이스 선정 실험으로 확정한 뒤 compose에 추가한다. 이후 실험은 모두 선정된 DB 위에서 돌린다
+- Vector DB: Qdrant(gRPC 연결)로 확정(`research/database_selection.md`). 이후 실험은 모두 Qdrant 위에서 돌린다
 - 고정 순서 파이프라인이라 에이전트가 아니다. LangGraph 미도입
 
 ## 선정 실험 (필수)
