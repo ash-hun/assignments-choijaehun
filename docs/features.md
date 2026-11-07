@@ -79,7 +79,7 @@
 | `app/cli/eval_cli.py` | cli | `run` 하위 명령 |
 | `app/service/eval/eval_service.py` | service | 평가 파이프라인 조립, run_id 계산 |
 | `app/service/eval/gold_set_loader.py` | service | dev, test set 로드와 검증 |
-| `app/service/eval/retrieval_metric.py` | service | 근거 단위 Hit@k, MRR, 문서 단위 Recall@k |
+| `app/service/eval/retrieval_metric.py` | service | 근거 단위 Hit@k, MRR, 근거 재현율, 문서 단위 Recall@k. 구현됨 |
 | `app/service/eval/refusal_metric.py` | service | 거절 정확도 |
 | `app/service/eval/judge_metric.py` | service | Judge 기반 지표 |
 | `app/service/eval/report_writer.py` | service | results.jsonl, summary.md |
@@ -283,7 +283,7 @@
 | `tokenizer` | 청크 길이 단위별 임베딩 입력 잘림 비율, BM25 토크나이저별 Hit@5, MRR, 처리 시간 |
 | `chunking` | 분할 방식, 크기, 겹침별 Hit@5, MRR, 근거 보존율, 청크 수, 질의당 근거 토큰 수 |
 | `database` | 후보 DB별 기능 검사 6종, 적재 시간, 질의 지연 p50과 p95, 메모리 사용량, numpy 전수 비교 대비 ANN 재현율. 구현됨(`make db-bench`) |
-| `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 문서 단위 Recall@5, 색인 시간과 비용, 질의 임베딩 지연. 교차 확인 포함 |
+| `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 근거 재현율, 문서 단위 Recall@5(영어, 한국어 질의), bootstrap 신뢰구간, 색인 시간, 질의 임베딩 지연. 구현됨(`make embed-bench`). 교차 확인은 미구현 |
 | `refusal_threshold` | dev set 답 있음/답 없음 문항의 dense 최고 점수 분포와 임계값별 오거절, 미거절 비율 |
 | `llm` | 생성 후보별 Faithfulness, 인용 형식 준수율, 거절률, 문항당 비용과 지연 |
 
@@ -299,6 +299,9 @@
 | `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출 |
 | `app/schema/selection_schema.py` | schema | closed-book 문항과 답변 모델 |
 | `app/cli/database_selection_cli.py` | cli | DB 후보 접속, 청크와 임시 벡터 준비, 결과 저장 |
+| `app/cli/embedding_selection_cli.py` | cli | 임베딩 후보 정의(접두어, 최대 입력), 결과와 짝지은 차이 저장 |
+| `app/service/eval/embedding_benchmark.py` | service | 모델별 색인, Qdrant 정확 검색, 지표와 bootstrap 구간 |
+| `app/service/eval/retrieval_metric.py` | service | 근거 단위 Hit@k, MRR, 근거 재현율, 문서 Recall(60자 창 근거 판정) |
 | `app/service/eval/database_benchmark.py` | service | 기능 검사, 적재, 지연, ANN 재현율 측정 |
 | `app/service/eval/vector_projector.py` | service | 무작위 투영으로 차원 변경, numpy 전수 비교 |
 | `app/service/eval/term_hasher.py` | service | 기능 검사용 임시 sparse 인코더 |
@@ -313,8 +316,9 @@
 | 단위 | `tests/unit/test_selection_run_closed_book_prober.py` |
 | 단위 | `tests/unit/test_selection_run_closed_book_reporter.py` |
 | 단위 | `tests/unit/test_selection_run_vector_projector.py` |
+| 단위 | `tests/unit/test_selection_run_retrieval_metric.py` |
 
-**제약과 미구현**: 데이터셋, 데이터베이스 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
+**제약과 미구현**: 데이터셋, 데이터베이스, Embedding 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
 
 ---
 

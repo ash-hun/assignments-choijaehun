@@ -1,4 +1,4 @@
-.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench test typecheck
+.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -43,6 +43,12 @@ db-bench:
 	$(BATCH) app.cli.database_selection_cli
 	$(DB_STATS) > $(DB_ARTIFACTS)/docker_stats_loaded.jsonl
 	docker compose --profile dbbench stop $(DBS)
+
+# 선정된 Qdrant만 띄워 후보 임베딩 모델을 비교한다. 모델 파일은 .cache/models에 받아 재사용한다.
+embed-bench:
+	docker compose --profile dbbench up -d qdrant
+	$(BATCH) app.cli.embedding_selection_cli
+	docker compose --profile dbbench stop qdrant
 
 test:
 	$(DEV) pytest -q -p no:cacheprovider
