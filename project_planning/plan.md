@@ -145,7 +145,7 @@ sparse 적재를 통과 조건으로 두는 이유: BM25 토크나이저는 5단
 | 항목 | 내용 |
 |---|---|
 | 질문 | 이 Corpus에서 질의에 맞는 근거를 가장 잘 찾는 임베딩 모델은 무엇인가 |
-| 조사 | 엘리스 모델 라이브러리 제공 여부, 최대 입력, 차원, 다국어 지원, 단가. 미제공 시 로컬 오픈소스(bge-m3, multilingual-e5) |
+| 조사 | 엘리스 모델 라이브러리 제공 여부(없음), 최대 입력, 차원, 다국어 지원, 단가. 로컬 오픈소스 6종(bge-small/base-en, arctic-embed-m, nomic-embed-text, multilingual-e5-large, Qwen3-Embedding-0.6B)으로 비교. 결과는 `research/embedding_selection.md` |
 | 청킹 | 고정 문자 길이, 겹침 없음. 길이는 최대 입력이 가장 짧은 후보에서도 잘리지 않게 정하고, 후보별 토크나이저로 잘림 0%를 확인해 기록 |
 | 검색 | 선정된 DB의 정확 검색 모드로 dense top-k |
 | 지표 | 근거 단위 Hit@5, Hit@10, MRR(주). 문서 단위 Recall@5(보조). 색인 시간과 비용, 질의 1건 임베딩 지연(로컬 모델은 CPU 기준) |
