@@ -174,4 +174,4 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 | `llm_client` 생성 모델 | LLM |
 | `llm_client` Judge 모델 | Gold Set 및 Metric(Part B) |
 | `judge_metric` 지표 목록과 루브릭 | Gold Set 및 Metric |
-| `evidence_checker` 임계값 | 거절 임계값 보정 |
+| `evidence_checker` 임계값 | 거절 임계값 보정(확정: 0.6375, Qwen3와 `structure-512-77` 기준) |

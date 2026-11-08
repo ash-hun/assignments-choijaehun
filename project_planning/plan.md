@@ -76,7 +76,7 @@ Ingest를 질의 요청 경로 밖에서 돌리는 이유: 질의마다 정제�
 | 5 | 토크나이저 선정 | DB, 임베딩, 고정 길이 청크 | 목표 토큰 초과 비율, BM25 Hit@5 | `research/tokenizer_selection.md`(확정: 길이는 Qwen3 토큰, BM25는 `word`) |
 | 6 | Chunking 전략 선정 | DB, 임베딩, 토크나이저. 크기 상한은 임베딩 최대 입력 | Hit@5, 근거 보존율, 근거 토큰 수 | `research/chunking_selection.md`(확정: 문서 구조 분할, 512 Qwen3 토큰, 겹침 15%. 근거 보존@k 추가) |
 | 7 | Embedding 교차 확인 | 확정된 Chunking | 상위 2개의 Hit@5 순위 유지 여부, 근거 보존@5 | `research/embedding_selection.md`에 추가(확정: Qwen3-Embedding-0.6B 유지) |
-| 8 | 프롬프트, 인용 파서, 거절 판정 구현과 임계값 보정 | 확정된 검색 전체 | 답 있음/답 없음 문항의 dense 최고 점수 분포 | `research/refusal_threshold.md` |
+| 8 | 프롬프트, 인용 파서, 거절 판정 구현과 임계값 보정 | 확정된 검색 전체 | 답 있음/답 없음 문항의 dense 최고 점수 분포 | `research/refusal_threshold.md`(확정: 임계값 0.6375) |
 | 9 | LLM 선정 | 검색 결과, 프롬프트, 임계값 | 인용 형식 준수율, 거절률, 비용, 첫 토큰 지연 | `research/llm_selection.md` |
 
 기록 양식은 모두 같다: 질문, 후보, 고정한 변인, 방법, 결과 표, 결정, 기각한 후보와 이유, 재현 명령. README의 기술 선정 근거는 이 기록에 링크한다.

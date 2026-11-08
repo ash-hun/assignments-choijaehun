@@ -11,7 +11,7 @@ RAG QA 서비스의 구성 요소를 하나씩 고정해 가며 고른 과정이
 | 5 | 토크나이저 | 확정 | 청크 길이는 Qwen3 토큰 수로 재고, BM25는 `word` 토큰화 | [05_tokenizer.md](05_tokenizer.md) |
 | 6 | Chunking 전략 | 확정 | 문서 구조 분할, 512 Qwen3 토큰, 겹침 15%(`structure-512-77`). 사전 규칙의 선택(재귀 분할)을 Hit@5와 근거 보존@k 기준으로 바꿈 | [06_chunking.md](06_chunking.md) |
 | 7 | 임베딩 교차 확인 | 확정 | Qwen3 유지. Hit@5는 같고, e5는 청크 33%가 최대 입력에서 잘려 근거 보존@5가 0.10~0.13 낮음 | [07_embedding_crosscheck.md](07_embedding_crosscheck.md) |
-| 8 | 프롬프트, 인용 파서, 거절 임계값 | 예정 | 거절 판정은 dense 최고 점수 기준 | |
+| 8 | 프롬프트, 인용 파서, 거절 임계값 | 확정 | dense 최고 점수 0.6375 미만이면 거절. dev set 오거절 0%, 답 없음 거절 영어 4/8, 한국어 5/8. 나머지는 근거 부족 토큰으로 판정 | [08_prompt_and_refusal.md](08_prompt_and_refusal.md) |
 | 9 | LLM | 예정 | 인용 형식 준수율, 거절률, 비용, 첫 토큰 지연으로 비교 | |
 | 10 | 검색 성능 평가 | 예정 | 확정한 검색 구성을 test set으로 평가. Recall, Precision, F1, MRR, nDCG | |
 | 11 | 생성 성능 평가 | 예정 | 확정한 전체 파이프라인을 test set으로 평가. uv 문서 전용 루브릭 점수 | |
