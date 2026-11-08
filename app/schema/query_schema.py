@@ -56,6 +56,7 @@ class QueryMeta(BaseModel):
     retrieval_scores: list[float]
     dropped_citations: int
     latency_ms: int
+    retrieval_ms: int | None = Field(default=None, description="질의 임베딩과 벡터 검색에 걸린 시간. TTFT와 latency_ms에 포함된다")
     usage: TokenUsage
     first_token_ms: int | None = Field(default=None, description="스트리밍 응답에서 첫 token 이벤트까지 걸린 시간. 비스트리밍이면 null")
 

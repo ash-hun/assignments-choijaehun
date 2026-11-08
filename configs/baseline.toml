@@ -1,0 +1,8 @@
+# Part B 기준선 평가. 파이프라인 구성(임베딩, Chunk, 거절 임계값, 답변 모델)은 환경 설정(app/common/settings.py)에서 오고 manifest에 기록된다.
+name = "baseline"
+gold_files = ["data/gold/test_set.jsonl", "data/gold/test_set_ko.jsonl"]
+# 생성 단계에 넣는 근거 수(서비스 기본값과 같다).
+top_k = 5
+# 검색 지표(Recall@10, MRR@10, nDCG@10)를 재는 깊이.
+retrieval_depth = 10
+concurrency = 4

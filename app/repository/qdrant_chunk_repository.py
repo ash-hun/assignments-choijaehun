@@ -61,6 +61,18 @@ class QdrantChunkRepository:
             result = await self._client.query_points(name, query=vector.tolist(), using=DENSE, limit=k, with_payload=CHUNK_FIELDS)
         return [(Chunk.model_validate(p.payload or {}), float(p.score)) for p in result.points]
 
+    async def all_chunks(self, name: str) -> list[Chunk]:
+        """컬렉션의 청크 전부를 chunk_id 순으로. 평가에서 근거 구절마다 인덱스 전체의 관련 청크 수를 셀 때 쓴다."""
+        chunks: list[Chunk] = []
+        offset: qm.ExtendedPointId | None = None
+        async with _store_errors():
+            while True:
+                points, offset = await self._client.scroll(name, limit=DELETE_BATCH, offset=offset, with_payload=CHUNK_FIELDS)
+                chunks += [Chunk.model_validate(p.payload or {}) for p in points]
+                if offset is None:
+                    break
+        return sorted(chunks, key=lambda c: c.chunk_id)
+
     async def delete_except(self, name: str, keep: set[str]) -> int:
         """keep에 없는 chunk_id의 포인트를 지운다. 원문이 바뀌어 사라진 청크를 남기지 않아 재실행 결과가 같은 상태로 수렴한다."""
         stale: list[qm.ExtendedPointId] = []

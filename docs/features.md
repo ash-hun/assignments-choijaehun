@@ -15,7 +15,7 @@
 | 기능 ID | 경로 | 기능 | 진입점 | 상태 |
 |---|---|---|---|---|
 | `corpus_fetch` | Ingest | manifest에 고정된 원문 다운로드와 해시 검증 | `make corpus` | 구현됨 |
-| `eval_run` | Eval | test set 전체 채점과 Report 생성 | `make eval CONFIG=...` | 미구현 |
+| `eval_run` | Eval | test set 전체 채점과 Report 생성 | `make eval CONFIG=...` | 구현됨(Judge 지표 제외) |
 | `gold_draft` | Eval | 문서에서 Gold Set 초안 생성, 번역 묶음 생성, Gold 파일 검증 | `make gold-draft`, `make gold-translate`, `make gold-check` | 구현됨(dev, test) |
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
@@ -65,36 +65,44 @@
 
 ### eval_run: 평가 실행
 
-**설명**: 설정 파일 하나로 test set 전체를 `query_service`에 직접 넣고 지표를 계산해 Report를 만든다. 실행 환경(git hash, 모델 버전, 토크나이저, 프롬프트 해시, seed)을 함께 기록한다.
+**설명**: 설정 파일 하나로 test set 전체(영어, 한국어)를 실제 질의 경로(`query_builder`로 API와 같은 조립, 스트리밍)에 넣고, 문항마다 검색 지표, 거절, 인용 규칙, 운영 수치(검색 지연, TTFT, TPOT, Latency, 비용)를 평가 기록 저장소(PostgreSQL `evaldb`)에 남긴 뒤 언어별 Report를 쓴다. 재현에 필요한 값(git commit, Gold와 원문 해시, 인덱스 계약, 답변 모델과 생성 조건, 프롬프트 해시, bootstrap seed)을 manifest로 남긴다.
 
-**처리 흐름**: `eval_cli`에서 `eval_service.run`으로, `gold_set_loader`, `query_service`, `retrieval_metric`, `refusal_metric`, `judge_metric`, `report_writer` 순.
+**입력과 결과**
+
+| 입력 | 결과 |
+|---|---|
+| `make eval` (`CONFIG=configs/baseline.toml`) | `qdrant`, `evaldb`를 띄우고 평가. `reports/<run_id>/`에 `manifest.json`, `results.jsonl`, `summary.json`, `summary.md` |
+| 같은 설정, 데이터, 인덱스로 다시 실행 | 같은 run_id. 기록된 문항은 LLM을 부르지 않고 같은 Report를 다시 쓴다(비용 0) |
+| 일부 문항에서 LLM 호출 실패 | 그 문항만 기록하지 않고 Report에 id를 남긴 뒤 종료 코드 1. 다음 실행이 그 문항만 다시 부른다 |
+| `EVAL_DB_PASSWORD` 없음, 인덱스 계약 불일치 | 시작 전에 실패 |
+
+**처리 흐름**: `eval_run_cli`에서 설정과 Gold 파일 로드, manifest와 run_id 계산, `open_query_service`, `EvalRecordRepository.ensure_schema`와 `upsert_run`, `all_chunks`, `EvalService.run`(문항마다 `ChunkRetriever.retrieve` 깊이 10으로 순위 지표, `QueryService.answer_stream`으로 답), `summarize_records`, `write_report` 순.
 
 **구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/eval_cli.py` | cli | `run` 하위 명령 |
-| `app/service/eval/eval_service.py` | service | 평가 파이프라인 조립, run_id 계산 |
-| `app/service/eval/gold_set_loader.py` | service | dev, test set 로드와 검증 |
-| `app/service/eval/retrieval_metric.py` | service | 근거 단위 Hit@k, MRR, 근거 재현율, 문서 단위 Recall@k. 구현됨 |
-| `app/service/eval/refusal_metric.py` | service | 거절 정확도 |
-| `app/service/eval/judge_metric.py` | service | Judge 기반 지표 |
-| `app/service/eval/report_writer.py` | service | results.jsonl, summary.md |
-| `app/client/llm_cache.py` | client | 요청 해시 기반 응답 캐시(`LlmCache`). 구현됨(LLM 선정 실험에서 사용) |
-| `app/schema/gold_schema.py` | schema | Gold 문항 모델 |
-| `app/schema/eval_schema.py` | schema | 문항별 결과, 요약 모델 |
+| `app/cli/eval_run_cli.py` | cli | 설정, manifest, run_id, 연결 조립 |
+| `app/service/eval/eval_service.py` | service | 기록이 없는 문항만 동시 실행, 기록 저장, 실패 문항 분리 |
+| `app/service/eval/eval_summarizer.py` | service | 언어별 검색, 거절, 인용, 운영 지표 요약과 bootstrap 구간 |
+| `app/service/eval/retrieval_metric.py` | service | `rank_score`(Recall@k, Precision@k, F1@k, MRR, nDCG@10), `relevant_chunk_ids` |
+| `app/service/eval/report_writer.py` | service | Report 파일. 생성 시각을 넣지 않음 |
+| `app/service/query/query_builder.py` | service | API와 평가가 같이 쓰는 질의 파이프라인 조립 |
+| `app/repository/eval_record_repository.py` | repository | PostgreSQL 스키마(`IF NOT EXISTS`), 실행과 기록 upsert |
+| `app/repository/qdrant_chunk_repository.py` | repository | `all_chunks`: 인덱스 전체 청크(nDCG 이상적 순위용) |
+| `app/schema/eval_schema.py` | schema | `EvalConfig`, `EvalManifest`(run_id), `RankScore`, `EvalRecord` |
+| `configs/baseline.toml` | 설정 | 기준선 평가 설정 |
 
 **테스트**
 
 | 종류 | 파일 |
 |---|---|
-| 단위 | `tests/unit/test_eval_run_retrieval_metric.py` |
-| 단위 | `tests/unit/test_eval_run_refusal_metric.py` |
-| 단위 | `tests/unit/test_eval_run_judge_metric.py` |
+| 단위 | `tests/unit/test_eval_run_rank_score.py` |
+| 단위 | `tests/unit/test_eval_run_eval_summarizer.py` |
 | 단위 | `tests/unit/test_eval_run_llm_cache.py` |
-| 통합 | `tests/integ/test_eval_run.py` |
+| 통합 | `tests/integ/test_eval_run.py`(기록, 재실행 시 LLM 미호출, 실패 문항 재시도, Report 재작성) |
 
-**제약과 미구현**: 지표 목록은 `research/gold_metric_selection.md`에서 확정. 결과는 `reports/<run_id>/`와 함께 평가 기록 저장소에 `source=gold`로 넣어 `live_eval`의 기준선으로 쓴다.
+**제약과 미구현**: Judge 지표(Citation Precision, uv 답변 정확성, uv 답변 품질 점수의 Judge 항목)는 다음 단계. 실시간 기록(`source=live`)은 `live_eval`에서 같은 저장소를 쓴다. 저장소 연결이 끊긴 경우의 재시도는 없다(재실행으로 복구).
 
 ### gold_draft: Gold Set 초안 생성
 
@@ -224,7 +232,7 @@
 | `app/service/eval/eval_recorder.py` | service | 질의 기록 저장. 실패해도 응답에 영향 없음 |
 | `app/service/eval/judge_worker.py` | service | 큐, 샘플링, 예산 상한, 재시작 시 미채점 기록 재처리 |
 | `app/service/eval/metric_aggregator.py` | service | 누적 평균, Wilson 구간, 이동 창 |
-| `app/repository/eval_record_repository.py` | repository | SQLite 기록과 판정 upsert |
+| `app/repository/eval_record_repository.py` | repository | PostgreSQL 기록과 판정 upsert |
 
 **제약과 미구현**: 전부 미구현. Judge 신뢰성 기준을 통과한 항목만 대시보드에 올린다.
 

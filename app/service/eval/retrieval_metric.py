@@ -1,10 +1,12 @@
 """근거 단위 검색 지표. 검색된 청크에 Gold 근거 구절이 들어 있는지로 Hit@k, 근거 재현율, MRR을 계산하고 bootstrap 구간을 붙인다."""
+import math
 import random
 import statistics
 from pydantic import BaseModel
 
 from app.service.eval.evidence_matcher import normalize
 from app.service.ingest.text_cleaner import clean_text
+from app.schema.eval_schema import RankScore
 from app.schema.gold_schema import GoldItem
 from app.schema.chunk_schema import Chunk
 
@@ -98,6 +100,45 @@ def score(item: GoldItem, ranked: list[Chunk]) -> RetrievalScore:
         doc_recall_at_5=bool(set(item.gold_doc_ids) & {c.doc_id for c in ranked[:5]}),
         reciprocal_rank=1 / first if first else 0.0,
     )
+
+
+def relevant_chunk_ids(item: GoldItem, chunks: list[Chunk]) -> set[str]:
+    """인덱스 전체에서 이 문항의 근거 구절이 하나라도 들어 있는 청크 id. nDCG의 이상적 순위를 만들 때 쓴다."""
+    evidence = [(e.doc_id, evidence_anchors(e.quote)) for e in item.evidence]
+    return {c.chunk_id for c in chunks if any(chunk_has_evidence(c, doc, anchors) for doc, anchors in evidence)}
+
+
+def rank_score(item: GoldItem, ranked: list[Chunk], relevant_ids: set[str]) -> RankScore:
+    """순위가 매겨진 청크 목록(최대 10개)의 Recall@k, Precision@k, F1@k(k는 5, 10), 역순위, nDCG@10.
+
+    Recall은 근거 구절 단위(찾은 구절 / 전체 구절), Precision은 청크 단위(관련 청크 / k)다.
+    """
+    if not item.answerable:
+        raise ValueError("retrieval metrics are defined only for answerable items")
+    top = ranked[:10]
+    evidence = [(e.doc_id, evidence_anchors(e.quote)) for e in item.evidence]
+    relevant = [any(chunk_has_evidence(c, doc, anchors) for doc, anchors in evidence) for c in top]
+
+    def recall(k: int) -> float:
+        found = [any(chunk_has_evidence(c, doc, anchors) for c in top[:k]) for doc, anchors in evidence]
+        return sum(found) / len(found)
+
+    def precision(k: int) -> float:
+        return sum(relevant[:k]) / k
+
+    first = next((rank for rank, hit in enumerate(relevant, start=1) if hit), None)
+    dcg = sum(1 / math.log2(rank + 1) for rank, hit in enumerate(relevant, start=1) if hit)
+    ideal = sum(1 / math.log2(rank + 1) for rank in range(1, min(len(relevant_ids), 10) + 1))
+    r5, r10, p5, p10 = recall(5), recall(10), precision(5), precision(10)
+    return RankScore(
+        recall_at_5=round(r5, 4), recall_at_10=round(r10, 4), precision_at_5=round(p5, 4), precision_at_10=round(p10, 4),
+        f1_at_5=round(_f1(p5, r5), 4), f1_at_10=round(_f1(p10, r10), 4),
+        reciprocal_rank=round(1 / first, 4) if first else 0.0, ndcg_at_10=round(dcg / ideal, 4) if ideal else 0.0,
+    )
+
+
+def _f1(precision: float, recall: float) -> float:
+    return 2 * precision * recall / (precision + recall) if precision + recall else 0.0
 
 
 def summarize(scores: list[RetrievalScore]) -> RetrievalSummary:
