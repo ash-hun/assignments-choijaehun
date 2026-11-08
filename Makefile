@@ -1,4 +1,4 @@
-.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench tok-bench test typecheck
+.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -53,6 +53,14 @@ embed-bench:
 tok-bench:
 	docker compose --profile dbbench up -d qdrant
 	docker compose run --rm --build batch-korean app.cli.tokenizer_selection_cli
+	docker compose --profile dbbench stop qdrant
+
+# 선정 임베딩(Qwen3)으로 분할 설정마다 다시 색인한다. CPU에서 설정 하나에 약 5분.
+# 2단계 방식은 1단계 규칙의 선택(재귀) 대신 문서 구조로 정했다. 근거는 research/chunking_selection.md.
+CHUNK_METHOD ?= structure
+chunk-bench:
+	docker compose --profile dbbench up -d qdrant
+	$(BATCH) app.cli.chunking_selection_cli --method $(CHUNK_METHOD)
 	docker compose --profile dbbench stop qdrant
 
 test:

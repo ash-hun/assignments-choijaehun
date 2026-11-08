@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from app.service.eval.retrieval_metric import MetricSummary, RetrievalScore, score, summarize
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
-from app.service.ingest.sparse_encoder import Bm25Encoder
+from app.service.ingest.sparse_encoder import SparseEncoder
 from app.schema.vector_schema import IndexContract
 from app.schema.gold_schema import GoldItem
 from app.schema.chunk_schema import Chunk
@@ -119,14 +119,14 @@ class TokenizerBenchmark:
     def __init__(self, repository: QdrantChunkRepository) -> None:
         self._repository = repository
 
-    async def run_sparse(self, encoder: Bm25Encoder, chunks: list[Chunk], items_by_language: dict[str, list[GoldItem]]) -> list[SparseRun]:
+    async def run_sparse(self, encoder: SparseEncoder, chunks: list[Chunk], items_by_language: dict[str, list[GoldItem]]) -> list[SparseRun]:
         """후보 토크나이저 하나로 색인하고 언어별 질의로 sparse 단독 검색을 잰다."""
         tokenizer = encoder.tokenizer
         started = time.perf_counter()
         doc_tokens = [tokenizer.tokenize(c.text) for c in chunks]
         tokenize_ms = (time.perf_counter() - started) * 1000 * 1000 / len(chunks)
         vocabulary = {t for tokens in doc_tokens for t in tokens}
-        hashes = {Bm25Encoder.hash_token(t) for t in vocabulary}
+        hashes = {SparseEncoder.hash_token(t) for t in vocabulary}
         sparse = encoder.encode_documents([c.text for c in chunks])
 
         collection = "tok_" + tokenizer.name.replace("+", "_")

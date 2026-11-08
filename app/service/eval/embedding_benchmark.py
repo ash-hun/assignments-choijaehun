@@ -46,32 +46,42 @@ class EmbeddingBenchmark:
     ) -> list[EmbeddingRun]:
         """색인은 모델마다 한 번, 질의는 언어별로 따로 잰다."""
         token_counts = [client.token_count(c.text) for c in chunks]
-        started = time.perf_counter()
-        corpus = client.embed_documents([c.text for c in chunks])
-        index_seconds = time.perf_counter() - started
-
         collection = "emb_" + "".join(ch if ch.isalnum() else "_" for ch in client.model_name.lower())
         contract = IndexContract(embedding_model=client.model_name, tokenizer="model-native", chunk_config_hash="fixed-1000")
-        empty_sparse = [SparseTerms(indices=[], values=[]) for _ in chunks]
-        await self._repository.drop_collection(collection)
-        await self._repository.ensure_collection(collection, corpus.shape[1], contract)
-        await self._repository.upsert(collection, chunks, corpus, empty_sparse)
-        by_id = {c.chunk_id: c for c in chunks}
+        index_seconds, dim = await self.index(client, collection, contract, chunks)
 
         runs = []
         for language, items in items_by_language.items():
             answerable = [i for i in items if i.answerable]
-            started = time.perf_counter()
-            queries = client.embed_queries([i.question for i in answerable])
-            query_ms = (time.perf_counter() - started) * 1000 / max(len(answerable), 1)
-            scores = []
-            for item, vector in zip(answerable, queries):
-                hits = await self._repository.search_dense(collection, vector, TOP_K, exact=True)
-                scores.append(score(item, [by_id[h] for h in hits]))
-            runs.append(_summarize(client.model_name, language, corpus.shape[1], scores, index_seconds, query_ms, token_counts, max_tokens))
+            ranked, query_ms = await self.search(client, collection, answerable, chunks)
+            scores = [score(item, hits) for item, hits in zip(answerable, ranked)]
+            runs.append(_summarize(client.model_name, language, dim, scores, index_seconds, query_ms, token_counts, max_tokens))
             logger.info("embedding_scored", model=client.model_name, language=language, hit_at_5=runs[-1].hit_at_5.mean)
         await self._repository.drop_collection(collection)
         return runs
+
+    async def index(self, client: EmbeddingClient, collection: str, contract: IndexContract, chunks: list[Chunk]) -> tuple[float, int]:
+        """컬렉션을 지우고 새로 만들어 dense 벡터만 넣는다. 임베딩에 걸린 초와 벡터 차원을 돌려준다."""
+        started = time.perf_counter()
+        corpus = client.embed_documents([c.text for c in chunks])
+        seconds = time.perf_counter() - started
+        empty_sparse = [SparseTerms(indices=[], values=[]) for _ in chunks]
+        await self._repository.drop_collection(collection)
+        await self._repository.ensure_collection(collection, corpus.shape[1], contract)
+        await self._repository.upsert(collection, chunks, corpus, empty_sparse)
+        return seconds, int(corpus.shape[1])
+
+    async def search(self, client: EmbeddingClient, collection: str, items: list[GoldItem], chunks: list[Chunk]) -> tuple[list[list[Chunk]], float]:
+        """문항마다 정확 검색 상위 TOP_K 청크. 질의 임베딩의 문항당 평균 밀리초를 함께 돌려준다."""
+        started = time.perf_counter()
+        queries = client.embed_queries([i.question for i in items])
+        query_ms = (time.perf_counter() - started) * 1000 / max(len(items), 1)
+        by_id = {c.chunk_id: c for c in chunks}
+        ranked = []
+        for vector in queries:
+            hits = await self._repository.search_dense(collection, vector, TOP_K, exact=True)
+            ranked.append([by_id[h] for h in hits])
+        return ranked, query_ms
 
 
 def _summarize(
