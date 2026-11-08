@@ -2,9 +2,10 @@
 import json
 from typing import Annotated
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends
+from starlette.background import BackgroundTask
 from fastapi.responses import StreamingResponse
 from collections.abc import AsyncIterator, AsyncGenerator
+from fastapi import Request, APIRouter, Depends, BackgroundTasks
 
 from app.schema.query_schema import StreamToken, QueryRequest, QueryResponse
 from app.api.query_runtime import QueryRuntime, get_runtime
@@ -31,9 +32,14 @@ router = APIRouter(prefix="/v1", dependencies=[Depends(require_api_key)], tags=[
                502: {"description": "LLM 호출 실패"}, 503: {"description": "벡터 DB 연결 실패 또는 동시 호출 상한 초과"},
                504: {"description": "LLM 타임아웃"}},
 )
-async def query(request: QueryRequest, runtime: Annotated[QueryRuntime, Depends(get_runtime)]) -> QueryResponse:
-    """서비스 결과를 그대로 돌려준다."""
-    return await runtime.service.answer(request.question, request.top_k)
+async def query(
+    request: QueryRequest, http: Request, background: BackgroundTasks, runtime: Annotated[QueryRuntime, Depends(get_runtime)],
+) -> QueryResponse:
+    """서비스 결과를 그대로 돌려준다. 실시간 평가 기록은 응답을 보낸 뒤에 남긴다."""
+    response = await runtime.service.answer(request.question, request.top_k)
+    if runtime.live is not None and request.top_k in (None, runtime.settings.default_top_k):
+        background.add_task(runtime.live.recorder.record, http.state.request_id, request.question, response)
+    return response
 
 
 @router.post(
@@ -50,18 +56,40 @@ async def query(request: QueryRequest, runtime: Annotated[QueryRuntime, Depends(
                502: {"description": "첫 이벤트 전 LLM 호출 실패"}, 503: {"description": "벡터 DB 장애 또는 동시 호출 상한 초과"},
                504: {"description": "첫 이벤트 전 LLM 타임아웃"}},
 )
-async def query_stream(request: QueryRequest, runtime: Annotated[QueryRuntime, Depends(get_runtime)]) -> StreamingResponse:
-    """첫 이벤트를 받은 뒤에 응답을 시작해, 검색 실패나 동시 호출 상한 초과는 상태 코드로 돌려준다."""
+async def query_stream(
+    request: QueryRequest, http: Request, runtime: Annotated[QueryRuntime, Depends(get_runtime)],
+) -> StreamingResponse:
+    """첫 이벤트를 받은 뒤에 응답을 시작해, 검색 실패나 동시 호출 상한 초과는 상태 코드로 돌려준다.
+
+    final 이벤트까지 보낸 응답만 스트림이 끝난 뒤 실시간 평가 기록으로 남긴다.
+    """
     events = runtime.service.answer_stream(request.question, request.top_k)
     first = await anext(events)
-    return StreamingResponse(_sse(first, events), media_type="text/event-stream",
+    finals: list[QueryResponse] = []
+    background = None
+    live = runtime.live
+    if live is not None and request.top_k in (None, runtime.settings.default_top_k):
+        request_id: str = http.state.request_id
+
+        async def record_final() -> None:
+            if finals:
+                await live.recorder.record(request_id, request.question, finals[0])
+
+        background = BackgroundTask(record_final)
+    return StreamingResponse(_sse(first, events, finals), media_type="text/event-stream", background=background,
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-async def _sse(first: StreamToken | QueryResponse, events: AsyncGenerator[StreamToken | QueryResponse, None]) -> AsyncIterator[str]:
+async def _sse(
+    first: StreamToken | QueryResponse, events: AsyncGenerator[StreamToken | QueryResponse, None], finals: list[QueryResponse],
+) -> AsyncIterator[str]:
     try:
+        if isinstance(first, QueryResponse):
+            finals.append(first)
         yield _event(first)
         async for event in events:
+            if isinstance(event, QueryResponse):
+                finals.append(event)
             yield _event(event)
     except UpstreamError as error:
         status, detail = describe(error)

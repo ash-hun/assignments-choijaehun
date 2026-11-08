@@ -20,7 +20,7 @@
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make label-sheet`, `make agreement` | 구현됨 |
-| `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 미구현 |
+| `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 구현됨 |
 | `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(dense 검색) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
@@ -240,21 +240,46 @@
 
 ### live_eval: 실시간 누적 평가
 
-**설명**: `query`, `query_stream` 응답마다 기록을 남기고, 백그라운드 Judge가 뒤따라 채점하고, 집계기가 누적 평균, 95% 구간, 최근 50건 이동 창을 계산해 API와 대시보드로 보낸다. 같은 `config_id`의 Gold Set 평가값을 기준선으로 겹친다. 지표 정의는 `research/gold_metric_selection.md`.
+**설명**: `query`, `query_stream`이 응답을 보낸 뒤 질의 하나를 평가 기록 저장소(`evaldb`)에 `source=live`로 남긴다. API 프로세스 안의 백그라운드 Judge 작업자가 답한 기록을 1회 판정하고(샘플링 비율, 예산 상한), 집계기가 지표별 누적 평균, 95% 구간, 최근 50건 이동 평균과 같은 구성의 Gold Set 기준선을 만든다. 지표 구성은 `research/gold_metric_selection.md`의 "품질 점수와 Citation Precision 구성 확정"을 따라 Judge 지표는 참고값으로 표시한다. 화면은 `docs/view_spec.md`.
 
-**처리 흐름**: `query_service` 응답 뒤 `eval_recorder`가 저장, `judge_worker`가 채점 안 된 기록을 꺼내 `judge_metric`으로 판정, `metric_aggregator`가 집계, `metrics_router`가 응답.
+**입력과 결과**
 
-**구현 파일(예정)**
+| 입력 | 결과 |
+|---|---|
+| `POST /v1/query`, `/v1/query/stream`(기본 `top_k`) | 응답 뒤 기록 `live:<요청 id>` upsert, 답했으면 채점 대기열에 넣음, 변경 알림 |
+| 같은 `X-Request-ID`로 다시 요청 | 같은 기록을 덮어씀. 행이 늘지 않음 |
+| `top_k`를 기본값과 다르게 요청 | 기록하지 않음(다른 구성이라 같은 `config_id`로 섞지 않는다) |
+| 서버 재시작 | 누적 Judge 비용을 저장소에서 다시 세고, 채점이 안 된 답(최대 500개)을 대기열에 다시 넣음 |
+| Judge 예산 상한 도달 | 채점만 멈춤. 기록과 Judge 없는 지표는 계속 쌓임 |
+| `GET /v1/metrics`, `/v1/metrics/stream`, `/dashboard` | 집계 JSON, 변경마다 집계를 보내는 SSE, 화면 |
+| `EVAL_DB_PASSWORD` 없음, Judge 엔드포인트 없음, 저장소 연결 실패 | 실시간 평가만 꺼지고 질의 서비스는 뜬다. `/v1/metrics`는 503 |
+
+**처리 흐름**: 라우터가 응답 뒤 `LiveRecorder.record`(BackgroundTask), `LiveJudgeWorker`가 대기열에서 꺼내 `JudgeService.judge`(1회), `LiveSignal.publish`, `metrics_router`가 `LiveMetricService.snapshot`(저장소에서 기록과 현재 Judge 버전의 판정, 기준선을 읽고 `build_snapshot`).
+
+**구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
 | `app/api/metrics_router.py` | api | `/v1/metrics`, `/v1/metrics/stream`, `/dashboard` |
-| `app/service/eval/eval_recorder.py` | service | 질의 기록 저장. 실패해도 응답에 영향 없음 |
-| `app/service/eval/judge_worker.py` | service | 큐, 샘플링, 예산 상한, 재시작 시 미채점 기록 재처리 |
-| `app/service/eval/metric_aggregator.py` | service | 누적 평균, Wilson 구간, 이동 창 |
-| `app/repository/eval_record_repository.py` | repository | PostgreSQL 기록과 판정 upsert |
+| `app/api/static/metrics_dashboard.html` | api | 대시보드 화면(외부 스크립트 없음, SVG 차트) |
+| `app/api/query_router.py` | api | 응답 뒤 기록(BackgroundTask) |
+| `app/service/live/live_builder.py` | service | 저장소, Judge, 작업자, 기록기, 집계 조립. 없으면 끈 채로 기동 |
+| `app/service/live/live_recorder.py` | service | 기록 저장, 대기열 추가, 변경 알림. 실패해도 응답에 영향 없음 |
+| `app/service/live/live_judge_worker.py` | service | 크기가 정해진 대기열, 샘플링(기록 id 해시), 예산 상한, 재시작 시 미채점 기록 재처리 |
+| `app/service/live/live_aggregator.py` | service | 누적 평균, Wilson 구간, 정규 근사 구간, 이동 창, 지점 솎기 |
+| `app/service/live/live_metric_service.py` | service | 저장소에서 기록, 판정, 기준선을 읽어 집계 |
+| `app/service/live/live_signal.py` | service | 변경 버전과 대기 |
+| `app/service/eval/pipeline_identity.py` | service | `config_id`(Gold Set 평가와 공유) |
+| `app/repository/eval_record_repository.py` | repository | `live_records`, `unjudged_live`, `live_judge_tokens`, `latest_gold_run`, `judgments_for` |
 
-**제약과 미구현**: 전부 미구현. Judge 신뢰성 기준을 통과한 항목만 대시보드에 올린다.
+**테스트**
+
+| 종류 | 파일 |
+|---|---|
+| 단위 | `tests/unit/test_live_eval_live_aggregator.py` |
+| 통합 | `tests/integ/test_live_eval.py`(두 엔드포인트 기록, 같은 요청 id 덮어쓰기, 기본 외 top_k 미기록, 채점과 캐시, 집계, 꺼졌을 때 503과 질의 정상) |
+
+**제약과 미구현**: 저장소 연결 하나를 요청 사이에 공유한다(psycopg가 순서대로 처리). Judge 작업자는 하나라 판정이 질의보다 느리면 대기열이 밀린다(넘치면 재시작 때 다시 꺼냄). 집계는 매번 최근 2,000개를 저장소에서 다시 읽는다. 예산은 저장된 판정의 토큰으로 세서 캐시에서 받은 판정도 비용으로 센다(실제보다 크게 잡힘). 실시간 질의에는 언어, 유형 라벨이 없다.
 
 ### query: 질의응답
 

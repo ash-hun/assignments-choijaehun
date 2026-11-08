@@ -72,6 +72,8 @@
 │   ├── api/request_middleware.py # 요청 ID, 처리 시간 로그
 │   ├── api/api_key_guard.py     # X-API-Key 의존성
 │   ├── api/error_mapper.py      # 예외를 HTTP 상태와 에러 본문으로 변환
+│   ├── api/metrics_router.py    # /v1/metrics, /v1/metrics/stream, /dashboard
+│   ├── api/static/metrics_dashboard.html # 실시간 평가 대시보드(외부 스크립트 없음)
 │   ├── cli/corpus_cli.py
 │   ├── cli/ingest_cli.py
 │   ├── cli/eval_cli.py          # gold-draft, gold-translate, gold-check 하위 명령
@@ -89,6 +91,7 @@
 │   │   ├── evidence_checker.py
 │   │   ├── prompt_builder.py
 │   │   └── citation_parser.py
+│   ├── service/live/            # 실시간 누적 평가: 기록기, 백그라운드 Judge 작업자, 집계, 변경 알림, 조립
 │   ├── service/eval/
 │   │   ├── eval_service.py      # 문항마다 실제 질의 경로(스트리밍)로 답을 받아 기록
 │   │   ├── eval_summarizer.py   # 언어별 지표 요약과 bootstrap 구간

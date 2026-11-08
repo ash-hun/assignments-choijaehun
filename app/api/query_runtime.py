@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.query.query_service import QueryService
+from app.service.live.live_builder import LiveEval
 from app.schema.vector_schema import IndexContract
 from app.common.settings import Settings
 
@@ -17,6 +18,7 @@ class QueryRuntime:
     repository: QdrantChunkRepository
     collection: str
     contract: IndexContract
+    live: LiveEval | None = None
 
 
 def get_runtime(request: Request) -> QueryRuntime:

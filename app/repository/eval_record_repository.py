@@ -89,3 +89,51 @@ class EvalRecordRepository:
             (run_id,),
         )
         return [JudgeResult.model_validate(row[0]) for row in await cursor.fetchall()]
+
+    async def judgments_for(self, record_ids: list[str]) -> list[JudgeResult]:
+        """기록 id 목록의 판정 전부. 기록, 종류, 표본 순."""
+        if not record_ids:
+            return []
+        cursor = await self._conn.execute(
+            "SELECT body FROM judge_result WHERE record_id = ANY(%s) ORDER BY record_id, kind, sample, prompt_version",
+            (record_ids,),
+        )
+        return [JudgeResult.model_validate(row[0]) for row in await cursor.fetchall()]
+
+    async def live_records(self, config_id: str, limit: int) -> list[EvalRecord]:
+        """구성 하나의 실시간 기록 중 최근 limit개를 오래된 것부터."""
+        cursor = await self._conn.execute(
+            "SELECT body FROM (SELECT body, created_at, record_id FROM eval_record WHERE source = 'live' AND config_id = %s "
+            "ORDER BY created_at DESC, record_id DESC LIMIT %s) recent ORDER BY created_at, record_id",
+            (config_id, limit),
+        )
+        return [EvalRecord.model_validate(row[0]) for row in await cursor.fetchall()]
+
+    async def unjudged_live(self, config_id: str, versions: list[str], limit: int) -> list[EvalRecord]:
+        """답했지만 주어진 프롬프트 버전들의 판정이 모두 있지는 않은 실시간 기록. 재시작 뒤 이어서 채점할 대상이다."""
+        cursor = await self._conn.execute(
+            "SELECT r.body FROM eval_record r WHERE r.source = 'live' AND r.config_id = %s AND r.status = 'answered' "
+            "AND (SELECT count(DISTINCT j.prompt_version) FROM judge_result j WHERE j.record_id = r.record_id AND j.ok "
+            "AND j.prompt_version = ANY(%s)) < cardinality(%s::text[]) ORDER BY r.created_at LIMIT %s",
+            (config_id, versions, versions, limit),
+        )
+        return [EvalRecord.model_validate(row[0]) for row in await cursor.fetchall()]
+
+    async def live_judge_tokens(self) -> tuple[int, int]:
+        """실시간 기록에 쓴 Judge 입력, 출력 토큰 합. 예산 상한을 재시작 뒤에도 이어서 센다."""
+        cursor = await self._conn.execute(
+            "SELECT coalesce(sum((j.body->>'input_tokens')::bigint), 0), coalesce(sum((j.body->>'output_tokens')::bigint), 0) "
+            "FROM judge_result j JOIN eval_record r ON r.record_id = j.record_id WHERE r.source = 'live'"
+        )
+        row = await cursor.fetchone()
+        return (int(row[0]), int(row[1])) if row else (0, 0)
+
+    async def latest_gold_run(self, config_id: str) -> str | None:
+        """같은 구성의 변형 없는 Gold Set 실행 중 가장 최근 것. 대시보드 기준선으로 쓴다."""
+        cursor = await self._conn.execute(
+            "SELECT run_id FROM eval_run WHERE config_id = %s AND coalesce(manifest->'config'->>'variant', 'none') = 'none' "
+            "ORDER BY updated_at DESC LIMIT 1",
+            (config_id,),
+        )
+        row = await cursor.fetchone()
+        return str(row[0]) if row else None

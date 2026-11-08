@@ -123,3 +123,26 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
     async def judgments(self, run_id: str) -> list[JudgeResult]:
         ids = {r.record_id for r in self.rows.values() if r.run_id == run_id}
         return [self.judged[k] for k in sorted(self.judged) if k[0] in ids]
+
+    async def judgments_for(self, record_ids: list[str]) -> list[JudgeResult]:
+        wanted = set(record_ids)
+        return [self.judged[k] for k in sorted(self.judged) if k[0] in wanted]
+
+    async def live_records(self, config_id: str, limit: int) -> list[EvalRecord]:
+        rows = [r for r in self.rows.values() if r.source == "live" and r.config_id == config_id]
+        return rows[-limit:]
+
+    async def unjudged_live(self, config_id: str, versions: list[str], limit: int) -> list[EvalRecord]:
+        done = {(k[0], k[4]) for k, v in self.judged.items() if v.ok}
+        rows = [r for r in self.rows.values() if r.source == "live" and r.config_id == config_id and r.status == "answered"
+                and not all((r.record_id, v) in done for v in versions)]
+        return rows[:limit]
+
+    async def live_judge_tokens(self) -> tuple[int, int]:
+        live = {r.record_id for r in self.rows.values() if r.source == "live"}
+        results = [v for k, v in self.judged.items() if k[0] in live]
+        return sum(r.input_tokens for r in results), sum(r.output_tokens for r in results)
+
+    async def latest_gold_run(self, config_id: str) -> str | None:
+        runs = [run_id for run_id, m in self.runs.items() if m.config_id == config_id and m.config.variant == "none"]
+        return runs[-1] if runs else None
