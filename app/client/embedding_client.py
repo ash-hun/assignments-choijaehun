@@ -40,6 +40,14 @@ class EmbeddingClient:
 
         fastembed의 token_count는 최대 입력에서 잘린 뒤의 수를 돌려줘 넘침을 볼 수 없어서, 잘림을 끈 사본으로 센다.
         """
+        return len(self._tokenizer().encode(self._document_prefix + text).ids)
+
+    def token_offsets(self, text: str) -> list[tuple[int, int]]:
+        """접두어 없이 토큰화한 각 토큰의 문자 위치(시작, 끝). 특수 토큰은 뺀다. 긴 문서를 한 번만 토큰화해 구간 길이를 셀 때 쓴다."""
+        encoding = self._tokenizer().encode(text, add_special_tokens=False)
+        return list(encoding.offsets)
+
+    def _tokenizer(self) -> Tokenizer:
         if self._counter is None:
             # ponytail: fastembed 내부 속성(model.tokenizer)에 기댄다. fastembed를 0.10 이상으로 올리면 확인.
             self._model.token_count("")
@@ -47,7 +55,7 @@ class EmbeddingClient:
             self._counter = Tokenizer.from_str(source.to_str())
             self._counter.no_truncation()
             self._counter.no_padding()
-        return len(self._counter.encode(self._document_prefix + text).ids)
+        return self._counter
 
     def _embed(self, texts: list[str]) -> np.ndarray:
         vectors = np.array(list(self._model.embed(texts, batch_size=self._batch_size)), dtype=np.float32)

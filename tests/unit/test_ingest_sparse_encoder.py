@@ -1,15 +1,15 @@
 """ingest 기능의 BM25 sparse 인코더(sparse_encoder) 단위 테스트."""
-from app.service.ingest.sparse_encoder import Bm25Encoder
+from app.service.ingest.sparse_encoder import SparseEncoder
 from app.common.text_tokenizer import TextTokenizer
 
 
-def encoder() -> Bm25Encoder:
-    return Bm25Encoder(TextTokenizer("word"))
+def encoder() -> SparseEncoder:
+    return SparseEncoder(TextTokenizer("word"))
 
 
 def test_documents_saturate_term_frequency_and_normalize_length() -> None:
     short, long = encoder().encode_documents(["cache cache", "cache " + "other " * 8])
-    cache = Bm25Encoder.hash_token("cache")
+    cache = SparseEncoder.hash_token("cache")
 
     weight_short = short.values[short.indices.index(cache)]
     weight_long = long.values[long.indices.index(cache)]

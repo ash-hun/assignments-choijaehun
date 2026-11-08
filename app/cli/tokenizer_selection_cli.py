@@ -14,7 +14,7 @@ from app.service.ingest.chunk_splitter import FixedLengthSplitter
 from app.common.text_tokenizer import SplitMode, TextTokenizer
 from app.service.ingest.document_loader import load_documents
 from app.service.eval.retrieval_metric import paired_against
-from app.service.ingest.sparse_encoder import Bm25Encoder
+from app.service.ingest.sparse_encoder import SparseEncoder
 from app.client.embedding_client import EmbeddingClient
 from app.common.settings import Settings, get_settings
 from app.schema.corpus_schema import CorpusManifest
@@ -87,7 +87,7 @@ async def compare_sparse(settings: Settings) -> list[SparseRun]:
     benchmark = TokenizerBenchmark(QdrantChunkRepository(AsyncQdrantClient(url=settings.qdrant_url, prefer_grpc=True, timeout=60)))
     runs: list[SparseRun] = []
     for tokenizer in SPARSE_CANDIDATES + [TextTokenizer(name) for name in ANALYZER_CANDIDATES]:
-        runs += await benchmark.run_sparse(Bm25Encoder(tokenizer), chunks, gold)
+        runs += await benchmark.run_sparse(SparseEncoder(tokenizer), chunks, gold)
     return runs
 
 

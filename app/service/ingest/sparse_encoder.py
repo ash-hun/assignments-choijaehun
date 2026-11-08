@@ -11,7 +11,7 @@ K1 = 1.2
 B = 0.75
 
 
-class Bm25Encoder:
+class SparseEncoder:
     """토큰을 crc32로 SPARSE_DIM 공간에 해시한다. 어휘 사전이 없어 질의 쪽이 Corpus 상태 없이 같은 index를 만든다."""
 
     def __init__(self, tokenizer: TextTokenizer, k1: float = K1, b: float = B) -> None:

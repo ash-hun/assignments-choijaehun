@@ -74,7 +74,7 @@ Ingest를 질의 요청 경로 밖에서 돌리는 이유: 질의마다 정제�
 | 3 | 데이터베이스 선정 | 임시 임베딩, 고정 길이 청크 | 기능 통과 여부(sparse 적재 포함), ANN 재현율, 지연, 메모리 | `research/database_selection.md` |
 | 4 | Embedding 선정 | DB, 고정 문자 길이 청크, dense 검색 | 근거 단위 Hit@5, MRR | `research/embedding_selection.md` |
 | 5 | 토크나이저 선정 | DB, 임베딩, 고정 길이 청크 | 목표 토큰 초과 비율, BM25 Hit@5 | `research/tokenizer_selection.md`(확정: 길이는 Qwen3 토큰, BM25는 `word`) |
-| 6 | Chunking 전략 선정 | DB, 임베딩, 토크나이저. 크기 상한은 임베딩 최대 입력 | Hit@5, 근거 보존율, 근거 토큰 수 | `research/chunking_selection.md` |
+| 6 | Chunking 전략 선정 | DB, 임베딩, 토크나이저. 크기 상한은 임베딩 최대 입력 | Hit@5, 근거 보존율, 근거 토큰 수 | `research/chunking_selection.md`(확정: 문서 구조 분할, 512 Qwen3 토큰, 겹침 15%. 근거 보존@k 추가) |
 | 7 | Embedding 교차 확인 | 확정된 Chunking | 상위 2개의 Hit@5 순위 유지 여부 | `research/embedding_selection.md`에 추가 |
 | 8 | 프롬프트, 인용 파서, 거절 판정 구현과 임계값 보정 | 확정된 검색 전체 | 답 있음/답 없음 문항의 dense 최고 점수 분포 | `research/refusal_threshold.md` |
 | 9 | LLM 선정 | 검색 결과, 프롬프트, 임계값 | 인용 형식 준수율, 거절률, 비용, 첫 토큰 지연 | `research/llm_selection.md` |
@@ -165,9 +165,9 @@ sparse 적재를 통과 조건으로 두는 이유: BM25 토크나이저는 5단
 | 항목 | 내용 |
 |---|---|
 | 질문 | 어떤 분할 방식과 크기가 근거를 끊지 않으면서 검색 정확도가 가장 높은가 |
-| 분할 방식 후보 | 고정 길이(겹침 포함), 재귀 분할(문단, 문장 순), 문서 구조 기반(제목 계층 단위, 길이 상한 초과 시 재귀 분할) |
+| 분할 방식 후보 | 고정 길이(겹침 포함), 슬라이딩 윈도우(창을 절반씩 미는 겹침 50%), 재귀 분할(문단, 문장 순), 문서 구조 기반(제목 계층 단위, 길이 상한 초과 시 재귀 분할), 시맨틱(이웃 문장 임베딩 거리가 문서 안 95 백분위를 넘는 곳에서 분할) |
 | 크기와 겹침 후보 | 크기 256, 512, 1024(Qwen3 토크나이저 토큰. 5단계 결정) 중 선정 임베딩 최대 입력 이하인 것만. 겹침 0%, 15% |
-| 조합 통제 | 방식 3개를 크기 512(상한이 더 작으면 상한값), 겹침 15%로 먼저 비교하고, 1위 방식만 크기와 겹침을 바꾼다. 전체 격자를 돌리지 않는다 |
+| 조합 통제 | 방식 5개를 크기 512(상한이 더 작으면 상한값), 겹침 15%(슬라이딩은 50%)로 먼저 비교하고, 1위 방식만 크기와 겹침을 바꾼다. 슬라이딩은 겹침이 방식의 정의라 겹침 후보를 25%, 50%로 둔다. 전체 격자를 돌리지 않는다 |
 | 지표 | 근거 단위 Hit@5, MRR. 근거 보존율(gold_evidence 구절이 한 청크 안에 온전히 들어간 문항 비율). 청크 수, 평균 길이. 질의당 LLM에 넣는 근거 토큰 수 |
 | 판정 | Hit@5 우선, 신뢰구간 안이면 근거 보존율, 그다음 근거 토큰 수가 적은 쪽 |
 
@@ -296,12 +296,29 @@ Response { status: "answered" | "insufficient_context",
 | Metric | 방식 | 선정 이유 | 맹점 |
 |---|---|---|---|
 | Retrieval Hit@k | 규칙 기반. top-k 청크에 gold_evidence 구절이 들어 있는지(문서 단위 Recall은 보조) | 생성 실패와 검색 실패를 분리 | 근거가 여러 구절에 흩어진 다중 문서 문항은 부분 일치 처리가 필요 |
+| Retrieval Recall, Precision, F1, MRR, nDCG | 규칙 기반. 같은 관련 청크 판정으로 Recall@k, Precision@k, F1@k(k는 5, 10), MRR@10, nDCG@10 | 근거 누락(Recall), 문맥 잡음(Precision), 순위 품질(MRR, nDCG)을 나눠 봄 | 근거가 한 구절인 문항은 Precision 상한이 낮다(Precision@5 최대 0.2). 겹침이 큰 Chunking은 관련 청크 수가 늘어 Precision, nDCG가 부푼다 |
 | Faithfulness | Judge. 답변의 주장을 나누고 각 주장이 인용 근거로 뒷받침되는지 판정 | Hallucination을 직접 측정 | Judge가 근거를 잘못 읽으면 같이 틀림 |
 | Answer Correctness | Judge. acceptance_criteria 충족 여부를 요점 단위로 판정 | 근거에 충실해도 질문에 답하지 못한 경우를 잡음 | 기준 작성 품질에 의존 |
 | Refusal Accuracy | 규칙 기반. 답 없는 문항에서 거절, 답 있는 문항에서 응답 | 거절 로직의 과소, 과잉을 함께 봄 | 부분적으로 답할 수 있는 문항은 판정 모호 |
 | Citation Precision | Judge. 인용한 chunk가 해당 문장을 실제로 뒷받침하는지 | 원문 필수 요구인 Citation의 품질 | Faithfulness와 상관이 높을 수 있음 |
+| uv 문서 루브릭 점수 | Judge. uv 문서 전용 8항목을 통과, 실패, 해당 없음으로 판정하고 (통과 수 / 해당 항목 수)로 집계 | 일반 지표가 놓치는 uv 특유의 오류(명령 혼동, 식별자 철자, 낡은 동작)를 직접 잡음 | 항목 정의가 이 Corpus에 묶여 다른 Corpus로 옮길 수 없다. Answer Correctness, Faithfulness와 겹치는 항목이 있다 |
 
 검색, 생성, 거절을 각각 다른 지표로 분리해야 Part C에서 원인을 짚을 수 있다. 타당성 검증에서 떨어지지 않는 지표, 다른 지표와 거의 같은 값을 내는 지표는 제외한다.
+
+### 성능 평가 실험(10, 11단계)
+
+선정 실험(1~9단계)이 dev set으로 구성 요소를 고른다면, 이 두 실험은 고른 구성의 성능을 test set으로 잰다. 같은 측정을 Part C의 Baseline과 개선안 비교에 그대로 쓴다. 지표 정의와 루브릭 전문은 `project_planning/experiments/README.md`에 있다.
+
+| 항목 | 10. 검색 성능 평가 | 11. 생성 성능 평가 |
+|---|---|---|
+| 질문 | 확정한 검색 구성이 필요한 근거를 빠짐없이, 잡음 적게, 위쪽 순위로 가져오는가 | 확정한 전체 파이프라인의 답이 근거에 충실하고 uv 문서 기준으로 정확한가 |
+| 입력 | test set 답 있는 문항(영어, 한국어) | test set 전체 문항(답 없는 문항 포함) |
+| 지표 | Recall@k, Precision@k, F1@k(k는 5, 10), MRR@10, nDCG@10 | Faithfulness, Answer Correctness, Refusal Accuracy, Citation Precision, uv 문서 루브릭 점수 |
+| 판정 방식 | 규칙 기반(근거 구절 60자 창 일치) | Judge(생성 모델과 다른 계열, 3회 다수결) |
+| 보고 | 언어별, 문항 유형별 값과 bootstrap 95% 구간 | 항목별 통과율, 문항 점수 분포, 유형별 값, Judge 3회 일치율 |
+| 산출물 | `reports/<run_id>/`의 검색 지표 | `reports/<run_id>/`의 생성 지표, `research/gold_metric_selection.md`의 루브릭 검증 |
+
+uv 문서 루브릭 항목(초안, 파일럿에서 수정): 핵심 요점(acceptance_criteria), 명령 정확성, 식별자 정확성(플래그, `UV_*` 환경변수, `tool.uv.*` 설정 키, 파일 이름), 인터페이스 구분(`uv add`, `uv sync`와 `uv pip`), 버전과 기능 상태(preview, experimental, deprecated), 사전 지식 배제(pip, poetry 지식을 uv 동작처럼 말하지 않음), 인용 정합성, 거절 적절성.
 
 ### Judge 신뢰성 확보
 
@@ -330,7 +347,7 @@ Response { status: "answered" | "insufficient_context",
 
 - 가설: Dense 단독 검색에 BM25 Sparse 검색을 RRF로 결합하면 고유명사, 설정 키, 버전 번호가 들어간 질의에서 Recall@k가 오르고, 그 결과 Answer Correctness가 오른다. Faithfulness는 유지된다
 - 근거: Dense 임베딩은 의미 유사도에 강하고 정확한 토큰 일치에 약하다. 함정 유형 문항이 이 약점을 겨냥한다
-- 측정: Baseline과 Hybrid를 test set, 같은 seed로 실행. 전체와 유형별 지표, paired bootstrap 95% 신뢰구간, 지연시간과 비용 함께 비교
+- 측정: Baseline과 Hybrid를 test set, 같은 seed로 실행. 10단계 검색 지표와 11단계 생성 지표를 전체와 유형별로, paired bootstrap 95% 신뢰구간, 지연시간과 비용과 함께 비교
 
 ### 예비 가설
 
@@ -364,15 +381,17 @@ README의 Part C 절에 Hypothesis, Result(표와 그래프), Analysis(유형별
 | 15 | Part A | Streaming(SSE) |
 | 16 | Part B | Gold Set 및 Metric 조사, 파일럿, 타당성 검증 |
 | 17 | Part B | test set 확정, Eval Runner, Judge Metric, Report |
-| 18 | Part B | Judge 일관성과 Human Alignment 측정 |
-| 19 | Part C | Hybrid 실험과 분석 |
-| 20 | 문서 | README 전체, 한계와 향후 과제(증분 Ingest API 포함), CI 설계 논의 |
+| 18 | Part B | 검색 성능 평가(Recall, Precision, F1, MRR, nDCG) |
+| 19 | Part B | 생성 성능 평가(공통 지표와 uv 문서 루브릭) |
+| 20 | Part B | Judge 일관성과 Human Alignment 측정(루브릭 항목별 kappa 포함) |
+| 21 | Part C | Hybrid 실험과 분석 |
+| 22 | 문서 | README 전체, 한계와 향후 과제(증분 Ingest API 포함), CI 설계 논의 |
 
 ## 비용 추정(추정치, 모델 가격 확인 후 갱신)
 
 - Embedding: 50~100페이지 분량은 수십만 토큰 수준. 후보 2~3개를 각각 색인해도 소액 예상
 - 선정 실험: dev set 38문항 × 생성 후보 2~3개 + closed-book 검증. 수천 원 수준 예상
-- 평가 1회: test set 40문항 × (생성 1회 + Judge 3종) ≈ 160회 호출
+- 평가 1회: test set 40문항 × (생성 1회 + 공통 Judge 지표 3종 + uv 문서 루브릭 Judge 3회) ≈ 280회 호출(추정). 검색 성능 평가는 LLM을 부르지 않는다
 - 전체 1만~2만원 내외 예상. 캐시로 재실행 비용 제거
 - GPU 인스턴스는 쓰지 않는다. 오픈소스 Embedding 후보는 CPU로 로컬 실행
 
