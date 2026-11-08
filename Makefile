@@ -1,4 +1,4 @@
-.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check tok-bench chunk-bench test typecheck
+.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -54,6 +54,12 @@ embed-bench:
 embed-check:
 	docker compose --profile dbbench up -d qdrant
 	$(BATCH) app.cli.embedding_crosscheck_cli
+	docker compose --profile dbbench stop qdrant
+
+# 확정 구성으로 dev set 전 문항의 dense 최고 점수를 재고 거절 임계값을 고른다(선정 실험 8단계). CPU에서 약 6분.
+refusal-calib:
+	docker compose --profile dbbench up -d qdrant
+	$(BATCH) app.cli.refusal_calibration_cli
 	docker compose --profile dbbench stop qdrant
 
 tok-bench:

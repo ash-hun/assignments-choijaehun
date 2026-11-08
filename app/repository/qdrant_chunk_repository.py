@@ -63,11 +63,17 @@ class QdrantChunkRepository:
 
     async def search_dense(self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None) -> list[str]:
         """코사인 유사도 상위 k개 chunk_id. exact면 HNSW를 거치지 않고 전수 비교한다."""
+        return [chunk_id for chunk_id, _ in await self.search_dense_scored(name, vector, k, exact, doc_id)]
+
+    async def search_dense_scored(
+        self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None,
+    ) -> list[tuple[str, float]]:
+        """상위 k개 (chunk_id, 코사인 유사도). 거절 판정은 검색 방식과 상관없이 이 dense 점수를 쓴다."""
         result = await self._client.query_points(
             name, query=vector.tolist(), using=DENSE, limit=k, with_payload=["chunk_id"],
             search_params=qm.SearchParams(exact=exact), query_filter=_doc_filter(doc_id),
         )
-        return [str((p.payload or {})["chunk_id"]) for p in result.points]
+        return [(str((p.payload or {})["chunk_id"]), float(p.score)) for p in result.points]
 
     async def search_sparse(self, name: str, sparse: SparseTerms, k: int) -> list[str]:
         """sparse 내적(IDF 가중) 상위 k개 chunk_id."""
