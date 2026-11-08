@@ -1,0 +1,50 @@
+[
+  {
+    "model": "claude-haiku-5-5",
+    "language": "en",
+    "generated": 34,
+    "format_compliance": 1.0,
+    "dropped_citation_rate": 0.0,
+    "answerable_false_refusal": 0.0333,
+    "unanswerable_refusal": 1.0,
+    "cost_krw_per_item": 0.7881,
+    "latency_ms_mean": 3246.0,
+    "latency_ms_p95": 5536.9
+  },
+  {
+    "model": "claude-haiku-5-5",
+    "language": "ko",
+    "generated": 33,
+    "format_compliance": 1.0,
+    "dropped_citation_rate": 0.0,
+    "answerable_false_refusal": 0.0,
+    "unanswerable_refusal": 1.0,
+    "cost_krw_per_item": 0.9424,
+    "latency_ms_mean": 3689.4,
+    "latency_ms_p95": 6743.4
+  },
+  {
+    "model": "gemini-3.8-flash",
+    "language": "en",
+    "generated": 34,
+    "format_compliance": 1.0,
+    "dropped_citation_rate": 0.0,
+    "answerable_false_refusal": 0.1,
+    "unanswerable_refusal": 1.0,
+    "cost_krw_per_item": 4.5267,
+    "latency_ms_mean": 5800.9,
+    "latency_ms_p95": 11526.2
+  },
+  {
+    "model": "gemini-3.8-flash",
+    "language": "ko",
+    "generated": 33,
+    "format_compliance": 1.0,
+    "dropped_citation_rate": 0.0,
+    "answerable_false_refusal": 0.1333,
+    "unanswerable_refusal": 1.0,
+    "cost_krw_per_item": 4.8628,
+    "latency_ms_mean": 5932.4,
+    "latency_ms_p95": 10910.5
+  }
+]
