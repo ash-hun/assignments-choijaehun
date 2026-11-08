@@ -1,0 +1,182 @@
+[
+  {
+    "language": "en",
+    "best": "kiwi",
+    "tokenizer": "whitespace",
+    "hit_at_5_diff": {
+      "mean": 0.1,
+      "ci_low": 0.0,
+      "ci_high": 0.2333
+    },
+    "mrr_diff": {
+      "mean": 0.0569,
+      "ci_low": 0.0158,
+      "ci_high": 0.1108
+    }
+  },
+  {
+    "language": "en",
+    "best": "kiwi",
+    "tokenizer": "word",
+    "hit_at_5_diff": {
+      "mean": 0.0333,
+      "ci_low": 0.0,
+      "ci_high": 0.1
+    },
+    "mrr_diff": {
+      "mean": 0.0397,
+      "ci_low": 0.0017,
+      "ci_high": 0.0897
+    }
+  },
+  {
+    "language": "en",
+    "best": "kiwi",
+    "tokenizer": "word+stem",
+    "hit_at_5_diff": {
+      "mean": 0.0667,
+      "ci_low": -0.0667,
+      "ci_high": 0.2
+    },
+    "mrr_diff": {
+      "mean": 0.0619,
+      "ci_low": -0.0139,
+      "ci_high": 0.1577
+    }
+  },
+  {
+    "language": "en",
+    "best": "kiwi",
+    "tokenizer": "word+stem+ident",
+    "hit_at_5_diff": {
+      "mean": 0.0667,
+      "ci_low": -0.0667,
+      "ci_high": 0.2
+    },
+    "mrr_diff": {
+      "mean": 0.0541,
+      "ci_low": -0.0131,
+      "ci_high": 0.1313
+    }
+  },
+  {
+    "language": "en",
+    "best": "kiwi",
+    "tokenizer": "okt",
+    "hit_at_5_diff": {
+      "mean": 0.0333,
+      "ci_low": 0.0,
+      "ci_high": 0.1
+    },
+    "mrr_diff": {
+      "mean": 0.0175,
+      "ci_low": -0.0056,
+      "ci_high": 0.0538
+    }
+  },
+  {
+    "language": "en",
+    "best": "kiwi",
+    "tokenizer": "kkma",
+    "hit_at_5_diff": {
+      "mean": 0.1,
+      "ci_low": 0.0,
+      "ci_high": 0.2333
+    },
+    "mrr_diff": {
+      "mean": 0.0328,
+      "ci_low": 0.0044,
+      "ci_high": 0.0733
+    }
+  },
+  {
+    "language": "ko",
+    "best": "word+stem+ident",
+    "tokenizer": "whitespace",
+    "hit_at_5_diff": {
+      "mean": 0.2,
+      "ci_low": 0.0333,
+      "ci_high": 0.4
+    },
+    "mrr_diff": {
+      "mean": 0.2523,
+      "ci_low": 0.0978,
+      "ci_high": 0.4293
+    }
+  },
+  {
+    "language": "ko",
+    "best": "word+stem+ident",
+    "tokenizer": "word",
+    "hit_at_5_diff": {
+      "mean": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+    },
+    "mrr_diff": {
+      "mean": 0.0148,
+      "ci_low": -0.0185,
+      "ci_high": 0.0667
+    }
+  },
+  {
+    "language": "ko",
+    "best": "word+stem+ident",
+    "tokenizer": "word+stem",
+    "hit_at_5_diff": {
+      "mean": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+    },
+    "mrr_diff": {
+      "mean": 0.0333,
+      "ci_low": -0.0111,
+      "ci_high": 0.0944
+    }
+  },
+  {
+    "language": "ko",
+    "best": "word+stem+ident",
+    "tokenizer": "kiwi",
+    "hit_at_5_diff": {
+      "mean": 0.0667,
+      "ci_low": 0.0,
+      "ci_high": 0.1667
+    },
+    "mrr_diff": {
+      "mean": 0.0681,
+      "ci_low": 0.0037,
+      "ci_high": 0.1633
+    }
+  },
+  {
+    "language": "ko",
+    "best": "word+stem+ident",
+    "tokenizer": "okt",
+    "hit_at_5_diff": {
+      "mean": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+    },
+    "mrr_diff": {
+      "mean": 0.0259,
+      "ci_low": 0.0,
+      "ci_high": 0.0741
+    }
+  },
+  {
+    "language": "ko",
+    "best": "word+stem+ident",
+    "tokenizer": "kkma",
+    "hit_at_5_diff": {
+      "mean": 0.1,
+      "ci_low": 0.0,
+      "ci_high": 0.2333
+    },
+    "mrr_diff": {
+      "mean": 0.0889,
+      "ci_low": 0.0046,
+      "ci_high": 0.2009
+    }
+  }
+]

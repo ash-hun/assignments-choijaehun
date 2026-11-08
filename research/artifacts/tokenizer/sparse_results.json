@@ -1,0 +1,590 @@
+[
+  {
+    "tokenizer": "whitespace",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.8667,
+      "ci_low": 0.7333,
+      "ci_high": 0.9667
+    },
+    "hit_at_10": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7747,
+      "ci_low": 0.6397,
+      "ci_high": 0.8917
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.8833,
+      "ci_low": 0.7778,
+      "ci_high": 0.9722
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 0.75,
+      "summary": 0.8,
+      "trap": 1.0
+    },
+    "vocabulary": 5984,
+    "hash_collisions": 13,
+    "tokenize_ms_per_1k_chunks": 9.7,
+    "query_token_coverage": 0.9705,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "whitespace",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.3667,
+      "ci_low": 0.2,
+      "ci_high": 0.5333
+    },
+    "hit_at_10": {
+      "mean": 0.4333,
+      "ci_low": 0.2667,
+      "ci_high": 0.6
+    },
+    "mrr_at_10": {
+      "mean": 0.2581,
+      "ci_low": 0.1284,
+      "ci_high": 0.3978
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.3722,
+      "ci_low": 0.2167,
+      "ci_high": 0.5389
+    },
+    "doc_recall_at_5": {
+      "mean": 0.5,
+      "ci_low": 0.3333,
+      "ci_high": 0.6667
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.3333,
+      "multi_doc": 0.625,
+      "summary": 0.0,
+      "trap": 0.4
+    },
+    "vocabulary": 5984,
+    "hash_collisions": 13,
+    "tokenize_ms_per_1k_chunks": 9.7,
+    "query_token_coverage": 0.0938,
+    "hangul_query_tokens": 390,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "word",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.792,
+      "ci_low": 0.6662,
+      "ci_high": 0.9028
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.9278,
+      "ci_low": 0.8389,
+      "ci_high": 0.9889
+    },
+    "doc_recall_at_5": {
+      "mean": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 0.875,
+      "summary": 1.0,
+      "trap": 1.0
+    },
+    "vocabulary": 4071,
+    "hash_collisions": 6,
+    "tokenize_ms_per_1k_chunks": 13.9,
+    "query_token_coverage": 0.9891,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "word",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.5667,
+      "ci_low": 0.4,
+      "ci_high": 0.7333
+    },
+    "hit_at_10": {
+      "mean": 0.6333,
+      "ci_low": 0.4667,
+      "ci_high": 0.8
+    },
+    "mrr_at_10": {
+      "mean": 0.4956,
+      "ci_low": 0.3344,
+      "ci_high": 0.6556
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.5778,
+      "ci_low": 0.4111,
+      "ci_high": 0.7389
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6667,
+      "ci_low": 0.5,
+      "ci_high": 0.8333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.5,
+      "multi_doc": 0.75,
+      "summary": 0.2,
+      "trap": 0.8
+    },
+    "vocabulary": 4071,
+    "hash_collisions": 6,
+    "tokenize_ms_per_1k_chunks": 13.9,
+    "query_token_coverage": 0.1974,
+    "hangul_query_tokens": 435,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "word+stem",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7698,
+      "ci_low": 0.6372,
+      "ci_high": 0.8817
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.9028,
+      "ci_low": 0.8194,
+      "ci_high": 0.9667
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 1.0,
+      "multi_doc": 1.0,
+      "summary": 0.4,
+      "trap": 1.0
+    },
+    "vocabulary": 2920,
+    "hash_collisions": 5,
+    "tokenize_ms_per_1k_chunks": 1268.2,
+    "query_token_coverage": 0.9922,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "word+stem",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.5667,
+      "ci_low": 0.4,
+      "ci_high": 0.7333
+    },
+    "hit_at_10": {
+      "mean": 0.6333,
+      "ci_low": 0.4667,
+      "ci_high": 0.8
+    },
+    "mrr_at_10": {
+      "mean": 0.477,
+      "ci_low": 0.3196,
+      "ci_high": 0.637
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.5778,
+      "ci_low": 0.4111,
+      "ci_high": 0.7389
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6667,
+      "ci_low": 0.5,
+      "ci_high": 0.8333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.5,
+      "multi_doc": 0.75,
+      "summary": 0.2,
+      "trap": 0.8
+    },
+    "vocabulary": 2920,
+    "hash_collisions": 5,
+    "tokenize_ms_per_1k_chunks": 1268.2,
+    "query_token_coverage": 0.1974,
+    "hangul_query_tokens": 435,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "word+stem+ident",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9,
+      "ci_low": 0.7667,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7776,
+      "ci_low": 0.6401,
+      "ci_high": 0.8956
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.9194,
+      "ci_low": 0.8389,
+      "ci_high": 0.9806
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 1.0,
+      "multi_doc": 1.0,
+      "summary": 0.4,
+      "trap": 1.0
+    },
+    "vocabulary": 4767,
+    "hash_collisions": 9,
+    "tokenize_ms_per_1k_chunks": 1307.5,
+    "query_token_coverage": 0.9925,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "word+stem+ident",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.5667,
+      "ci_low": 0.4,
+      "ci_high": 0.7333
+    },
+    "hit_at_10": {
+      "mean": 0.6333,
+      "ci_low": 0.4667,
+      "ci_high": 0.8
+    },
+    "mrr_at_10": {
+      "mean": 0.5104,
+      "ci_low": 0.34,
+      "ci_high": 0.6789
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.5778,
+      "ci_low": 0.4111,
+      "ci_high": 0.7389
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6667,
+      "ci_low": 0.5,
+      "ci_high": 0.8333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.5,
+      "multi_doc": 0.75,
+      "summary": 0.2,
+      "trap": 0.8
+    },
+    "vocabulary": 4767,
+    "hash_collisions": 9,
+    "tokenize_ms_per_1k_chunks": 1307.5,
+    "query_token_coverage": 0.219,
+    "hangul_query_tokens": 435,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "kiwi",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.8317,
+      "ci_low": 0.7133,
+      "ci_high": 0.9333
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.9,
+      "ci_low": 0.8056,
+      "ci_high": 0.9778
+    },
+    "doc_recall_at_5": {
+      "mean": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 1.0,
+      "multi_doc": 0.875,
+      "summary": 1.0,
+      "trap": 1.0
+    },
+    "vocabulary": 5335,
+    "hash_collisions": 9,
+    "tokenize_ms_per_1k_chunks": 1364.6,
+    "query_token_coverage": 0.9876,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "kiwi",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.5,
+      "ci_low": 0.3333,
+      "ci_high": 0.6667
+    },
+    "hit_at_10": {
+      "mean": 0.6,
+      "ci_low": 0.4333,
+      "ci_high": 0.7667
+    },
+    "mrr_at_10": {
+      "mean": 0.4422,
+      "ci_low": 0.2889,
+      "ci_high": 0.6011
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.5444,
+      "ci_low": 0.3833,
+      "ci_high": 0.7056
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6,
+      "ci_low": 0.4333,
+      "ci_high": 0.7667
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.4167,
+      "multi_doc": 0.625,
+      "summary": 0.2,
+      "trap": 0.8
+    },
+    "vocabulary": 5335,
+    "hash_collisions": 9,
+    "tokenize_ms_per_1k_chunks": 1364.6,
+    "query_token_coverage": 0.1123,
+    "hangul_query_tokens": 816,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "okt",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "hit_at_10": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.8142,
+      "ci_low": 0.694,
+      "ci_high": 0.9222
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.9278,
+      "ci_low": 0.8389,
+      "ci_high": 0.9889
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9667,
+      "ci_low": 0.9,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 0.875,
+      "summary": 1.0,
+      "trap": 1.0
+    },
+    "vocabulary": 4150,
+    "hash_collisions": 7,
+    "tokenize_ms_per_1k_chunks": 1471.1,
+    "query_token_coverage": 0.989,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "okt",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.5667,
+      "ci_low": 0.4,
+      "ci_high": 0.7333
+    },
+    "hit_at_10": {
+      "mean": 0.6,
+      "ci_low": 0.4333,
+      "ci_high": 0.7667
+    },
+    "mrr_at_10": {
+      "mean": 0.4844,
+      "ci_low": 0.3222,
+      "ci_high": 0.65
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.5444,
+      "ci_low": 0.3778,
+      "ci_high": 0.7111
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6667,
+      "ci_low": 0.5,
+      "ci_high": 0.8333
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.5,
+      "multi_doc": 0.75,
+      "summary": 0.2,
+      "trap": 0.8
+    },
+    "vocabulary": 4150,
+    "hash_collisions": 7,
+    "tokenize_ms_per_1k_chunks": 1471.1,
+    "query_token_coverage": 0.1331,
+    "hangul_query_tokens": 658,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "kkma",
+    "language": "en",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.8667,
+      "ci_low": 0.7333,
+      "ci_high": 0.9667
+    },
+    "hit_at_10": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "mrr_at_10": {
+      "mean": 0.7989,
+      "ci_low": 0.6689,
+      "ci_high": 0.9167
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.8833,
+      "ci_low": 0.7778,
+      "ci_high": 0.9722
+    },
+    "doc_recall_at_5": {
+      "mean": 0.9333,
+      "ci_low": 0.8333,
+      "ci_high": 1.0
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.9167,
+      "multi_doc": 0.75,
+      "summary": 0.8,
+      "trap": 1.0
+    },
+    "vocabulary": 4730,
+    "hash_collisions": 6,
+    "tokenize_ms_per_1k_chunks": 3469.3,
+    "query_token_coverage": 0.9889,
+    "hangul_query_tokens": 0,
+    "hangul_tokens_in_corpus": 0
+  },
+  {
+    "tokenizer": "kkma",
+    "language": "ko",
+    "questions": 30,
+    "hit_at_5": {
+      "mean": 0.4667,
+      "ci_low": 0.3,
+      "ci_high": 0.6333
+    },
+    "hit_at_10": {
+      "mean": 0.6,
+      "ci_low": 0.4333,
+      "ci_high": 0.7667
+    },
+    "mrr_at_10": {
+      "mean": 0.4214,
+      "ci_low": 0.2659,
+      "ci_high": 0.581
+    },
+    "evidence_recall_at_10": {
+      "mean": 0.5444,
+      "ci_low": 0.3778,
+      "ci_high": 0.7111
+    },
+    "doc_recall_at_5": {
+      "mean": 0.6333,
+      "ci_low": 0.4667,
+      "ci_high": 0.8
+    },
+    "by_type_hit_at_5": {
+      "factual": 0.4167,
+      "multi_doc": 0.5,
+      "summary": 0.2,
+      "trap": 0.8
+    },
+    "vocabulary": 4730,
+    "hash_collisions": 6,
+    "tokenize_ms_per_1k_chunks": 3469.3,
+    "query_token_coverage": 0.1087,
+    "hangul_query_tokens": 814,
+    "hangul_tokens_in_corpus": 0
+  }
+]
