@@ -171,7 +171,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 | `chunk_splitter` 분할 방식, 크기, 겹침 | Chunking 전략(확정: `structure-512-77`, 문서 구조 분할, 512 Qwen3 토큰, 겹침 77토큰) |
 | `chunk_repository` 구현, compose 벡터 DB 서비스, 컬렉션 명명 방식 | 데이터베이스(확정: Qdrant, `app/repository/qdrant_chunk_repository.py`) |
 | `embedding_client` 모델과 호출 방식(API 또는 로컬) | Embedding(확정: Qwen3-Embedding-0.6B, 로컬 fastembed. 교차 확인에서 2위 multilingual-e5-large보다 근거 보존@5가 높음) |
-| `llm_client` 생성 모델 | LLM |
-| `llm_client` Judge 모델 | Gold Set 및 Metric(Part B) |
+| `llm_client` 생성 모델 | LLM(확정: claude-haiku-5-5, 엘리스 ML API Serverless, temperature 0, seed 미지원) |
+| `llm_client` Judge 모델 | Gold Set 및 Metric(Part B). 생성 모델과 다른 계열이라 Anthropic 계열 제외 |
 | `judge_metric` 지표 목록과 루브릭 | Gold Set 및 Metric |
 | `evidence_checker` 임계값 | 거절 임계값 보정(확정: 0.6375, Qwen3와 `structure-512-77` 기준) |

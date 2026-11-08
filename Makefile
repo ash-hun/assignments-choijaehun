@@ -1,4 +1,4 @@
-.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib tok-bench chunk-bench test typecheck
+.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -60,6 +60,13 @@ embed-check:
 refusal-calib:
 	docker compose --profile dbbench up -d qdrant
 	$(BATCH) app.cli.refusal_calibration_cli
+	docker compose --profile dbbench stop qdrant
+
+# 확정 검색 구성의 근거로 LLM 후보마다 dev set 답을 받는다(선정 실험 9단계). 엘리스 ML API를 호출해 비용이 든다.
+# 응답은 research/artifacts/llm_selection/responses.jsonl에 캐시돼 다시 돌리면 API를 부르지 않는다.
+llm-bench:
+	docker compose --profile dbbench up -d qdrant
+	$(BATCH) app.cli.llm_selection_cli
 	docker compose --profile dbbench stop qdrant
 
 tok-bench:

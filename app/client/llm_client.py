@@ -41,12 +41,12 @@ class LlmClient:
     async def complete(
         self,
         messages: list[ChatMessage],
-        seed: int,
+        seed: int | None,
         max_completion_tokens: int,
         temperature: float | None = None,
         json_schema: dict[str, Any] | None = None,
     ) -> LlmCompletion:
-        """비스트리밍 채팅 호출. temperature가 None이면 모델 기본값을 쓴다. json_schema가 있으면 구조화 출력을 강제한다."""
+        """비스트리밍 채팅 호출. seed나 temperature가 None이면 보내지 않는다(모델마다 거부하는 인자가 다르다). json_schema가 있으면 구조화 출력을 강제한다."""
         response_format = (
             {"type": "json_schema", "json_schema": {"name": "output", "schema": json_schema, "strict": True}}
             if json_schema
@@ -55,7 +55,7 @@ class LlmClient:
         response = await self._sdk.chat.completions.create(
             model=self._model,
             messages=cast(list[ChatCompletionMessageParam], [m.model_dump() for m in messages]),
-            seed=seed,
+            seed=omit if seed is None else seed,
             max_completion_tokens=max_completion_tokens,
             temperature=omit if temperature is None else temperature,
             response_format=omit if response_format is None else cast(ResponseFormatJSONSchema, response_format),
