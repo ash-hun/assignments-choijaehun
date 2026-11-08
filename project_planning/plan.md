@@ -212,7 +212,7 @@ Judge 모델은 Part B에서 Judge 신뢰성 측정과 함께 고른다.
 | 조사 | 기존 RAG 평가 체계(RAGAS, ARES, RAGChecker, TruLens 등)의 지표 정의와 판정 방식 조사. 채택, 변형, 미채택 항목과 이유 기록 |
 | Gold Set 설계 | 유형 분포, 필드 구조, 구축 방법, dev/test 분리 규칙 확정 |
 | 파일럿 | test set 10문항으로 지표 전체를 먼저 돌려 판정 불가, 모호 사례 수집 후 루브릭 수정 |
-| 지표 타당성 검증 | 의도적으로 망가뜨린 시스템에서 지표가 실제로 떨어지는지 확인. 검색 결과를 무작위 청크로 바꾸면 Recall과 루브릭 핵심 요점이 떨어져야 하고, 거절 로직을 끄면 Refusal Accuracy가 떨어져야 한다. 떨어지지 않는 지표는 측정하려는 것을 측정하지 못하는 것으로 보고 재설계 |
+| 지표 타당성 검증 | 의도적으로 망가뜨린 시스템에서 지표가 실제로 떨어지는지 확인. 검색 결과를 무작위 청크로 바꾸면 Recall과 uv 답변 정확성이 떨어져야 하고, 거절 로직을 끄면 Refusal Accuracy가 떨어져야 한다. 떨어지지 않는 지표는 측정하려는 것을 측정하지 못하는 것으로 보고 재설계 |
 | Judge 검증 | 반복 일치율, 사람 라벨 대비 kappa(아래 Part B 절) |
 | 산출물 | `research/gold_metric_selection.md`, `data/gold/dev_set.jsonl`, `data/gold/test_set.jsonl` |
 
@@ -314,7 +314,7 @@ Response { status: "answered" | "insufficient_context",
 |---|---|---|
 | 질문 | 확정한 검색 구성이 필요한 근거를 빠짐없이, 잡음 적게, 위쪽 순위로 가져오는가 | 확정한 전체 파이프라인의 답이 근거에 충실하고 uv 문서 기준으로 정확한가 |
 | 입력 | test set 답 있는 문항(영어, 한국어) | test set 전체 문항(답 없는 문항 포함) |
-| 지표 | Recall@k, Precision@k, F1@k(k는 5, 10), MRR@10, nDCG@10 | Citation Precision, Refusal Accuracy, uv 문서 루브릭 통합 점수(핵심 요점 = Answer Correctness 포함), TTFT, TPOT, Latency, 질의당 비용 |
+| 지표 | Recall@k, Precision@k, F1@k(k는 5, 10), MRR@10, nDCG@10 | Citation Precision, Refusal Accuracy, uv 답변 정확성, uv 답변 품질 점수, TTFT, TPOT, Latency, 질의당 비용 |
 | 판정 방식 | 규칙 기반(근거 구절 60자 창 일치) | Judge(생성 모델과 다른 계열, 3회 다수결) |
 | 보고 | 언어별, 문항 유형별 값과 bootstrap 95% 구간 | 항목별 통과율, 문항 점수 분포, 유형별 값, Judge 3회 일치율 |
 | 산출물 | `reports/<run_id>/`의 검색 지표 | `reports/<run_id>/`의 생성 지표, `research/gold_metric_selection.md`의 루브릭 검증 |
@@ -334,11 +334,11 @@ uv 문서 루브릭 항목(초안, 파일럿에서 수정): 핵심 요점(accept
 Gold Set 평가에 더해, 실제 사용자 질의마다 정답 없이 잴 수 있는 지표를 누적해 대시보드로 보여준다. 설계 전문은 `research/gold_metric_selection.md`의 "실시간 누적 평가" 절.
 
 - 기록: 질의 하나가 기록 하나. 요청 id가 UNIQUE 키이고, 모든 기록에 `config_id`(인덱스 계약 해시, 프롬프트 버전, 답변 모델)를 붙인다. 저장소는 SQLite(compose named volume)
-- 지표: 즉시 지표(거절률, 루브릭 규칙 항목, TTFT, TPOT, Latency, 비용, 검색 최고 점수 분포)는 응답 직후, Judge 지표(Citation Precision, 핵심 요점을 뺀 루브릭 Judge 항목)는 백그라운드 채점 뒤 반영
+- 지표: 즉시 지표(거절률, 품질 점수의 규칙 항목, TTFT, TPOT, Latency, 비용, 검색 최고 점수 분포)는 응답 직후, Judge 지표(Citation Precision, uv 답변 품질 점수의 Judge 항목)는 백그라운드 채점 뒤 반영
 - 표시: 누적 평균과 95% 구간, 최근 50건 이동 창, 같은 `config_id`의 Gold Set 기준선
 - 비용 상한: Judge 샘플링 비율과 예산 상한(기본 ₩3,000). 넘으면 채점만 멈춘다
 - 응답 경로와 분리: 기록 저장과 채점이 실패해도 응답은 나간다. 재시작하면 채점이 안 된 기록을 다시 꺼낸다
-- 정답이 필요한 지표(검색 Recall 등, 루브릭 핵심 요점, Refusal Accuracy)는 실시간에서 재지 않는다
+- 정답이 필요한 지표(검색 Recall 등, uv 답변 정확성, Refusal Accuracy)는 실시간에서 재지 않는다
 
 ### 자동화와 재현성
 
@@ -357,7 +357,7 @@ Gold Set 평가에 더해, 실제 사용자 질의마다 정답 없이 잴 수 �
 
 ### 1차 가설 후보(추천)
 
-- 가설: Dense 단독 검색에 BM25 Sparse 검색을 RRF로 결합하면 고유명사, 설정 키, 버전 번호가 들어간 질의에서 Recall@k가 오르고, 그 결과 루브릭 핵심 요점(Answer Correctness) 통과율이 오른다. Citation Precision은 유지된다
+- 가설: Dense 단독 검색에 BM25 Sparse 검색을 RRF로 결합하면 고유명사, 설정 키, 버전 번호가 들어간 질의에서 Recall@k가 오르고, 그 결과 uv 답변 정확성이 오른다. Citation Precision은 유지된다
 - 근거: Dense 임베딩은 의미 유사도에 강하고 정확한 토큰 일치에 약하다. 함정 유형 문항이 이 약점을 겨냥한다
 - 측정: Baseline과 Hybrid를 test set, 같은 seed로 실행. 10단계 검색 지표와 11단계 생성 지표를 전체와 유형별로, paired bootstrap 95% 신뢰구간, 지연시간과 비용과 함께 비교
 

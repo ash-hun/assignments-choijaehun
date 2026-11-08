@@ -1,7 +1,7 @@
 """selection_run 기능의 근거 단위 검색 지표(retrieval_metric)와 bootstrap 구간 단위 테스트."""
 import pytest
 
-from app.service.eval.retrieval_metric import score, bootstrap, evidence_anchors, paired_difference
+from app.service.eval.retrieval_metric import score, bootstrap, shares_evidence, evidence_anchors, paired_difference
 from app.schema.gold_schema import GoldItem, GoldEvidence
 from app.schema.chunk_schema import Chunk
 
@@ -59,3 +59,11 @@ def test_bootstrap_is_deterministic_and_paired_difference_of_equal_lists_is_zero
     assert bootstrap(values) == bootstrap(values)
     assert bootstrap(values).ci_low <= 0.6 <= bootstrap(values).ci_high
     assert paired_difference(values, values).model_dump() == {"mean": 0.0, "ci_low": 0.0, "ci_high": 0.0}
+
+
+def test_shares_evidence_detects_a_common_window_in_either_direction() -> None:
+    long_quote = "The cache is stored in the user cache directory unless UV_CACHE_DIR is set to another location on disk."
+
+    assert shares_evidence(long_quote, "UV_CACHE_DIR is set to another location on disk.")
+    assert shares_evidence("UV_CACHE_DIR is set to another location on disk.", long_quote)
+    assert not shares_evidence(long_quote, "Locks are universal across platforms.")

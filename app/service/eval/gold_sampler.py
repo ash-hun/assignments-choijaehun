@@ -23,6 +23,7 @@ class DraftTarget(BaseModel):
     type: GoldType
     doc_ids: list[str]
     count: int = 1
+    reasoning: bool = False
 
 
 def load_documents(manifest: CorpusManifest, raw_dir: Path) -> dict[str, str]:
@@ -54,11 +55,16 @@ def outline(docs: dict[str, str]) -> str:
     return "\n".join(lines)
 
 
-def plan_targets(docs: dict[str, str], plan: dict[GoldType, int], seed: int) -> list[DraftTarget]:
-    """유형별 개수만큼 원문을 고른다. 한 문서가 여러 문항에 몰리지 않게 이미 쓴 문서를 뒤로 미룬다."""
+def plan_targets(
+    docs: dict[str, str], plan: dict[GoldType, int], seed: int, prior_docs: set[str] | None = None, reasoning: int = 0,
+) -> list[DraftTarget]:
+    """유형별 개수만큼 원문을 고른다. 한 문서가 여러 문항에 몰리지 않게 이미 쓴 문서를 뒤로 미룬다.
+
+    prior_docs는 다른 split에서 이미 근거로 쓴 문서로, 처음부터 쓴 것으로 친다. multi_doc 중 앞의 reasoning개는 추론 문항이다.
+    """
     rng = random.Random(seed)
     eligible = sorted(p for p, t in docs.items() if len(t) >= MIN_DOC_CHARS)
-    used: set[str] = set()
+    used: set[str] = set(prior_docs or ())
     targets: list[DraftTarget] = []
 
     def pick(pool: list[str], n: int) -> list[str]:
@@ -81,7 +87,7 @@ def plan_targets(docs: dict[str, str], plan: dict[GoldType, int], seed: int) -> 
         if all(a not in pair and b not in pair for pair in chosen_pairs):
             chosen_pairs.append((a, b))
             used.update((a, b))
-    targets += [DraftTarget(type="multi_doc", doc_ids=[a, b]) for a, b in chosen_pairs]
+    targets += [DraftTarget(type="multi_doc", doc_ids=[a, b], reasoning=n < reasoning) for n, (a, b) in enumerate(chosen_pairs)]
 
     long_docs = [p for p in eligible if len(docs[p]) >= SUMMARY_MIN_CHARS]
     targets += [DraftTarget(type="summary", doc_ids=[p]) for p in pick(long_docs, plan.get("summary", 0))]
@@ -99,7 +105,8 @@ def _stratified(paths: list[str], n: int, rng: random.Random, used: set[str]) ->
     by_section: dict[str, list[str]] = {}
     for p in paths:
         by_section.setdefault(p.split("/")[0] if "/" in p else "(root)", []).append(p)
-    queues = {s: rng.sample(ps, len(ps)) for s, ps in sorted(by_section.items())}
+    # 뒤에서 꺼내므로 이미 쓴 문서를 앞으로 보낸다. 쓴 문서가 없으면 순서가 그대로라 dev set 표집이 바뀌지 않는다.
+    queues = {s: sorted(rng.sample(ps, len(ps)), key=lambda p: p not in used) for s, ps in sorted(by_section.items())}
     chosen: list[str] = []
     while len(chosen) < n and any(queues.values()):
         for section in sorted(queues):

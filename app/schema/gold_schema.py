@@ -28,7 +28,12 @@ class GoldItem(BaseModel):
     answerable: bool
     reference_answer: str
     evidence: list[GoldEvidence]
+    # 답이 반드시 담아야 할 요점. 요점 하나가 Judge 이진 판정 하나다. dev set은 비워 두었다.
     acceptance_criteria: list[str] | None = None
+    # 답에 들어가면 틀린 답이 되는 내용(낡은 동작, 다른 도구의 동작, 지어낸 값).
+    rejection_criteria: list[str] | None = None
+    # 문서에 그대로 적힌 답이 없고 여러 문서의 조건을 결합하거나 비교해야 답이 나오는 문항.
+    requires_reasoning: bool = False
     origin: GoldOrigin
     notes: str | None = None
     # 번역 묶음 행은 원문(영어) 행의 id를 가리킨다. 근거와 정답은 원문 행과 같다.

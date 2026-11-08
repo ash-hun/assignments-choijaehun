@@ -10,9 +10,13 @@
 | `dev_set_ko.jsonl` | dev set 한국어 번역 묶음 38문항. 행마다 `dev_set.jsonl`의 한 행과 짝 | 한국어 질의 성능 측정 |
 | `drafts/dev_draft.jsonl` | dev set LLM 초안(검수 전) | 정본과 비교용. 평가에 쓰지 않음 |
 | `drafts/dev_ko_draft.jsonl` | 한국어 번역 초안(검수 전) | 같음 |
-| `test_set.jsonl` | test set 정본(미작성) | 최종 평가 |
+| `test_set.jsonl` | test set 정본, 영어 40문항 | 최종 평가(10, 11단계, Part C) |
+| `drafts/test_draft.jsonl` | test set LLM 초안(검수 전) | 정본과 비교용. 평가에 쓰지 않음 |
+| `test_set_ko.jsonl` | test set 한국어 번역 묶음 40문항. 행마다 `test_set.jsonl`의 한 행과 짝 | 최종 평가(한국어 질의) |
+| `drafts/test_ko_draft.jsonl` | test set 한국어 번역 초안(검수 전) | 정본과 비교용 |
+| `drafts/test_set_review.md` | test set 검수표(질문, 정답, 요점, 금지) | 사람 검수 |
 
-정본 파일은 검수를 거쳐서만 바뀐다. `make gold-draft`, `make gold-translate`는 `drafts/`만 덮어쓴다. 구축 방법, 검수 내역, 한계는 `research/dev_set_construction.md`에 있다.
+정본 파일은 검수를 거쳐서만 바뀐다. `make gold-draft`, `make gold-translate`는 `drafts/`만 덮어쓴다. 구축 방법, 검수 내역, 한계는 dev set은 `research/dev_set_construction.md`, test set은 `research/gold_metric_selection.md`에 있다.
 
 ## 한 행의 스키마
 
@@ -27,7 +31,9 @@
 | `evidence` | array of `GoldEvidence` | 예 | 정답 근거 구절 목록. 답 없는 문항은 빈 배열 |
 | `evidence[].doc_id` | string | 예 | Corpus 기준 상대 경로. 예: `concepts/cache.md` |
 | `evidence[].quote` | string | 예 | 그 문서에 글자 그대로 있는 구간(줄바꿈 포함 원문 그대로) |
-| `acceptance_criteria` | array of string \| null | 아니오 | 반드시 포함할 요점, 포함하면 안 되는 내용. test set에서만 채운다. dev set은 `null` |
+| `acceptance_criteria` | array of string \| null | 아니오 | 답이 반드시 담아야 할 요점. 요점 하나가 Judge 이진 판정 하나다. test set은 모든 문항에 채우고(답 없는 문항은 거절 요건 한 줄), dev set은 `null` |
+| `rejection_criteria` | array of string \| null | 아니오 | 답에 들어가면 틀린 답이 되는 내용(낡은 동작, 다른 도구의 동작, 지어낸 값). test set에서만 채운다 |
+| `requires_reasoning` | boolean | 아니오(기본 `false`) | 문서에 그대로 적힌 답이 없고 여러 문서의 조건을 결합하거나 비교해야 답이 나오는 문항 |
 | `origin` | `"llm_draft"` \| `"llm_draft_reviewed"` \| `"human_written"` | 예 | 작성 출처. LLM 초안은 사람 검토를 마친 뒤에만 `llm_draft_reviewed`가 된다 |
 | `notes` | string \| null | 아니오 | 검수 메모. 답 없는 문항은 답이 없는 이유 |
 | `language` | `"en"` \| `"ko"` | 아니오(기본 `"en"`) | 질문 언어 |
@@ -47,7 +53,7 @@
 
 ## 지켜야 하는 규칙
 
-`make gold-check SPLIT=dev LANG_CODE=en|ko`가 아래를 검사하고, 어기면 종료 코드 1로 끝난다.
+`make gold-check SPLIT=dev|test LANG_CODE=en|ko`가 아래를 검사하고, 어기면 종료 코드 1로 끝난다.
 
 | 규칙 | 검사 위치 |
 |---|---|
@@ -59,6 +65,9 @@
 | `evidence[].quote`가 `doc_id` 문서에 글자 그대로 있다 | gold-check |
 | 번역 행의 `translation_of`가 원문 파일에 있고, `type`, `evidence`, `reference_answer`가 원문 행과 같다 | gold-check(번역 묶음) |
 | 원문 파일의 모든 행에 번역 행이 있다 | gold-check(번역 묶음) |
+| test set의 모든 행에 `acceptance_criteria`가 있다 | gold-check(test) |
+| test set의 근거 구절이 dev set 근거 구절과 60자 창을 공유하지 않는다 | gold-check(test) |
+| test set 원문 파일에 `requires_reasoning` 문항이 4개 이상 | gold-check(test) |
 
 ## id 규칙
 
