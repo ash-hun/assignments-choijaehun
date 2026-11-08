@@ -1,0 +1,246 @@
+[
+  {
+    "checks": [
+      {
+        "diff": {
+          "ci_high": 0.8906,
+          "ci_low": 0.6484,
+          "mean": 0.7734
+        },
+        "expected": true,
+        "metric": "recall_at_5",
+        "pairs": 32,
+        "passed": true
+      },
+      {
+        "diff": {
+          "ci_high": 0.875,
+          "ci_low": 0.5625,
+          "mean": 0.7188
+        },
+        "expected": true,
+        "metric": "correct",
+        "pairs": 32,
+        "passed": true
+      },
+      {
+        "diff": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "mean": 1.0
+        },
+        "expected": false,
+        "metric": "citation_precision",
+        "pairs": 2,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "quality_score",
+        "pairs": 2,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "unanswerable_refused",
+        "pairs": 8,
+        "passed": null
+      }
+    ],
+    "passed": true,
+    "variant": "random_chunks"
+  },
+  {
+    "checks": [
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "recall_at_5",
+        "pairs": 32,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0938,
+          "ci_low": -0.0938,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "correct",
+        "pairs": 32,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0848,
+          "ci_low": -0.0448,
+          "mean": 0.0085
+        },
+        "expected": false,
+        "metric": "citation_precision",
+        "pairs": 30,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0462,
+          "ci_low": -0.0511,
+          "mean": -0.0032
+        },
+        "expected": false,
+        "metric": "quality_score",
+        "pairs": 31,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "mean": 1.0
+        },
+        "expected": true,
+        "metric": "unanswerable_refused",
+        "pairs": 8,
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "variant": "no_refusal"
+  },
+  {
+    "checks": [
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "recall_at_5",
+        "pairs": 32,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "correct",
+        "pairs": 32,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.9516,
+          "ci_low": 0.7796,
+          "mean": 0.879
+        },
+        "expected": true,
+        "metric": "citation_precision",
+        "pairs": 30,
+        "passed": true
+      },
+      {
+        "diff": {
+          "ci_high": 0.0872,
+          "ci_low": -0.0167,
+          "mean": 0.0361
+        },
+        "expected": false,
+        "metric": "quality_score",
+        "pairs": 30,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "unanswerable_refused",
+        "pairs": 8,
+        "passed": null
+      }
+    ],
+    "passed": true,
+    "variant": "shuffled_citations"
+  },
+  {
+    "checks": [
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "recall_at_5",
+        "pairs": 32,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.0938,
+          "ci_low": 0.0,
+          "mean": 0.0312
+        },
+        "expected": false,
+        "metric": "correct",
+        "pairs": 32,
+        "passed": null
+      },
+      {
+        "diff": {
+          "ci_high": 0.9929,
+          "ci_low": 0.9409,
+          "mean": 0.9702
+        },
+        "expected": true,
+        "metric": "citation_precision",
+        "pairs": 30,
+        "passed": true
+      },
+      {
+        "diff": {
+          "ci_high": 0.2417,
+          "ci_low": 0.1333,
+          "mean": 0.1883
+        },
+        "expected": true,
+        "metric": "quality_score",
+        "pairs": 30,
+        "passed": true
+      },
+      {
+        "diff": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean": 0.0
+        },
+        "expected": false,
+        "metric": "unanswerable_refused",
+        "pairs": 8,
+        "passed": null
+      }
+    ],
+    "passed": true,
+    "variant": "swapped_context"
+  }
+]
