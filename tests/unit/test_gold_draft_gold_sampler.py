@@ -38,6 +38,17 @@ def test_plan_targets_is_deterministic_and_respects_rules() -> None:
     assert by_type["unanswerable"].count == 3 and by_type["unanswerable"].doc_ids == []
 
 
+def test_plan_targets_prefers_docs_outside_prior_and_marks_reasoning() -> None:
+    docs = make_docs()
+    plan: dict[GoldType, int] = {"factual": 2, "multi_doc": 1}
+
+    targets = plan_targets(docs, plan, seed=7, prior_docs={"concepts/a.md"}, reasoning=1)
+
+    factual = [t.doc_ids[0] for t in targets if t.type == "factual"]
+    assert factual == ["index.md", "concepts/long.md"]
+    assert [t.reasoning for t in targets if t.type == "multi_doc"] == [True]
+
+
 def test_outline_lists_h1_and_h2_only() -> None:
     text = outline({"a.md": "# Title\n## Sub\n### Deep\nbody"})
 

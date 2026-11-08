@@ -63,6 +63,12 @@ def evidence_anchors(quote: str) -> list[str]:
     return [cleaned[s:s + ANCHOR_CHARS] for s in starts]
 
 
+def shares_evidence(quote: str, other: str) -> bool:
+    """두 근거 구절이 60자 창 하나라도 공유하는지. 짧은 구절이 긴 구절 안에 들어가는 경우도 양쪽으로 본다."""
+    a, b = normalize(clean_text(quote)), normalize(clean_text(other))
+    return any(anchor in b for anchor in evidence_anchors(quote)) or any(anchor in a for anchor in evidence_anchors(other))
+
+
 def chunk_has_evidence(chunk: Chunk, doc_id: str, anchors: list[str]) -> bool:
     """같은 문서의 청크이고 anchor 중 하나라도 들어 있으면 근거가 있는 청크다."""
     if chunk.doc_id != doc_id:

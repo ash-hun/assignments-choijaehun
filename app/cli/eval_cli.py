@@ -7,18 +7,26 @@ from collections import Counter
 
 from app.service.eval.gold_sampler import outline, plan_targets, load_documents
 from app.schema.gold_schema import GoldItem, GoldType, GoldSplit, GoldLanguage
+from app.service.eval.gold_drafter import PriorSet, GoldDrafter
+from app.service.eval.retrieval_metric import shares_evidence
 from app.service.eval.gold_translator import GoldTranslator
 from app.service.eval.evidence_matcher import locate_quote
 from app.common.settings import Settings, get_settings
-from app.service.eval.gold_drafter import GoldDrafter
 from app.schema.corpus_schema import CorpusManifest
 from app.cli.selection_cli import build_llm
 from app.common.logger import get_logger
 
-# dev set 구성은 project_planning/plan.md의 "dev set 구성"을 따른다. 답 있음 30, 답 없음 8.
+# dev set 구성은 project_planning/plan.md의 "dev set 구성", test set 구성은 research/gold_metric_selection.md를 따른다.
 SPLIT_PLANS: dict[str, dict[GoldType, int]] = {
     "dev": {"factual": 12, "multi_doc": 8, "summary": 5, "trap": 5, "unanswerable": 8},
+    "test": {"factual": 12, "multi_doc": 10, "summary": 6, "trap": 4, "unanswerable": 8},
 }
+# multi_doc 중 추론 문항 수.
+REASONING_PLAN: dict[str, int] = {"dev": 0, "test": 4}
+# split마다 표집 seed를 달리해 test가 dev와 같은 원문을 같은 순서로 뽑지 않게 한다. dev는 기존 값 그대로다.
+SPLIT_SEED_OFFSET: dict[str, int] = {"dev": 0, "test": 1}
+# test set이 근거를 겹치면 안 되는 split.
+PRIOR_SPLIT: dict[str, GoldSplit] = {"test": "dev"}
 DRAFT_DIR = "gold/drafts"
 GOLD_DIR = "gold"
 
@@ -35,9 +43,12 @@ def load_corpus(settings: Settings) -> dict[str, str]:
 async def draft(settings: Settings, split: GoldSplit) -> Path:
     """초안을 만들어 drafts 디렉토리에 쓴다. 검수를 마친 Gold 파일은 건드리지 않는다."""
     docs = load_corpus(settings)
-    targets = plan_targets(docs, SPLIT_PLANS[split], settings.gold_seed)
+    prior = load_prior(settings, split)
+    targets = plan_targets(
+        docs, SPLIT_PLANS[split], settings.gold_seed + SPLIT_SEED_OFFSET[split], set(prior.quotes), REASONING_PLAN[split],
+    )
     drafter = GoldDrafter(build_llm(settings), settings.llm_seed, settings.llm_concurrency)
-    outcome = await drafter.draft(targets, docs, outline(docs), split)
+    outcome = await drafter.draft(targets, docs, outline(docs), split, prior)
     out = settings.data_dir / DRAFT_DIR / f"{split}_draft.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("".join(i.model_dump_json() + "\n" for i in outcome.items), encoding="utf-8")
@@ -46,6 +57,21 @@ async def draft(settings: Settings, split: GoldSplit) -> Path:
         input_tokens=outcome.input_tokens, output_tokens=outcome.output_tokens,
     )
     return out
+
+
+def load_prior(settings: Settings, split: GoldSplit) -> PriorSet:
+    """이 split이 겹치면 안 되는 split의 근거 구절과 질문. 없으면 빈 값이다."""
+    other = PRIOR_SPLIT.get(split)
+    if other is None:
+        return PriorSet()
+    items, problems = read_gold(gold_path(settings, other, "en"))
+    if problems:
+        raise SystemExit(f"{other} gold file has problems: {problems}")
+    quotes: dict[str, list[str]] = {}
+    for item in items:
+        for ev in item.evidence:
+            quotes.setdefault(ev.doc_id, []).append(ev.quote)
+    return PriorSet(quotes=quotes, questions=[i.question for i in items])
 
 
 def gold_path(settings: Settings, split: GoldSplit, language: GoldLanguage) -> Path:
@@ -103,6 +129,19 @@ def check(settings: Settings, path: Path, source: Path | None = None) -> list[st
                 problems.append(f"{item.id}: type, evidence or reference_answer differs from {original.id}")
         missing = set(originals) - {item.translation_of for item in translated}
         problems += [f"no translation for {i}" for i in sorted(map(str, missing))]
+    split = items[0].split if items else None
+    if split == "test":
+        problems += [f"{item.id}: acceptance_criteria is empty" for item in items if not item.acceptance_criteria]
+        prior = load_prior(settings, split)
+        problems += [
+            f"{item.id}: evidence shares a passage with the {PRIOR_SPLIT[split]} set in {ev.doc_id}"
+            for item in items for ev in item.evidence
+            if any(shares_evidence(ev.quote, q) for q in prior.quotes.get(ev.doc_id, []))
+        ]
+        sources = [item for item in items if item.translation_of is None]
+        reasoning = sum(item.requires_reasoning for item in sources)
+        if sources and reasoning < REASONING_PLAN[split]:
+            problems.append(f"reasoning items {reasoning} < {REASONING_PLAN[split]}")
     counts = Counter(item.type for item in items)
     logger.info("gold_checked", path=str(path), items=len(items), by_type=dict(sorted(counts.items())), problems=len(problems))
     return problems
