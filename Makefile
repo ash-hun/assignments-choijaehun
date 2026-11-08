@@ -20,6 +20,7 @@ ingest:
 # API 서버(http://localhost:8000). 색인과 설정의 인덱스 계약이 다르면 기동하지 않는다.
 serve:
 	docker compose up -d --build api
+	@echo "대시보드: http://localhost:8000/dashboard"
 
 stop:
 	docker compose stop api qdrant evaldb

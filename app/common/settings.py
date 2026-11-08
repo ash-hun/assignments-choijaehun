@@ -62,6 +62,11 @@ class Settings(BaseSettings):
     judge_input_krw_per_mtok: float = 1063.0
     judge_output_krw_per_mtok: float = 5315.0
     judge_cache_path: Path = Path(".cache/judge_responses.jsonl")
+    # 실시간 누적 평가(research/gold_metric_selection.md). 저장소 비밀번호나 Judge 엔드포인트가 없으면 꺼진 채로 서비스만 뜬다.
+    live_eval_enabled: bool = True
+    live_judge_sample_rate: float = 1.0
+    live_judge_budget_krw: float = 3000.0
+    live_snapshot_limit: int = 2000
     # 컨테이너 안에는 .git이 없어 Makefile이 넘긴다. Report와 manifest에 기록만 하고 run_id에는 넣지 않는다.
     git_commit: str = "unknown"
     # 설정되면 /v1/* 요청에 X-API-Key가 필요하다. 없으면 로컬 개발용으로 검사하지 않는다.

@@ -155,12 +155,12 @@ def test_judge_scores_answered_records_once_per_sample_and_reuses_stored_judgmen
     outcome = run(service, chunks)
     retriever = ChunkRetriever(*_memory_index(chunks))
     judge_llm = JudgeLlm()
-    judge = JudgeService(judge_llm, LlmCache(tmp_path / "judge.jsonl"), records, retriever, chunks, 2)
+    judge = JudgeService(judge_llm, LlmCache(tmp_path / "judge.jsonl"), records, retriever, 2)
     items = {str(i.id): i for i in ITEMS}
 
-    first = asyncio.run(judge.judge("t-run", outcome.records, items, 3, 2))
+    first = asyncio.run(judge.judge(outcome.records, items, 3, 2))
     calls = judge_llm.calls
-    second = asyncio.run(judge.judge("t-run", outcome.records, items, 3, 2))
+    second = asyncio.run(judge.judge(outcome.records, items, 3, 2))
 
     assert calls == 6 and judge_llm.calls == 6
     assert len(first) == len(second) == 6 and all(r.ok for r in second)

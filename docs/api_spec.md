@@ -15,7 +15,8 @@
 | 파이프라인 | 경로 | 흐름 | 진입점 | 저장소 접근 |
 |---|---|---|---|---|
 | Ingest | 쓰기, 오프라인 배치 | 문서, 정제, 청크, 임베딩, 인덱스 저장 | `make corpus`, `make ingest` (compose 일회성 서비스) | 쓰기 |
-| Query | 읽기, 온라인 | 질문, 검색, LLM 답변 생성, Citation 반환 | FastAPI `POST /v1/query`, `POST /v1/query/stream` | 읽기 전용 |
+| Query | 읽기, 온라인 | 질문, 검색, LLM 답변 생성, Citation 반환 | FastAPI `POST /v1/query`, `POST /v1/query/stream` | 벡터 DB 읽기 전용. 응답 뒤 평가 기록 저장소(`evaldb`)에 쓰기 |
+| 실시간 평가 | 온라인 | 응답 뒤 기록, 백그라운드 Judge, 누적 집계 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 평가 기록 저장소 읽기, 쓰기 |
 
 두 파이프라인의 연결점은 인덱스 계약이다. Ingest가 컬렉션 메타데이터에 기록한 임베딩 모델, 토크나이저, Chunk 설정 해시가 Query의 설정과 다르면 Query 서버는 기동하지 않는다.
 
@@ -98,6 +99,9 @@
 | `GET` | `/ready` | 벡터 DB 연결과 인덱스 계약 일치 시 200, 아니면 503 | 구현됨 |
 | `POST` | `/v1/query` | 질의응답 | 구현됨 |
 | `POST` | `/v1/query/stream` | 질의응답 SSE 스트리밍 | 구현됨 |
+| `GET` | `/v1/metrics` | 실시간 누적 지표 | 구현됨 |
+| `GET` | `/v1/metrics/stream` | 실시간 누적 지표 SSE | 구현됨 |
+| `GET` | `/dashboard` | 실시간 평가 대시보드(정적 HTML, 인증 없음. 데이터는 화면이 `/v1/metrics/stream`에서 받음) | 구현됨 |
 
 ### POST /v1/query
 
@@ -133,7 +137,7 @@
 
 #### 재호출하면
 
-읽기 전용이라 서버 상태가 바뀌지 않는다. 같은 질문과 같은 인덱스면 검색 결과와 검색 단계 거절 여부는 같다. 생성은 temperature 0이지만 생성 모델(claude-haiku-5-5)이 seed를 받지 않아, 모델 제공자 측 비결정성 때문에 문구가 달라질 수 있다.
+벡터 DB와 인덱스는 바뀌지 않는다. 같은 질문과 같은 인덱스면 검색 결과와 검색 단계 거절 여부는 같다. 실시간 평가가 켜져 있고 `top_k`가 기본값(생략 또는 5)이면 응답을 보낸 뒤 평가 기록 저장소에 기록 하나를 남긴다. 기록 키는 `live:<X-Request-ID>`라, 같은 `X-Request-ID`로 다시 보내면 같은 행을 덮어쓰고 행이 늘지 않는다. 기록이나 채점에 실패해도 응답은 그대로다. 생성은 temperature 0이지만 생성 모델(claude-haiku-5-5)이 seed를 받지 않아, 모델 제공자 측 비결정성 때문에 문구가 달라질 수 있다.
 
 ### POST /v1/query/stream
 
@@ -151,7 +155,36 @@
 
 #### 재호출하면
 
-`/v1/query`와 같다.
+`/v1/query`와 같다. 평가 기록은 `final` 이벤트까지 보낸 응답만 스트림이 끝난 뒤 남긴다.
+
+### GET /v1/metrics
+
+실제 질의(`source=live`)의 최근 기록(기본 2,000개)을 지표별로 집계한다. 인증은 `/v1/query`와 같다. 실시간 평가가 꺼져 있으면(평가 저장소 비밀번호나 Judge 엔드포인트가 없거나, 저장소 연결 실패) 503.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `config_id` | string | 파이프라인 구성 해시. Gold Set 평가와 같은 함수로 계산 |
+| `records`, `answered`, `judged` | int | 기록 수, 답한 수, Judge 판정이 있는 수 |
+| `judge_spent_krw`, `judge_limit_krw`, `judge_exhausted` | float, float, bool | 실시간 채점 누적 비용, 상한, 상한 도달 여부. 도달하면 채점만 멈춘다 |
+| `baseline_run` | string \| null | 기준선으로 쓴 Gold Set 실행(같은 `config_id`, 변형 없음) |
+| `metrics[].key`, `label`, `unit` | string | 지표 키, 표시 이름, 단위(`rate`, `ms`, `krw`, `score`) |
+| `metrics[].reference` | bool | 검증 조건을 통과하지 못한 참고값 |
+| `metrics[].baseline` | float \| null | 같은 지표의 Gold Set 전체 평균 |
+| `metrics[].points[]` | object | `n`(표본 수), `cum`(누적 평균), `low`, `high`(95% 구간. 비율은 Wilson, 나머지는 정규 근사), `window`(최근 50개 평균). 200개를 넘으면 고르게 솎고 마지막 지점은 남긴다 |
+
+지표: 거절률, 검색 최고 점수가 임계값 ±0.05 안인 비율, Latency(답한 질의), TTFT(답한 질의), 질의당 비용, 근거 없는 주장 없음(참고값), Citation Precision(참고값).
+
+#### 재호출하면
+
+읽기 전용이다. 새 기록이나 판정이 없으면 같은 값이 나온다.
+
+### GET /v1/metrics/stream
+
+연결 직후 `snapshot` 이벤트(`/v1/metrics`와 같은 본문)를 한 번 보내고, 기록이나 판정이 늘 때마다 새 `snapshot`을 보낸다. 변경이 없으면 15초마다 `: keepalive` 주석 줄을 보낸다. 인증과 503은 `/v1/metrics`와 같다.
+
+#### 재호출하면
+
+읽기 전용이다. 연결마다 독립이고, 끊으면 서버 쪽 루프도 끝난다.
 
 ---
 

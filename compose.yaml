@@ -54,8 +54,10 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./.cache:/workspace/.cache
+    # evaldb는 실시간 평가용이다. 연결하지 못해도 api는 평가만 끄고 뜬다.
     depends_on:
       - qdrant
+      - evaldb
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=3)"]
       interval: 15s

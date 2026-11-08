@@ -5,9 +5,9 @@ import asyncio
 from app.service.eval.judge_prompt import RUBRIC_SCHEMA, CITATION_SCHEMA, prompt_version, rubric_messages, citation_messages
 from app.service.eval.judge_metric import parse_rubric, citation_pairs, parse_citations
 from app.client.llm_client import ChatMessage, LlmClient, LlmCompletion
+from app.schema.judge_schema import JUDGE_KINDS, JudgeKind, JudgeResult
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.service.query.chunk_retriever import ChunkRetriever
-from app.schema.judge_schema import JUDGE_KINDS, JudgeKind, JudgeResult
 from app.common.upstream_error import UpstreamError
 from app.schema.eval_schema import EvalRecord
 from app.schema.gold_schema import GoldItem
@@ -28,29 +28,28 @@ class JudgeService:
     """답한 기록만 판정한다. 근거 청크는 같은 검색기로 다시 찾는다(질의 경로의 검색은 같은 입력이면 같은 결과다)."""
 
     def __init__(
-        self, llm: LlmClient, cache: LlmCache, repository: EvalRecordRepository, retriever: ChunkRetriever,
-        chunks: list[Chunk], concurrency: int,
+        self, llm: LlmClient, cache: LlmCache, repository: EvalRecordRepository, retriever: ChunkRetriever, concurrency: int,
     ) -> None:
         self._llm = llm
         self._cache = cache
         self._repository = repository
         self._retriever = retriever
-        self._chunks = {c.chunk_id: c for c in chunks}
         self._semaphore = asyncio.Semaphore(concurrency)
         # 문구를 고치면 그 종류의 해시가 바뀌어 이전 판정을 다시 쓰지 않는다.
         self.versions = {kind: prompt_version(kind) for kind in JUDGE_KINDS}
 
-    async def current(self, run_id: str) -> list[JudgeResult]:
-        """이 Judge 모델과 프롬프트 버전의 판정만."""
-        return [r for r in await self._repository.judgments(run_id)
+    async def current(self, record_ids: list[str]) -> list[JudgeResult]:
+        """기록들의 판정 중 이 Judge 모델과 프롬프트 버전의 것만."""
+        return [r for r in await self._repository.judgments_for(record_ids)
                 if r.judge_model == self._llm.model and r.prompt_version == self.versions[r.kind]]
 
     async def judge(
-        self, run_id: str, records: list[EvalRecord], items: dict[str, GoldItem], samples: int, top_k: int,
+        self, records: list[EvalRecord], items: dict[str, GoldItem], samples: int, top_k: int,
     ) -> list[JudgeResult]:
         """성공한 판정이 없는 (기록, 종류, 표본)만 부른다. 호출 자체가 실패하면 저장하지 않는다."""
         # 실패한 판정은 다시 부른다. 같은 요청이면 캐시가 같은 응답을 돌려줘 비용이 들지 않는다.
-        done = {(r.record_id, r.kind, r.sample) for r in await self.current(run_id) if r.ok}
+        ids = [r.record_id for r in records]
+        done = {(r.record_id, r.kind, r.sample) for r in await self.current(ids) if r.ok}
         jobs = []
         for record in records:
             if record.status != "answered":
@@ -62,8 +61,8 @@ class JudgeService:
                     if (record.record_id, kind, sample) not in done:
                         jobs.append(self._one(record, item, context, kind, sample))
         fresh = [r for r in await asyncio.gather(*jobs) if r is not None]
-        logger.info("judge_done", run_id=run_id, new=len(fresh), skipped=len(done), failed_calls=len(jobs) - len(fresh))
-        return await self.current(run_id)
+        logger.info("judge_done", records=len(records), new=len(fresh), skipped=len(done), failed_calls=len(jobs) - len(fresh))
+        return await self.current(ids)
 
     async def _one(
         self, record: EvalRecord, item: GoldItem | None, context: list[Chunk], kind: JudgeKind, sample: int,

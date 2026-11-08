@@ -1,6 +1,5 @@
 """Gold Set 평가 진입점(`make eval`). 설정 파일 하나로 test set 전체를 실제 질의 경로에 넣고 기록 저장소와 Report를 남긴다."""
 import sys
-import json
 import asyncio
 import hashlib
 import tomllib
@@ -12,6 +11,7 @@ from psycopg import AsyncConnection
 from collections.abc import Callable
 
 from app.service.eval.validity_variant import NeverRefuseChecker, RandomChunkRetriever, strip_citations, shuffle_citations
+from app.service.eval.pipeline_identity import answer_prompt_hash, pipeline_config_id
 from app.service.eval.eval_service import TokenPrice, EvalOutcome, EvalService
 from app.service.query.query_builder import QueryParts, open_query_service
 from app.repository.eval_record_repository import EvalRecordRepository
@@ -21,7 +21,6 @@ from app.service.query.evidence_checker import EvidenceChecker
 from app.service.query.chunk_retriever import ChunkRetriever
 from app.service.eval.retrieval_metric import BOOTSTRAP_SEED
 from app.schema.eval_schema import EvalConfig, EvalManifest
-from app.service.query.prompt_builder import build_messages
 from app.service.query.query_service import QueryService
 from app.service.eval.report_writer import write_report
 from app.service.eval.judge_service import JudgeService
@@ -59,20 +58,14 @@ def load_items(config: EvalConfig) -> tuple[list[GoldItem], dict[str, str]]:
 def build_manifest(settings: Settings, config: EvalConfig, gold_hashes: dict[str, str]) -> EvalManifest:
     """재현에 필요한 값을 모은다. config_id는 파이프라인 구성만의 해시라 Gold Set 평가와 실시간 질의가 같은 값을 쓴다."""
     contract = settings.index_contract()
-    prompt = json.dumps([m.model_dump() for m in build_messages("{question}", [])], ensure_ascii=False)
-    prompt_hash = _sha256(prompt.encode())[:12]
-    pipeline = {
-        "index_contract": contract.model_dump(), "answer_model": settings.answer_llm_model, "prompt_hash": prompt_hash,
-        "refusal_threshold": settings.refusal_threshold, "top_k": config.top_k,
-    }
     corpus_manifest = settings.data_dir / "corpus" / "manifests" / f"{settings.corpus_name}.json"
     return EvalManifest(
-        config=config, config_id=_sha256(json.dumps(pipeline, sort_keys=True).encode())[:12], gold_hashes=gold_hashes,
+        config=config, config_id=pipeline_config_id(settings, config.top_k), gold_hashes=gold_hashes,
         corpus_manifest_hash=_sha256(corpus_manifest.read_bytes()), index_contract=contract.model_dump(),
         collection=contract.collection_name(settings.corpus_name), answer_model=settings.answer_llm_model,
         answer_temperature=settings.answer_temperature, answer_seed=settings.answer_seed,
         answer_max_tokens=settings.answer_max_tokens, refusal_threshold=settings.refusal_threshold,
-        prompt_hash=prompt_hash, bootstrap_seed=BOOTSTRAP_SEED, git_commit=settings.git_commit,
+        prompt_hash=answer_prompt_hash(), bootstrap_seed=BOOTSTRAP_SEED, git_commit=settings.git_commit,
     )
 
 
@@ -138,11 +131,11 @@ async def run(settings: Settings, config: EvalConfig, judge_limit: int | None) -
                           timeout=settings.llm_timeout_seconds, max_retries=settings.llm_max_retries)
         judge_retriever = RandomChunkRetriever(chunks, BOOTSTRAP_SEED) if config.variant == "swapped_context" else retriever
         judge = JudgeService(LlmClient(sdk, settings.judge_llm_model), LlmCache(settings.judge_cache_path), repository,
-                             judge_retriever, chunks, settings.llm_concurrency)
+                             judge_retriever, settings.llm_concurrency)
         answered = [r for r in outcome.records if r.status == "answered"]
         targets = answered[:judge_limit] if judge_limit is not None else answered
         by_id = {str(i.id): i for i in items}
-        results = await judge.judge(run_id, targets, by_id, config.judge_samples, config.top_k)
+        results = await judge.judge(targets, by_id, config.judge_samples, config.top_k)
         await sdk.close()
     grouped: dict[str, list[JudgeResult]] = {}
     for result in results:

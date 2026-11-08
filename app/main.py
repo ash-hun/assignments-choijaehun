@@ -3,10 +3,12 @@ from fastapi import FastAPI
 from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
+from app.api.metrics_router import page_router, router as metrics_router
 from app.api.request_middleware import register_request_middleware
 from app.service.query.query_builder import open_query_service
 from app.common.logger import configure_logging, get_logger
 from app.api.health_router import router as health_router
+from app.service.live.live_builder import open_live_eval
 from app.api.error_mapper import register_error_handlers
 from app.api.query_router import router as query_router
 from app.common.settings import Settings, get_settings
@@ -20,10 +22,10 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def build_runtime(settings: Settings) -> AsyncIterator[QueryRuntime]:
     """실제 클라이언트로 조립한다. 키, 엔드포인트, 인덱스 중 하나라도 없거나 계약이 다르면 기동을 멈춘다."""
-    async with open_query_service(settings) as parts:
-        logger.info("query_runtime_ready", collection=parts.collection, model=settings.answer_llm_model)
+    async with open_query_service(settings) as parts, open_live_eval(settings, parts) as live:
+        logger.info("query_runtime_ready", collection=parts.collection, model=settings.answer_llm_model, live_eval=live is not None)
         yield QueryRuntime(settings=settings, service=parts.service, repository=parts.repository,
-                           collection=parts.collection, contract=parts.contract)
+                           collection=parts.collection, contract=parts.contract, live=live)
 
 
 def create_app(settings: Settings, builder: RuntimeBuilder = build_runtime) -> FastAPI:
@@ -42,6 +44,8 @@ def create_app(settings: Settings, builder: RuntimeBuilder = build_runtime) -> F
     register_error_handlers(app, settings.llm_queue_timeout_seconds)
     app.include_router(health_router)
     app.include_router(query_router)
+    app.include_router(metrics_router)
+    app.include_router(page_router)
     return app
 
 

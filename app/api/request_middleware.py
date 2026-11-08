@@ -23,6 +23,7 @@ def register_request_middleware(app: FastAPI) -> None:
         request_id = incoming if REQUEST_ID.match(incoming) else uuid.uuid4().hex
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(request_id=request_id)
+        request.state.request_id = request_id
         started = time.perf_counter()
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
