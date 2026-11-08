@@ -1,4 +1,4 @@
-.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench test typecheck
+.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench tok-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -48,6 +48,11 @@ db-bench:
 embed-bench:
 	docker compose --profile dbbench up -d qdrant
 	$(BATCH) app.cli.embedding_selection_cli
+	docker compose --profile dbbench stop qdrant
+
+tok-bench:
+	docker compose --profile dbbench up -d qdrant
+	docker compose run --rm --build batch-korean app.cli.tokenizer_selection_cli
 	docker compose --profile dbbench stop qdrant
 
 test:

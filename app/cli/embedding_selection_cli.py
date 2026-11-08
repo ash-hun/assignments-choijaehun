@@ -6,10 +6,11 @@ import argparse
 from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
 
-from app.service.eval.embedding_benchmark import EmbeddingRun, EmbeddingBenchmark, paired_difference
+from app.service.eval.embedding_benchmark import EmbeddingRun, EmbeddingBenchmark
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.chunk_splitter import FixedLengthSplitter
 from app.service.ingest.document_loader import load_documents
+from app.service.eval.retrieval_metric import paired_against
 from app.client.embedding_client import EmbeddingClient
 from app.common.settings import Settings, get_settings
 from app.schema.corpus_schema import CorpusManifest
@@ -96,8 +97,7 @@ def write(settings: Settings, runs: list[EmbeddingRun]) -> None:
                 continue
             comparison.append({
                 "language": language, "best": best.model, "model": r.model,
-                "hit_at_5_diff": paired_difference([float(s.hit_at_5) for s in best.per_question], [float(s.hit_at_5) for s in r.per_question]).model_dump(),
-                "mrr_diff": paired_difference([s.reciprocal_rank for s in best.per_question], [s.reciprocal_rank for s in r.per_question]).model_dump(),
+                **{k: v.model_dump() for k, v in paired_against(best.per_question, r.per_question).items()},
             })
     (out / "comparison.json").write_text(json.dumps(comparison, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     logger.info("embedding_results_written", path=str(out), runs=len(runs))

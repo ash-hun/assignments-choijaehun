@@ -8,6 +8,8 @@ x-app: &app
   environment:
     LOG_FORMAT: ${LOG_FORMAT:-console}
     LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    # tiktoken 인코딩 파일을 마운트된 캐시에 받아 두어 매번 내려받지 않는다.
+    TIKTOKEN_CACHE_DIR: /workspace/.cache/tiktoken
 
 services:
   # 일회성 배치: Corpus 수집, 선정 실험, Ingest, Eval. `docker compose up`에서는 뜨지 않는다.
@@ -17,6 +19,20 @@ services:
       context: .
       target: runtime
     image: elice-rag-qa:runtime
+    profiles: [batch]
+    entrypoint: ["python", "-m"]
+    volumes:
+      - ./data:/workspace/data
+      - ./research:/workspace/research
+      - ./.cache:/workspace/.cache
+
+  # 토크나이저 선정 실험용 배치. 형태소 분석기(korean 의존성 그룹)와 JVM이 더 들어 있다.
+  batch-korean:
+    <<: *app
+    build:
+      context: .
+      target: korean
+    image: elice-rag-qa:korean
     profiles: [batch]
     entrypoint: ["python", "-m"]
     volumes:

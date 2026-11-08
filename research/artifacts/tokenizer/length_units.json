@@ -1,0 +1,290 @@
+{
+  "units": [
+    {
+      "window_chars": 500,
+      "unit": "chars",
+      "chunks": 1135,
+      "mean_length": 474.9,
+      "max_length": 499,
+      "ratio_to_reference": {
+        "mean": 4.0918,
+        "cv": 0.1517,
+        "min": 1.4507,
+        "p01": 2.4175,
+        "max": 6.1111
+      }
+    },
+    {
+      "window_chars": 500,
+      "unit": "tiktoken_o200k",
+      "chunks": 1135,
+      "mean_length": 116.3,
+      "max_length": 223,
+      "ratio_to_reference": {
+        "mean": 0.9806,
+        "cv": 0.0337,
+        "min": 0.7606,
+        "p01": 0.8509,
+        "max": 1.1007
+      }
+    },
+    {
+      "window_chars": 500,
+      "unit": "qwen3",
+      "chunks": 1135,
+      "mean_length": 118.8,
+      "max_length": 239,
+      "ratio_to_reference": {
+        "mean": 1.0,
+        "cv": 0.0,
+        "min": 1.0,
+        "p01": 1.0,
+        "max": 1.0
+      }
+    },
+    {
+      "window_chars": 500,
+      "unit": "e5",
+      "chunks": 1135,
+      "mean_length": 143.9,
+      "max_length": 255,
+      "ratio_to_reference": {
+        "mean": 1.2256,
+        "cv": 0.1068,
+        "min": 0.6625,
+        "p01": 0.8592,
+        "max": 1.7778
+      }
+    },
+    {
+      "window_chars": 1000,
+      "unit": "chars",
+      "chunks": 587,
+      "mean_length": 919.5,
+      "max_length": 999,
+      "ratio_to_reference": {
+        "mean": 4.0866,
+        "cv": 0.1329,
+        "min": 2.0,
+        "p01": 2.5827,
+        "max": 5.5419
+      }
+    },
+    {
+      "window_chars": 1000,
+      "unit": "tiktoken_o200k",
+      "chunks": 587,
+      "mean_length": 225.0,
+      "max_length": 431,
+      "ratio_to_reference": {
+        "mean": 0.9834,
+        "cv": 0.0311,
+        "min": 0.7708,
+        "p01": 0.8567,
+        "max": 1.0683
+      }
+    },
+    {
+      "window_chars": 1000,
+      "unit": "qwen3",
+      "chunks": 587,
+      "mean_length": 228.9,
+      "max_length": 480,
+      "ratio_to_reference": {
+        "mean": 1.0,
+        "cv": 0.0,
+        "min": 1.0,
+        "p01": 1.0,
+        "max": 1.0
+      }
+    },
+    {
+      "window_chars": 1000,
+      "unit": "e5",
+      "chunks": 587,
+      "mean_length": 274.4,
+      "max_length": 450,
+      "ratio_to_reference": {
+        "mean": 1.2138,
+        "cv": 0.0965,
+        "min": 0.6429,
+        "p01": 0.8719,
+        "max": 1.75
+      }
+    },
+    {
+      "window_chars": 2000,
+      "unit": "chars",
+      "chunks": 317,
+      "mean_length": 1703.4,
+      "max_length": 1999,
+      "ratio_to_reference": {
+        "mean": 4.0831,
+        "cv": 0.1238,
+        "min": 2.0,
+        "p01": 2.5,
+        "max": 5.6562
+      }
+    },
+    {
+      "window_chars": 2000,
+      "unit": "tiktoken_o200k",
+      "chunks": 317,
+      "mean_length": 416.7,
+      "max_length": 732,
+      "ratio_to_reference": {
+        "mean": 0.9839,
+        "cv": 0.0313,
+        "min": 0.75,
+        "p01": 0.8759,
+        "max": 1.0587
+      }
+    },
+    {
+      "window_chars": 2000,
+      "unit": "qwen3",
+      "chunks": 317,
+      "mean_length": 423.1,
+      "max_length": 752,
+      "ratio_to_reference": {
+        "mean": 1.0,
+        "cv": 0.0,
+        "min": 1.0,
+        "p01": 1.0,
+        "max": 1.0
+      }
+    },
+    {
+      "window_chars": 2000,
+      "unit": "e5",
+      "chunks": 317,
+      "mean_length": 504.8,
+      "max_length": 812,
+      "ratio_to_reference": {
+        "mean": 1.2178,
+        "cv": 0.1036,
+        "min": 0.8385,
+        "p01": 0.9481,
+        "max": 2.0
+      }
+    },
+    {
+      "window_chars": 4000,
+      "unit": "chars",
+      "chunks": 183,
+      "mean_length": 2952.1,
+      "max_length": 3999,
+      "ratio_to_reference": {
+        "mean": 4.0962,
+        "cv": 0.1168,
+        "min": 2.0,
+        "p01": 2.4891,
+        "max": 5.7742
+      }
+    },
+    {
+      "window_chars": 4000,
+      "unit": "tiktoken_o200k",
+      "chunks": 183,
+      "mean_length": 721.8,
+      "max_length": 1433,
+      "ratio_to_reference": {
+        "mean": 0.985,
+        "cv": 0.0263,
+        "min": 0.8728,
+        "p01": 0.8759,
+        "max": 1.0294
+      }
+    },
+    {
+      "window_chars": 4000,
+      "unit": "qwen3",
+      "chunks": 183,
+      "mean_length": 732.2,
+      "max_length": 1439,
+      "ratio_to_reference": {
+        "mean": 1.0,
+        "cv": 0.0,
+        "min": 1.0,
+        "p01": 1.0,
+        "max": 1.0
+      }
+    },
+    {
+      "window_chars": 4000,
+      "unit": "e5",
+      "chunks": 183,
+      "mean_length": 871.4,
+      "max_length": 1588,
+      "ratio_to_reference": {
+        "mean": 1.2239,
+        "cv": 0.1026,
+        "min": 0.943,
+        "p01": 0.9526,
+        "max": 1.9231
+      }
+    }
+  ],
+  "char_limit_checks": [
+    {
+      "target_tokens": 256,
+      "rule": "mean_ratio",
+      "char_limit": 1046,
+      "chunks": 562,
+      "over_target": 0.3861,
+      "over_runner_up_cap": 0.0,
+      "mean_utilization": 0.9337,
+      "max_tokens": 477
+    },
+    {
+      "target_tokens": 256,
+      "rule": "min_ratio",
+      "char_limit": 371,
+      "chunks": 1523,
+      "over_target": 0.0,
+      "over_runner_up_cap": 0.0,
+      "mean_utilization": 0.3468,
+      "max_tokens": 188
+    },
+    {
+      "target_tokens": 512,
+      "rule": "mean_ratio",
+      "char_limit": 2092,
+      "chunks": 300,
+      "over_target": 0.3367,
+      "over_runner_up_cap": 0.76,
+      "mean_utilization": 0.8731,
+      "max_tokens": 789
+    },
+    {
+      "target_tokens": 512,
+      "rule": "min_ratio",
+      "char_limit": 742,
+      "chunks": 771,
+      "over_target": 0.0,
+      "over_runner_up_cap": 0.0,
+      "mean_utilization": 0.3408,
+      "max_tokens": 313
+    },
+    {
+      "target_tokens": 1024,
+      "rule": "mean_ratio",
+      "char_limit": 4184,
+      "chunks": 173,
+      "over_target": 0.2717,
+      "over_runner_up_cap": 0.7803,
+      "mean_utilization": 0.7563,
+      "max_tokens": 1490
+    },
+    {
+      "target_tokens": 1024,
+      "rule": "min_ratio",
+      "char_limit": 1485,
+      "chunks": 408,
+      "over_target": 0.0,
+      "over_runner_up_cap": 0.0466,
+      "mean_utilization": 0.3212,
+      "max_tokens": 646
+    }
+  ]
+}

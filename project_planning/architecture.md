@@ -37,6 +37,7 @@
 | `qdrant` | `qdrant/qdrant:v1.20.0` | 상시 | 기본. 데이터베이스 선정 실험에서 확정. 지금은 실험 profile(`dbbench`)에만 있고 Ingest 구현 때 운영 구성으로 옮김 |
 | `api` | 프로젝트 이미지 | 상시 | `uvicorn app.main:app` |
 | `batch` | 프로젝트 이미지 `runtime` 단계(api와 같음) | 일회성, `profiles: [batch]` | `python -m <모듈>`. `make corpus`, `make ingest`, `make eval` 등이 감싼다 |
+| `batch-korean` | 프로젝트 이미지 `korean` 단계(`runtime` + JRE + `korean` 의존성 그룹) | 일회성, `profiles: [batch]` | 토크나이저 선정 실험(`make tok-bench`) 전용. 형태소 분석기 비교에 JVM이 필요해 운영 이미지와 분리 |
 | `dev` | 프로젝트 이미지 `dev` 단계(개발 의존성 포함) | 일회성, `profiles: [dev]`, 네트워크 없음 | `make test`, `make typecheck` |
 
 `batch`는 profile로 묶어 `docker compose up`에서 뜨지 않게 하고 `docker compose run --rm batch <모듈> ...`로만 실행한다. Ingest, 선정 실험, Eval이 모두 이 서비스를 쓴다. api와 같은 이미지 단계를 써서 두 경로의 토크나이저와 임베딩 클라이언트 버전이 갈라지지 않게 한다. `data/`와 `research/`는 호스트 디렉토리를 마운트해 결과가 저장소에 남는다. `dev`는 네트워크를 끊어 테스트가 외부 API를 호출하지 못하게 한다.
@@ -58,7 +59,7 @@
 
 ```
 .
-├── compose.yaml                 # qdrant, api(Query 구현 후 추가), batch(일회성), dev(테스트), 선정 실험 후보 DB(profile dbbench)
+├── compose.yaml                 # qdrant, api(Query 구현 후 추가), batch(일회성), batch-korean(토크나이저 실험), dev(테스트), 선정 실험 후보 DB(profile dbbench)
 ├── Dockerfile
 ├── Makefile                     # corpus, ingest, serve, eval, select, test 별칭
 ├── pyproject.toml / uv.lock
@@ -146,7 +147,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 | 대상 | 경로 | 용도 | 보호 장치 |
 |---|---|---|---|
 | 엘리스 ML API (OpenAI 호환) | Query, Eval | 답변 생성, Judge, Gold 초안 | 타임아웃 60초, 재시도 3회, 키는 `SecretStr` 환경변수. 확인된 제약: `gpt-6.1-terra`는 temperature 기본값(1)만 허용, 비스트리밍 호출은 `max_completion_tokens` 2000 이하, `max_tokens` 대신 `max_completion_tokens` 사용, JSON Schema 구조화 출력 지원 |
-| 로컬 임베딩 모델(fastembed, ONNX) | Ingest, Query | Chunk와 질의 벡터화. 잠정 `Qwen/Qwen3-Embedding-0.6B`(엘리스 모델 라이브러리에 임베딩 모델이 없어 로컬 실행) | 외부 호출 없음. 모델 파일은 `.cache/models`에 받아 재사용 |
+| 로컬 임베딩 모델(fastembed, ONNX) | Ingest, Query | Chunk와 질의 벡터화. 잠정 `Qwen/Qwen3-Embedding-0.6B`(엘리스 모델 라이브러리에 임베딩 모델이 없어 로컬 실행) | 외부 호출 없음. 모델 파일은 `.cache/models`에 받아 재사용. 청크 길이도 이 모델의 토크나이저로 잰다 |
 | Qdrant | Ingest(쓰기), Query(읽기) | dense, sparse(IDF) 저장과 검색, RRF 결합 검색 | gRPC 연결(REST는 응답마다 약 45ms 지연 관찰), compose 내부 네트워크, Ingest 시 `ensure_collection` |
 | Corpus 원천 | Ingest | 다운로드 | 허용 URL은 manifest에만. 사용자 입력 URL 호출 없음 |
 
@@ -166,7 +167,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 | 지점 | 결정하는 선정 실험 |
 |---|---|
 | `document_loader` 파서 | 데이터셋 |
-| `common/text_tokenizer.py` 청크 길이 단위, BM25 토큰화 | 토크나이저 |
+| `common/text_tokenizer.py` BM25 토큰화, 청크 길이 단위 | 토크나이저(확정: BM25는 `word`, 길이는 선정 임베딩 토크나이저 토큰 수 `EmbeddingClient.token_count`) |
 | `chunk_splitter` 분할 방식, 크기, 겹침 | Chunking 전략 |
 | `chunk_repository` 구현, compose 벡터 DB 서비스, 컬렉션 명명 방식 | 데이터베이스(확정: Qdrant, `app/repository/qdrant_chunk_repository.py`) |
 | `embedding_client` 모델과 호출 방식(API 또는 로컬) | Embedding(잠정: Qwen3-Embedding-0.6B, 로컬 fastembed. 2위 multilingual-e5-large와 교차 확인 예정) |

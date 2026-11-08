@@ -1,8 +1,7 @@
 """selection_run 기능의 근거 단위 검색 지표(retrieval_metric)와 bootstrap 구간 단위 테스트."""
 import pytest
 
-from app.service.eval.embedding_benchmark import bootstrap, paired_difference
-from app.service.eval.retrieval_metric import score, evidence_anchors
+from app.service.eval.retrieval_metric import score, bootstrap, evidence_anchors, paired_difference
 from app.schema.gold_schema import GoldItem, GoldEvidence
 from app.schema.chunk_schema import Chunk
 

@@ -156,7 +156,7 @@
 
 **설명**: 원문을 정제, 청크, 임베딩해 벡터 DB에 upsert하고 컬렉션 메타데이터에 인덱스 계약(임베딩 모델, 토크나이저, Chunk 설정 해시)을 기록한다. 같은 입력으로 다시 돌리면 같은 상태로 수렴한다.
 
-**처리 흐름**: `ingest_cli`에서 `ingest_service.run`으로, `document_loader`, `text_cleaner`, `chunk_splitter`(`text_tokenizer`로 길이 측정), `embedding_client`, `chunk_repository.ensure_collection`, `chunk_repository.upsert` 순.
+**처리 흐름**: `ingest_cli`에서 `ingest_service.run`으로, `document_loader`, `text_cleaner`, `chunk_splitter`(`embedding_client.token_count`로 길이 측정), `embedding_client`, `sparse_encoder`(`text_tokenizer`로 BM25 토큰화), `chunk_repository.ensure_collection`, `chunk_repository.upsert` 순.
 
 **구현 파일**
 
@@ -167,8 +167,9 @@
 | `app/service/ingest/document_loader.py` | service | manifest 순서로 원문을 읽어 정제한 Document로 만듦. 구현됨 |
 | `app/service/ingest/text_cleaner.py` | service | front matter, HTML 주석, HTML 태그 제거. Markdown 링크와 `<name>` 같은 자리표시자는 유지(근거 인용과 대조하기 위해). 구현됨 |
 | `app/service/ingest/chunk_splitter.py` | service | 고정 길이 분할(`FixedLengthSplitter`) 구현됨. 다른 방식은 Chunking 선정 후 |
-| `app/common/text_tokenizer.py` | common | 청크 길이 측정, BM25 토큰화(Query와 공유) |
-| `app/client/embedding_client.py` | client | 배치 임베딩(Query와 공유). 지금은 로컬 fastembed 임시 모델 |
+| `app/common/text_tokenizer.py` | common | BM25 단어 토큰화(Query와 공유). 선정 설정 `word`. 비교용 kiwi, okt, kkma 모드는 `korean` 의존성 그룹이 있을 때만 import. 구현됨 |
+| `app/service/ingest/sparse_encoder.py` | service | BM25 sparse 벡터(문서 쪽 k1, b 가중, crc32 해시, 질의는 단어마다 1). Query와 공유. 구현됨 |
+| `app/client/embedding_client.py` | client | 배치 임베딩과 잘림 없는 토큰 수(Query와 공유). 로컬 fastembed, 잠정 Qwen3-Embedding-0.6B |
 | `app/repository/qdrant_chunk_repository.py` | repository | `ensure_collection`, `upsert`, 검색(dense, sparse, RRF 결합). 선정된 DB |
 | `app/schema/chunk_schema.py` | schema | Document, Chunk 모델. chunk_id는 (doc_id, text)의 sha256 |
 | `app/schema/vector_schema.py` | schema | sparse 벡터, 인덱스 계약 |
@@ -178,9 +179,11 @@
 | 종류 | 파일 |
 |---|---|
 | 단위 | `tests/unit/test_ingest_chunk_splitter.py`(정제 포함) |
+| 단위 | `tests/unit/test_ingest_text_tokenizer.py` |
+| 단위 | `tests/unit/test_ingest_sparse_encoder.py` |
 | 통합 | `tests/integ/test_ingest.py`(미구현) |
 
-**제약과 미구현**: `ingest_service`, `ingest_cli`, 인덱스 계약 기록은 미구현. 길이 단위는 토크나이저 선정, 분할 방식은 Chunking 선정, 모델은 Embedding 선정 후 확정.
+**제약과 미구현**: `ingest_service`, `ingest_cli`, 인덱스 계약 기록은 미구현. 길이 단위(Qwen3 토큰)와 BM25 토큰화(`word`)는 토크나이저 선정에서 확정. 분할 방식은 Chunking 선정, 모델은 Embedding 교차 확인 후 확정.
 
 ### judge_agreement: Judge 신뢰성 측정
 
@@ -280,7 +283,7 @@
 | `profile` | 후보 Corpus별 규모, 구조, 파싱 난이도, 함정 요소 통계. 구현됨 |
 | `closed_book` | 후보 Corpus별 근거 없는 질의를 seed별로 반복해 답변 수집. 구현됨 |
 | `closed_book_report` | 블라인드 채점 결과를 답변에 붙여 후보별 오답, 모름, 다수결 판정 집계. 구현됨 |
-| `tokenizer` | 청크 길이 단위별 임베딩 입력 잘림 비율, BM25 토크나이저별 Hit@5, MRR, 처리 시간 |
+| `tokenizer` | 길이 단위별 임베딩 토큰 대비 비율 분포, 문자 수 상한의 목표 초과 비율과 채움률, BM25 토크나이저 7종(규칙 4종, Kiwi, Okt, Kkma)별 sparse 단독 Hit@5, MRR, 처리 시간, 어휘와 해시 충돌. 구현됨(`make tok-bench`, `batch-korean` 이미지) |
 | `chunking` | 분할 방식, 크기, 겹침별 Hit@5, MRR, 근거 보존율, 청크 수, 질의당 근거 토큰 수 |
 | `database` | 후보 DB별 기능 검사 6종, 적재 시간, 질의 지연 p50과 p95, 메모리 사용량, numpy 전수 비교 대비 ANN 재현율. 구현됨(`make db-bench`) |
 | `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 근거 재현율, 문서 단위 Recall@5(영어, 한국어 질의), bootstrap 신뢰구간, 색인 시간, 질의 임베딩 지연. 구현됨(`make embed-bench`). 교차 확인은 미구현 |
@@ -301,7 +304,9 @@
 | `app/cli/database_selection_cli.py` | cli | DB 후보 접속, 청크와 임시 벡터 준비, 결과 저장 |
 | `app/cli/embedding_selection_cli.py` | cli | 임베딩 후보 정의(접두어, 최대 입력), 결과와 짝지은 차이 저장 |
 | `app/service/eval/embedding_benchmark.py` | service | 모델별 색인, Qdrant 정확 검색, 지표와 bootstrap 구간 |
-| `app/service/eval/retrieval_metric.py` | service | 근거 단위 Hit@k, MRR, 근거 재현율, 문서 Recall(60자 창 근거 판정) |
+| `app/service/eval/retrieval_metric.py` | service | 근거 단위 Hit@k, MRR, 근거 재현율, 문서 Recall(60자 창 근거 판정), bootstrap 구간과 짝지은 차이 |
+| `app/cli/tokenizer_selection_cli.py` | cli | 길이 단위와 BM25 후보 정의, 결과와 짝지은 차이 저장 |
+| `app/service/eval/tokenizer_benchmark.py` | service | 단위별 길이 비율, 문자 상한 검사, BM25 sparse 단독 검색 측정 |
 | `app/service/eval/database_benchmark.py` | service | 기능 검사, 적재, 지연, ANN 재현율 측정 |
 | `app/service/eval/vector_projector.py` | service | 무작위 투영으로 차원 변경, numpy 전수 비교 |
 | `app/service/eval/term_hasher.py` | service | 기능 검사용 임시 sparse 인코더 |
@@ -317,8 +322,9 @@
 | 단위 | `tests/unit/test_selection_run_closed_book_reporter.py` |
 | 단위 | `tests/unit/test_selection_run_vector_projector.py` |
 | 단위 | `tests/unit/test_selection_run_retrieval_metric.py` |
+| 단위 | `tests/unit/test_selection_run_tokenizer_benchmark.py` |
 
-**제약과 미구현**: 데이터셋, 데이터베이스, Embedding 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
+**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
 
 ---
 
@@ -329,4 +335,4 @@
 | `app/common/logger.py` | structlog 로거. `LOG_FORMAT`으로 콘솔과 JSON 전환 |
 | `app/common/settings.py` | pydantic-settings 환경변수 로딩. 키 누락 시 기동 실패 |
 | `app/common/content_hasher.py` | 파일, 텍스트, 설정의 sha256 |
-| `app/common/text_tokenizer.py` | 선정된 토크나이저. Ingest와 Query가 같은 인스턴스 설정을 씀 |
+| `app/common/text_tokenizer.py` | BM25 단어 토큰화. 선정 설정 `word`. Ingest와 Query가 같은 설정을 씀. 형태소 분석기 모드는 실험 전용 |

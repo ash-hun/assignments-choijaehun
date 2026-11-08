@@ -16,13 +16,20 @@ dependencies = [
     "pydantic-settings>=2.4,<3",
     "qdrant-client>=1.20,<1.21",
     "rich>=13.7,<15",
+    "snowballstemmer>=3,<4",
     "structlog>=24.4,<26",
+    "tiktoken>=0.12,<1",
+    "tokenizers>=0.23,<0.24",
 ]
 
 [dependency-groups]
 dev = [
     "mypy>=1.11,<2",
     "pytest>=8.3,<9",
+]
+korean = [
+    "kiwipiepy>=0.21,<1",
+    "konlpy>=0.6,<0.7",
 ]
 
 [tool.uv]
@@ -37,3 +44,8 @@ python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["app", "tests"]
+
+# 타입 정보를 배포하지 않거나, 이미지에 따라 설치되지 않는 의존성이다. 쓰는 곳은 text_tokenizer 한 곳이다.
+[[tool.mypy.overrides]]
+module = ["snowballstemmer", "konlpy.*", "kiwipiepy"]
+ignore_missing_imports = true
