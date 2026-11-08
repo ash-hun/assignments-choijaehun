@@ -14,7 +14,7 @@ RAG QA 서비스의 구성 요소를 하나씩 고정해 가며 고른 과정이
 | 8 | 프롬프트, 인용 파서, 거절 임계값 | 확정 | dense 최고 점수 0.6375 미만이면 거절. dev set 오거절 0%, 답 없음 거절 영어 4/8, 한국어 5/8. 나머지는 근거 부족 토큰으로 판정 | [08_prompt_and_refusal.md](08_prompt_and_refusal.md) |
 | 9 | LLM | 확정 | claude-haiku-5-5. gemini-3.8-flash는 한국어 오거절 0.133으로 품질 하한(10%) 미달. 문항당 약 ₩0.9 | [09_llm.md](09_llm.md) |
 | 10 | 검색 성능 평가 | 예정 | 확정한 검색 구성을 test set으로 평가. Recall, Precision, F1, MRR, nDCG | |
-| 11 | 생성 성능 평가 | 예정 | 확정한 전체 파이프라인을 test set으로 평가. uv 문서 전용 루브릭 점수 | |
+| 11 | 생성 성능 평가 | 예정 | 확정한 전체 파이프라인을 test set으로 평가. uv 답변 정확성과 품질 점수 | |
 
 1~9단계는 dev set으로 구성 요소를 **고르는** 실험이고, 10, 11단계는 고른 구성의 성능을 test set으로 **재는** 실험이다. 10, 11단계의 측정 방식은 Part C(개선 실험)의 기준선과 개선안 비교에도 그대로 쓴다.
 
@@ -49,9 +49,9 @@ RAG QA 서비스의 구성 요소를 하나씩 고정해 가며 고른 과정이
 
 ### 11. 생성 성능 평가
 
-확정 지표는 Citation Precision, Refusal Accuracy, uv 문서 루브릭 통합 점수(규칙 항목과 Judge 항목, 핵심 요점이 Answer Correctness), 운영 지표(TTFT, TPOT, Latency, 질의당 비용)다. 정의, 선정 이유, 통과 기준은 [research/gold_metric_selection.md](../../research/gold_metric_selection.md). 아래 루브릭은 초안이고 항목은 별도 설계로 확정한다. 일반 지표는 "근거에 충실한가"를 보지만, uv 문서에서 실제로 틀리기 쉬운 지점(명령 혼동, 식별자 철자, 낡은 동작)은 따로 보지 않으면 놓친다.
+확정 지표는 Citation Precision, Refusal Accuracy, uv 답변 정확성(핵심 요점, 금지 내용 없음), uv 답변 품질 점수(규칙 2항목, Judge 5항목), 운영 지표(TTFT, TPOT, Latency, 질의당 비용)다. 정의, 선정 이유, 통과 기준은 [research/gold_metric_selection.md](../../research/gold_metric_selection.md). 아래 루브릭은 초안이고, 검수 중인 9항목 초안은 그 문서의 "uv 문서 루브릭" 절에 있다. 일반 지표는 "근거에 충실한가"를 보지만, uv 문서에서 실제로 틀리기 쉬운 지점(명령 혼동, 식별자 철자, 낡은 동작)은 따로 보지 않으면 놓친다.
 
-**uv 문서 루브릭(초안)**
+**uv 문서 루브릭(계획 당시 초안, 최신 초안은 research/gold_metric_selection.md)**
 
 | 항목 | 통과 조건 | 해당 문항 |
 |---|---|---|
