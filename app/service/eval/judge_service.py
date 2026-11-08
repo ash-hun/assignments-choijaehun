@@ -2,12 +2,12 @@
 import json
 import asyncio
 
-from app.service.eval.judge_prompt import PROMPT_VERSION, RUBRIC_SCHEMA, CITATION_SCHEMA, prompt_hash, rubric_messages, citation_messages
+from app.service.eval.judge_prompt import RUBRIC_SCHEMA, CITATION_SCHEMA, prompt_version, rubric_messages, citation_messages
 from app.service.eval.judge_metric import parse_rubric, citation_pairs, parse_citations
 from app.client.llm_client import ChatMessage, LlmClient, LlmCompletion
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.service.query.chunk_retriever import ChunkRetriever
-from app.schema.judge_schema import JudgeKind, JudgeResult
+from app.schema.judge_schema import JUDGE_KINDS, JudgeKind, JudgeResult
 from app.common.upstream_error import UpstreamError
 from app.schema.eval_schema import EvalRecord
 from app.schema.gold_schema import GoldItem
@@ -37,13 +37,13 @@ class JudgeService:
         self._retriever = retriever
         self._chunks = {c.chunk_id: c for c in chunks}
         self._semaphore = asyncio.Semaphore(concurrency)
-        # 문구를 고치면 해시가 바뀌어 이전 판정을 다시 쓰지 않는다.
-        self.version = f"{PROMPT_VERSION}-{prompt_hash()}"
+        # 문구를 고치면 그 종류의 해시가 바뀌어 이전 판정을 다시 쓰지 않는다.
+        self.versions = {kind: prompt_version(kind) for kind in JUDGE_KINDS}
 
     async def current(self, run_id: str) -> list[JudgeResult]:
         """이 Judge 모델과 프롬프트 버전의 판정만."""
         return [r for r in await self._repository.judgments(run_id)
-                if r.judge_model == self._llm.model and r.prompt_version == self.version]
+                if r.judge_model == self._llm.model and r.prompt_version == self.versions[r.kind]]
 
     async def judge(
         self, run_id: str, records: list[EvalRecord], items: dict[str, GoldItem], samples: int, top_k: int,
@@ -88,7 +88,7 @@ class JudgeService:
         elif raws[0] is not None:
             rubric = parse_rubric(raws[0], len(key_points), len(rejections))
         result = JudgeResult(
-            record_id=record.record_id, kind=kind, sample=sample, judge_model=self._llm.model, prompt_version=self.version,
+            record_id=record.record_id, kind=kind, sample=sample, judge_model=self._llm.model, prompt_version=self.versions[kind],
             ok=citations is not None or rubric is not None, citations=citations, rubric=rubric,
             input_tokens=sum(c.input_tokens for c in completions), output_tokens=sum(c.output_tokens for c in completions),
         )

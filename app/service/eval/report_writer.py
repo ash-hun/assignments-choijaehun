@@ -94,11 +94,10 @@ def _judge_section(summaries: list[LanguageSummary], judge_info: dict[str, str])
         f"- Judge `{judge_info['model']}`, 프롬프트 `{judge_info['version']}`, 표본 {judge_info['samples']}회 다수결. 답한 문항만 판정한다", "",
         head, rule,
         "| 판정한 답 / 판정 실패 | " + " | ".join(f"{j.judged} / {j.failed}" for j in judges) + " |",
-        "| Citation Precision | " + " | ".join(_ci(j.citation_precision) for j in judges) + " |",
+        "| Citation Precision(참고값, 사람 대비 kappa 미달) | " + " | ".join(_ci(j.citation_precision) for j in judges) + " |",
         "| uv 답변 정확성 | " + " | ".join(_ci(j.accuracy) for j in judges) + " |",
         "| 핵심 요점 포함률 | " + " | ".join(_ci(j.key_point_rate) for j in judges) + " |",
-        "| uv 답변 품질 점수 | " + " | ".join(_ci(j.quality_score) for j in judges) + " |",
-        "", "품질 항목별 통과율(해당 없음 제외):", "", head, rule,
+        "", "품질 항목별 통과율(해당 없음 제외, 참고값). 검증 조건을 통과한 항목이 없어 uv 답변 품질 점수는 내지 않는다:", "", head, rule,
     ]
     lines += [f"| {label} | " + " | ".join(_rate(j.quality_items.get(key)) for j in judges) + " |" for key, label in QUALITY_LABELS.items()]
     if any(j.agreement for j in judges):

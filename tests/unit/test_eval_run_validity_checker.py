@@ -1,7 +1,8 @@
 """eval_run 기능의 지표 타당성 판정(validity_checker) 단위 테스트."""
+from app.service.eval.validity_variant import strip_citations, shuffle_citations
 from app.service.eval.validity_checker import check_variant
 
-METRICS = ["recall_at_5", "correct", "citation_precision", "quality_score", "unanswerable_refused"]
+METRICS = ["recall_at_5", "correct", "citation_precision", "quality_score", "unsupported_claim", "unanswerable_refused"]
 
 
 def values(**given: float) -> dict[str, float | None]:
@@ -19,3 +20,8 @@ def test_variant_passes_only_when_every_expected_metric_drops_beyond_noise() -> 
     assert passed.passed and next(c for c in passed.checks if c.metric == "citation_precision").pairs == 10
     assert not failed.passed
     assert next(c for c in passed.checks if c.metric == "recall_at_5").passed is None
+
+
+def test_strip_and_shuffle_rewrite_only_citation_markers() -> None:
+    assert strip_citations("Use `uv sync` [1][2].") == "Use `uv sync` ."
+    assert shuffle_citations("A [1]. B [5].", 5) == "A [2]. B [1]."

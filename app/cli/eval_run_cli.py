@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from psycopg import AsyncConnection
 from collections.abc import Callable
 
-from app.service.eval.validity_variant import NeverRefuseChecker, RandomChunkRetriever, shuffle_citations
+from app.service.eval.validity_variant import NeverRefuseChecker, RandomChunkRetriever, strip_citations, shuffle_citations
 from app.service.eval.eval_service import TokenPrice, EvalOutcome, EvalService
 from app.service.query.query_builder import QueryParts, open_query_service
 from app.repository.eval_record_repository import EvalRecordRepository
@@ -98,6 +98,8 @@ def variant_parts(
         return parts.service, parts.retriever, None
     if config.variant == "shuffled_citations":
         return parts.service, parts.retriever, lambda answer: shuffle_citations(answer, config.top_k)
+    if config.variant == "stripped_citations":
+        return parts.service, parts.retriever, strip_citations
     retriever = RandomChunkRetriever(chunks, BOOTSTRAP_SEED) if config.variant == "random_chunks" else parts.retriever
     checker = NeverRefuseChecker() if config.variant == "no_refusal" else EvidenceChecker(settings.refusal_threshold)
     service = QueryService(retriever, checker, parts.llm, parts.gate, settings.embedding_model, settings.default_top_k,
@@ -153,7 +155,8 @@ async def run(settings: Settings, config: EvalConfig, judge_limit: int | None) -
     tokens_in = sum(r.input_tokens for r in results)
     tokens_out = sum(r.output_tokens for r in results)
     cost = tokens_in * settings.judge_input_krw_per_mtok / 1e6 + tokens_out * settings.judge_output_krw_per_mtok / 1e6
-    judge_info = {"model": settings.judge_llm_model, "version": judge.version, "samples": str(config.judge_samples),
+    version = ", ".join(f"{kind} {v}" for kind, v in judge.versions.items())
+    judge_info = {"model": settings.judge_llm_model, "version": version, "samples": str(config.judge_samples),
                   "calls": str(len(results)), "cost_krw": f"{cost:.1f}"}
     return RunResult(run_id=run_id, manifest=manifest, outcome=outcome, judgments=judgments, judge_info=judge_info)
 

@@ -8,7 +8,7 @@ from app.schema.query_schema import QueryStatus
 
 EvalSource = Literal["gold", "live"]
 # 지표 타당성 검증용 변형(research/gold_metric_selection.md의 "지표 타당성 검증"). none이 실제 서비스 구성이다.
-EvalVariant = Literal["none", "random_chunks", "no_refusal", "shuffled_citations", "swapped_context"]
+EvalVariant = Literal["none", "random_chunks", "no_refusal", "shuffled_citations", "swapped_context", "stripped_citations"]
 
 
 class EvalConfig(BaseModel):

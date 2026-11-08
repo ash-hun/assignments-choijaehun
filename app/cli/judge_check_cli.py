@@ -8,11 +8,11 @@ from pathlib import Path
 from psycopg import AsyncConnection
 
 from app.service.eval.validity_checker import VariantCheck, item_values, check_variant
-from app.schema.judge_schema import HumanLabel, JudgeResult, RecordJudgment
+from app.schema.judge_schema import JUDGE_KINDS, HumanLabel, JudgeResult, RecordJudgment
 from app.cli.eval_run_cli import load_items, load_config, build_manifest
 from app.service.eval.agreement_calculator import AgreementRow, compare
 from app.repository.eval_record_repository import EvalRecordRepository
-from app.service.eval.judge_prompt import PROMPT_VERSION, prompt_hash
+from app.service.eval.judge_prompt import prompt_version
 from app.service.eval.judge_metric import aggregate, citation_pairs
 from app.service.query.query_builder import open_query_service
 from app.common.settings import Settings, get_settings
@@ -21,7 +21,8 @@ from app.schema.gold_schema import GoldItem
 from app.common.logger import get_logger
 
 VALIDITY_CONFIGS = ["configs/validity_random_chunks.toml", "configs/validity_no_refusal.toml",
-                    "configs/validity_shuffled_citations.toml", "configs/validity_swapped_context.toml"]
+                    "configs/validity_shuffled_citations.toml", "configs/validity_swapped_context.toml",
+                    "configs/validity_stripped_citations.toml"]
 VALIDITY_OUT = "artifacts/judge_validity"
 AGREEMENT_OUT = "artifacts/judge_agreement"
 LABEL_COUNT = 20
@@ -41,7 +42,7 @@ async def load_run(
     config = load_config(Path(config_path))
     items, hashes = load_items(config)
     run_id = build_manifest(settings, config, hashes).run_id()
-    version = f"{PROMPT_VERSION}-{prompt_hash()}"
+    versions = {kind: prompt_version(kind) for kind in JUDGE_KINDS}
     async with await AsyncConnection.connect(
         host=settings.eval_db_host, port=settings.eval_db_port, dbname=settings.eval_db_name, user=settings.eval_db_user,
         password=settings.eval_db_password.get_secret_value(), autocommit=True, connect_timeout=10,
@@ -51,7 +52,7 @@ async def load_run(
         results = await repository.judgments(run_id)
     grouped: dict[str, list[JudgeResult]] = {}
     for r in results:
-        if r.judge_model == settings.judge_llm_model and r.prompt_version == version and (max_samples is None or r.sample < max_samples):
+        if r.judge_model == settings.judge_llm_model and r.prompt_version == versions[r.kind] and (max_samples is None or r.sample < max_samples):
             grouped.setdefault(r.record_id, []).append(r)
     if not records:
         raise SystemExit(f"no records for {run_id}: run `make eval CONFIG={config_path}` first")

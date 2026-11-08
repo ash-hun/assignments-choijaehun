@@ -65,7 +65,7 @@
 
 ### eval_run: 평가 실행
 
-**설명**: 설정 파일 하나로 test set 전체(영어, 한국어)를 실제 질의 경로(`query_builder`로 API와 같은 조립, 스트리밍)에 넣고, 문항마다 검색 지표, 거절, 인용 규칙, 운영 수치(검색 지연, TTFT, TPOT, Latency, 비용)를 평가 기록 저장소(PostgreSQL `evaldb`)에 남긴다. 답한 문항은 Judge(gemini-3.8-flash)가 인용 대조와 루브릭으로 3회 판정하고, 다수결로 Citation Precision, uv 답변 정확성, uv 답변 품질 점수를 만든다. 재현에 필요한 값(git commit, Gold와 원문 해시, 인덱스 계약, 답변 모델과 생성 조건, 프롬프트 해시, Judge 프롬프트 버전, bootstrap seed)을 manifest와 Report에 남긴다. 설정의 `variant`로 일부러 망가뜨린 파이프라인(무작위 청크, 거절 끔, 인용 섞기, Judge 근거 바꿔치기)을 돌려 지표 타당성을 검증한다.
+**설명**: 설정 파일 하나로 test set 전체(영어, 한국어)를 실제 질의 경로(`query_builder`로 API와 같은 조립, 스트리밍)에 넣고, 문항마다 검색 지표, 거절, 인용 규칙, 운영 수치(검색 지연, TTFT, TPOT, Latency, 비용)를 평가 기록 저장소(PostgreSQL `evaldb`)에 남긴다. 답한 문항은 Judge(gemini-3.8-flash)가 인용 대조와 루브릭으로 3회 판정하고, 다수결로 uv 답변 정확성을 만들고, Citation Precision과 품질 6항목 통과율은 검증 조건에 못 미쳐 참고값으로 낸다(uv 답변 품질 점수는 채택 항목이 없어 내지 않는다). 재현에 필요한 값(git commit, Gold와 원문 해시, 인덱스 계약, 답변 모델과 생성 조건, 프롬프트 해시, Judge 프롬프트 버전, bootstrap seed)을 manifest와 Report에 남긴다. 설정의 `variant`로 일부러 망가뜨린 파이프라인(무작위 청크, 거절 끔, 인용 섞기, Judge 근거 바꿔치기)을 돌려 지표 타당성을 검증한다.
 
 **입력과 결과**
 
@@ -73,11 +73,11 @@
 |---|---|
 | `make eval` (`CONFIG=configs/baseline.toml`) | `qdrant`, `evaldb`를 띄우고 평가와 Judge. `reports/<run_id>/`에 `manifest.json`, `results.jsonl`(기록과 판정), `summary.json`, `summary.md` |
 | 같은 설정, 데이터, 인덱스로 다시 실행 | 같은 run_id. 기록된 문항은 LLM을, 성공한 판정은 Judge를 부르지 않고 같은 Report를 다시 쓴다(비용 0) |
-| Judge 프롬프트 문구 변경 | 프롬프트 버전(해시)이 바뀌어 새로 판정한다. 이전 판정은 버전별로 남는다 |
+| Judge 프롬프트 문구 변경 | 그 종류(인용, 루브릭)의 버전(해시)만 바뀌어 그 종류만 새로 판정한다. 이전 판정은 버전별로 남는다 |
 | 일부 문항에서 LLM 호출 실패 | 그 문항만 기록하지 않고 Report에 id를 남긴 뒤 종료 코드 1. 다음 실행이 그 문항만 다시 부른다 |
 | Judge 출력이 스키마나 규칙(목록 길이, 해당 없음 불가 항목의 na)을 어김 | 그 판정은 실패로 저장되고 집계에서 빠진다. 다음 실행에서 다시 부른다(같은 요청은 캐시) |
 | `make eval EVAL_ARGS="--judge-limit 10"` | 파일럿. 답한 기록 앞 10개만 Judge |
-| `make validity` | 변형 4종을 영어 40문항, Judge 1회로 평가하고 기준선 첫 표본과 짝지어 비교. `research/artifacts/judge_validity/results.json`. 기대한 하락이 하나라도 없으면 종료 코드 1 |
+| `make validity` | 변형 5종(무작위 청크, 거절 끔, 인용 섞기, 근거 바꿔치기, 인용 지우기)을 영어 40문항, Judge 1회로 평가하고 기준선 첫 표본과 짝지어 비교. `research/artifacts/judge_validity/results.json`. 기대한 하락이 하나라도 없으면 종료 코드 1 |
 | `EVAL_DB_PASSWORD` 없음, Judge 엔드포인트 없음, 인덱스 계약 불일치 | 시작 전에 실패 |
 
 **처리 흐름**: `eval_run_cli`에서 설정과 Gold 파일 로드, manifest와 run_id 계산, `open_query_service`, 변형 선택(`variant_parts`), `EvalRecordRepository.ensure_schema`와 `upsert_run`, `all_chunks`, `EvalService.run`, `JudgeService.judge`(답마다 같은 검색기로 근거 청크를 다시 찾고 인용 대조, 루브릭 호출), `aggregate`, `summarize_records`, `write_report` 순.
@@ -90,9 +90,9 @@
 | `app/cli/judge_check_cli.py` | cli | `validity`, `label-sheet`, `agreement` |
 | `app/service/eval/eval_service.py` | service | 기록이 없는 문항만 동시 실행, 기록 저장, 실패 문항 분리 |
 | `app/service/eval/judge_service.py` | service | 성공한 판정이 없는 (기록, 종류, 표본)만 Judge 호출. 인용은 8개씩 나눠 부름. 캐시와 저장소 |
-| `app/service/eval/judge_prompt.py` | service | Judge 프롬프트 v2, 구조화 출력 스키마, 프롬프트 해시, 경계 태그 중화 |
+| `app/service/eval/judge_prompt.py` | service | Judge 프롬프트(인용 v3, 루브릭 v2), 구조화 출력 스키마, 종류별 버전 해시, 경계 태그 중화 |
 | `app/service/eval/judge_metric.py` | service | (문장, 인용 번호) 분리, Judge 출력 검증, 표본 다수결과 일치 |
-| `app/service/eval/validity_variant.py` | service | 무작위 청크 검색기(근거 바꿔치기에도 씀), 거절하지 않는 판정기, 인용 섞기 |
+| `app/service/eval/validity_variant.py` | service | 무작위 청크 검색기(근거 바꿔치기에도 씀), 거절하지 않는 판정기, 인용 섞기, 인용 지우기 |
 | `app/service/eval/validity_checker.py` | service | 기준선과 변형의 짝지은 차이와 판정 |
 | `app/service/eval/eval_summarizer.py` | service | 언어별 검색, 거절, 인용, 운영, Judge 지표 요약과 bootstrap 구간 |
 | `app/service/eval/retrieval_metric.py` | service | `rank_score`(Recall@k, Precision@k, F1@k, MRR, nDCG@10), `relevant_chunk_ids` |

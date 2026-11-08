@@ -33,12 +33,13 @@ eval:
 	docker compose up -d --wait qdrant evaldb
 	docker compose run --rm --build -e GIT_COMMIT=$(GIT_COMMIT) batch app.cli.eval_run_cli --config $(CONFIG) $(EVAL_ARGS)
 
-# 지표 타당성 검증: 망가뜨린 변형 4종을 평가하고 기준선과 비교한다(research/artifacts/judge_validity).
+# 지표 타당성 검증: 망가뜨린 변형 5종을 평가하고 기준선과 비교한다(research/artifacts/judge_validity).
 validity:
 	$(MAKE) eval CONFIG=configs/validity_random_chunks.toml || true
 	$(MAKE) eval CONFIG=configs/validity_no_refusal.toml || true
 	$(MAKE) eval CONFIG=configs/validity_shuffled_citations.toml || true
 	$(MAKE) eval CONFIG=configs/validity_swapped_context.toml || true
+	$(MAKE) eval CONFIG=configs/validity_stripped_citations.toml || true
 	$(BATCH) app.cli.judge_check_cli validity
 
 # 사람 라벨 시트(data/gold/human_labels_sheet.md)와 채울 라벨 파일. 라벨 파일이 있으면 덮어쓰지 않는다.

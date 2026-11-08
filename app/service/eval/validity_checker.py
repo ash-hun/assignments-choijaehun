@@ -10,12 +10,14 @@ from app.schema.judge_schema import RecordJudgment
 EXPECTED_DROPS: dict[str, list[str]] = {
     "random_chunks": ["recall_at_5", "correct"],
     # 무작위 청크를 받은 답변 모델은 대부분 거절해(40문항 중 38) 품질 점수를 짝지을 수 없었다.
-    # 실제 답은 그대로 두고 Judge에게만 무작위 청크를 근거로 보여 품질 점수와 인용 판정이 근거를 읽는지 본다.
-    "swapped_context": ["quality_score", "citation_precision"],
+    # 실제 답은 그대로 두고 Judge에게만 무작위 청크를 근거로 보여 인용 판정이 근거를 읽는지 본다.
+    "swapped_context": ["citation_precision"],
+    # 품질 점수가 "근거 없는 주장 없음" 하나로 확정된 뒤의 직접 검증. 근거를 바꿔도 인용 유무는 그대로라 위 변형으로는 잴 수 없다.
+    "stripped_citations": ["unsupported_claim"],
     "no_refusal": ["unanswerable_refused"],
     "shuffled_citations": ["citation_precision"],
 }
-METRICS = ["recall_at_5", "correct", "citation_precision", "quality_score", "unanswerable_refused"]
+METRICS = ["recall_at_5", "correct", "citation_precision", "quality_score", "unsupported_claim", "unanswerable_refused"]
 
 
 class MetricCheck(BaseModel):
@@ -54,6 +56,7 @@ def item_values(record: EvalRecord, judgment: RecordJudgment | None) -> dict[str
         "correct": correct,
         "citation_precision": judgment.citation_precision if judged and judgment is not None else None,
         "quality_score": judgment.quality_score if judged and judgment is not None else None,
+        "unsupported_claim": _flag(judgment.quality_items.get("unsupported_claim")) if judged and judgment is not None else None,
         "unanswerable_refused": float(refused) if record.answerable is False else None,
     }
 
@@ -73,3 +76,7 @@ def check_variant(
         passed = (diff is not None and diff.ci_low > 0) if is_expected else None
         checks.append(MetricCheck(metric=metric, pairs=len(shared), diff=diff, expected=is_expected, passed=passed))
     return VariantCheck(variant=variant, checks=checks, passed=all(c.passed for c in checks if c.expected))
+
+
+def _flag(value: bool | None) -> float | None:
+    return None if value is None else float(value)

@@ -1,14 +1,16 @@
-"""Judge 프롬프트 v2와 구조화 출력 스키마. 루브릭 v1(research/gold_metric_selection.md의 "항목 상세")을 옮겼고 해시를 결과에 기록한다.
-v2는 파일럿에서 na와 pass가 표본마다 갈린 항목의 해당 없음 조건을 명시했다."""
+"""Judge 프롬프트와 구조화 출력 스키마. 루브릭 v1(research/gold_metric_selection.md의 "항목 상세")을 옮겼고 종류별 버전과 해시를 결과에 기록한다.
+루브릭 v2는 해당 없음 조건을 명시했고, 인용 v3은 여러 근거를 인용한 문장의 판정 기준을 명시했다."""
 import re
 import json
 import hashlib
 from typing import Any
 
 from app.client.llm_client import ChatMessage
+from app.schema.judge_schema import JudgeKind
 from app.schema.chunk_schema import Chunk
 
-PROMPT_VERSION = "v2"
+# 종류마다 따로 올린다. 한쪽 문구만 고치면 그쪽 판정만 다시 부른다.
+PROMPT_VERSIONS: dict[JudgeKind, str] = {"citation": "v3", "rubric": "v2"}
 # 질문, 답, 근거, 기준은 모두 신뢰하지 않는 입력이다. 경계 태그를 흉내 내 지시를 끼워 넣지 못하게 꺾쇠를 바꾼다.
 BOUNDARY_TAG = re.compile(r"</?(documents?|question|answer|claims?|key_points?|rejections?)\b", re.IGNORECASE)
 
@@ -19,6 +21,7 @@ Return only the requested JSON."""
 
 CITATION_TASK = """Each claim below is a sentence from the answer together with the document number it cites.
 For each claim, decide whether the cited document supports what the sentence says. "Supported" means the document states the information or it follows directly from it. Information that is only in other documents does not count.
+A sentence that cites one document must be supported as a whole by that document. A sentence that cites several documents splits its content among them: mark a cited document supported if it backs at least one substantive part of the sentence and contradicts none of it.
 
 <documents>
 {documents}
@@ -116,10 +119,11 @@ def rubric_messages(
     return [ChatMessage(role="system", content=SYSTEM_PROMPT), ChatMessage(role="user", content=task)]
 
 
-def prompt_hash() -> str:
-    """프롬프트 문구와 스키마의 해시 앞 12자리. 문구가 바뀌면 값이 바뀐다."""
-    body = json.dumps([SYSTEM_PROMPT, CITATION_TASK, RUBRIC_TASK, CITATION_SCHEMA, RUBRIC_SCHEMA], sort_keys=True)
-    return hashlib.sha256(body.encode()).hexdigest()[:12]
+def prompt_version(kind: JudgeKind) -> str:
+    """종류별 "버전-해시". 해시는 그 종류가 쓰는 문구와 스키마만으로 계산해, 다른 종류의 문구 변경에 흔들리지 않는다."""
+    parts = [SYSTEM_PROMPT, CITATION_TASK, CITATION_SCHEMA] if kind == "citation" else [SYSTEM_PROMPT, RUBRIC_TASK, RUBRIC_SCHEMA]
+    digest = hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()[:12]
+    return f"{PROMPT_VERSIONS[kind]}-{digest}"
 
 
 def _documents(chunks: list[Chunk]) -> str:

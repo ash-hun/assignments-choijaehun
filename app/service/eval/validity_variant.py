@@ -38,6 +38,11 @@ class NeverRefuseChecker(EvidenceChecker):
         return False
 
 
+def strip_citations(answer: str) -> str:
+    """[n] 인용을 모두 지운다. 사실 문장마다 인용을 요구하는 항목이 이 변형에서 떨어져야 한다."""
+    return CITATION.sub("", answer)
+
+
 def shuffle_citations(answer: str, context_size: int) -> str:
     """[n]을 [n % context_size + 1]로 바꿔 모든 인용이 다른 근거를 가리키게 한다."""
     return CITATION.sub(lambda m: f"[{int(m.group(1)) % context_size + 1}]", answer)

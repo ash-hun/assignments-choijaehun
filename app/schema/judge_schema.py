@@ -4,8 +4,14 @@ from pydantic import BaseModel
 
 RubricVerdict = Literal["pass", "fail", "na"]
 JudgeKind = Literal["citation", "rubric"]
+JUDGE_KINDS: list[JudgeKind] = ["citation", "rubric"]
 # uv 답변 품질 점수의 Judge 항목. research/gold_metric_selection.md의 루브릭 v1 순서다.
 QUALITY_JUDGE_ITEMS = ["unsupported_claim", "identifier_accuracy", "interface_separation", "version_status", "prior_knowledge"]
+# 품질 점수에 넣는 항목. 루브릭 v1 6항목 중 검증 조건(반응성, 변별력, 신뢰성, 중복성)을 모두 통과한 항목만 둔다.
+# 5항목은 기준선 통과율이 1.000이라 변별력에서, "근거 없는 주장 없음"은 3회 판정 일치율(0.839, 0.821)이 0.90에 못 미쳐
+# 신뢰성에서 빠졌다. 채택 항목이 없어 품질 점수는 비고, 항목별 통과율만 참고값으로 보고한다
+# (research/gold_metric_selection.md의 "품질 점수와 Citation Precision 구성 확정").
+QUALITY_SCORE_ITEMS: list[str] = []
 # 해당 없음을 고를 수 없는 항목. 이 항목에 na가 오면 판정 실패로 본다.
 ALWAYS_APPLICABLE = {"unsupported_claim", "prior_knowledge"}
 

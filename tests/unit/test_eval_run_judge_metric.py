@@ -59,7 +59,7 @@ def test_aggregate_takes_the_majority_and_reports_disagreement() -> None:
     assert judged.citation_precision == 0.5
     assert judged.quality_items["prior_knowledge"] is True and judged.quality_items["interface_separation"] is None
     assert judged.quality_items["no_dropped_citation"] is False
-    assert judged.quality_score == 0.75
+    assert judged.quality_score is None
     assert judged.agreement["accuracy"] is False and judged.agreement["citation_precision"] is False
     assert judged.agreement["unsupported_claim"] is True
 

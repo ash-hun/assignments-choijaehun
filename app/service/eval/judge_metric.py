@@ -4,7 +4,7 @@ import statistics
 from typing import Any
 from collections import Counter
 
-from app.schema.judge_schema import ALWAYS_APPLICABLE, QUALITY_JUDGE_ITEMS, JudgeResult, RubricVerdict, RubricJudgment, RecordJudgment
+from app.schema.judge_schema import ALWAYS_APPLICABLE, QUALITY_JUDGE_ITEMS, QUALITY_SCORE_ITEMS, JudgeResult, RubricVerdict, RubricJudgment, RecordJudgment
 from app.schema.eval_schema import EvalRecord
 
 CITATION = re.compile(r"\[(\d+)\]")
@@ -71,7 +71,7 @@ def aggregate(record: EvalRecord, results: list[JudgeResult], has_criteria: bool
             agreement.update({item: len({getattr(r, item) for r in rubrics}) == 1 for item in QUALITY_JUDGE_ITEMS})
             if has_criteria:
                 agreement["accuracy"] = len({all(r.key_points) and not any(r.rejections) for r in rubrics}) == 1
-    applicable = [v for v in items.values() if v is not None]
+    applicable = [v for k, v in items.items() if k in QUALITY_SCORE_ITEMS and v is not None]
     return RecordJudgment(
         record_id=record.record_id, samples=len(rubrics), citation_precision=precision, accuracy=accuracy,
         key_point_rate=key_point_rate, quality_items=items,
