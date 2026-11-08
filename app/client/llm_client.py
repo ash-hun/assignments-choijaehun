@@ -1,6 +1,7 @@
 """엘리스 ML API(OpenAI 호환) 채팅 호출 클라이언트. 타임아웃과 재시도는 SDK 설정으로 건다."""
 from typing import Any, cast
 from pydantic import BaseModel
+from collections.abc import AsyncIterator
 from openai.types.chat import ChatCompletionMessageParam
 from openai import APIError, AsyncOpenAI, APITimeoutError, omit
 from openai.types.shared_params import ResponseFormatJSONSchema
@@ -25,6 +26,12 @@ class LlmCompletion(BaseModel):
     model: str
     input_tokens: int
     output_tokens: int
+
+
+class LlmDelta(BaseModel):
+    """스트리밍 중 새로 생성된 텍스트 조각."""
+
+    text: str
 
 
 class LlmClient:
@@ -74,3 +81,34 @@ class LlmClient:
             input_tokens=usage.prompt_tokens if usage else 0,
             output_tokens=usage.completion_tokens if usage else 0,
         )
+
+    async def stream(
+        self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int, temperature: float | None = None,
+    ) -> AsyncIterator[LlmDelta | LlmCompletion]:
+        """스트리밍 채팅 호출. 텍스트 조각을 LlmDelta로 흘리고, 끝나면 전체 텍스트와 토큰 수를 담은 LlmCompletion을 한 번 낸다."""
+        parts: list[str] = []
+        input_tokens = output_tokens = 0
+        model = self._model
+        try:
+            chunks = await self._sdk.chat.completions.create(
+                model=self._model,
+                messages=cast(list[ChatCompletionMessageParam], [m.model_dump() for m in messages]),
+                seed=omit if seed is None else seed,
+                max_completion_tokens=max_completion_tokens,
+                temperature=omit if temperature is None else temperature,
+                stream=True,
+                stream_options={"include_usage": True},
+            )
+            async for chunk in chunks:
+                model = chunk.model or model
+                if chunk.usage:
+                    input_tokens, output_tokens = chunk.usage.prompt_tokens, chunk.usage.completion_tokens
+                text = chunk.choices[0].delta.content if chunk.choices else None
+                if text:
+                    parts.append(text)
+                    yield LlmDelta(text=text)
+        except APITimeoutError as error:
+            raise LlmTimeoutError("llm request timed out") from error
+        except APIError as error:
+            raise LlmFailureError("llm request failed") from error
+        yield LlmCompletion(text="".join(parts), model=model, input_tokens=input_tokens, output_tokens=output_tokens)
