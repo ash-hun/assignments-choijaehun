@@ -2,10 +2,10 @@
   "failed_items": [],
   "judge": {
     "calls": "80",
-    "cost_krw": "475.2",
+    "cost_krw": "500.3",
     "model": "gemini-3.8-flash",
     "samples": "1",
-    "version": "v2-885fe14db546"
+    "version": "citation v3-96ee909bf92c, rubric v2-75cc0f62234d"
   },
   "languages": [
     {
@@ -26,8 +26,8 @@
         "agreement": {},
         "citation_precision": {
           "ci_high": 1.0,
-          "ci_low": 0.8917,
-          "mean": 0.9617
+          "ci_low": 0.8905,
+          "mean": 0.9601
         },
         "failed": 0,
         "judged": 40,
@@ -44,11 +44,7 @@
           "unsupported_claim": 0.85,
           "version_status": 1.0
         },
-        "quality_score": {
-          "ci_high": 0.9838,
-          "ci_low": 0.9292,
-          "mean": 0.9592
-        }
+        "quality_score": null
       },
       "language": "en",
       "latency_ms": {

@@ -4,10 +4,10 @@
   ],
   "judge": {
     "calls": "354",
-    "cost_krw": "2601.1",
+    "cost_krw": "2635.4",
     "model": "gemini-3.8-flash",
     "samples": "3",
-    "version": "v2-885fe14db546"
+    "version": "citation v3-96ee909bf92c, rubric v2-75cc0f62234d"
   },
   "languages": [
     {
@@ -27,7 +27,7 @@
         },
         "agreement": {
           "accuracy": 1.0,
-          "citation_precision": 0.871,
+          "citation_precision": 0.9677,
           "identifier_accuracy": 0.9355,
           "interface_separation": 0.9677,
           "prior_knowledge": 1.0,
@@ -35,9 +35,9 @@
           "version_status": 1.0
         },
         "citation_precision": {
-          "ci_high": 0.9931,
-          "ci_low": 0.9442,
-          "mean": 0.9711
+          "ci_high": 1.0,
+          "ci_low": 0.964,
+          "mean": 0.9874
         },
         "failed": 0,
         "judged": 31,
@@ -54,11 +54,7 @@
           "unsupported_claim": 0.8065,
           "version_status": 1.0
         },
-        "quality_score": {
-          "ci_high": 0.9855,
-          "ci_low": 0.9177,
-          "mean": 0.9538
-        }
+        "quality_score": null
       },
       "language": "en",
       "latency_ms": {
@@ -180,7 +176,7 @@
         },
         "agreement": {
           "accuracy": 0.9643,
-          "citation_precision": 0.8929,
+          "citation_precision": 0.9286,
           "identifier_accuracy": 0.9643,
           "interface_separation": 1.0,
           "prior_knowledge": 1.0,
@@ -188,9 +184,9 @@
           "version_status": 1.0
         },
         "citation_precision": {
-          "ci_high": 0.986,
-          "ci_low": 0.8919,
-          "mean": 0.9455
+          "ci_high": 0.9862,
+          "ci_low": 0.8855,
+          "mean": 0.9416
         },
         "failed": 0,
         "judged": 28,
@@ -207,11 +203,7 @@
           "unsupported_claim": 0.8571,
           "version_status": 1.0
         },
-        "quality_score": {
-          "ci_high": 0.9929,
-          "ci_low": 0.9321,
-          "mean": 0.9661
-        }
+        "quality_score": null
       },
       "language": "ko",
       "latency_ms": {

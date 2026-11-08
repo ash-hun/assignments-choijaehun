@@ -1,0 +1,69 @@
+{
+  "items": [
+    {
+      "agreement": 0.9841,
+      "item": "citation",
+      "kappa": 0.494,
+      "pairs": 126,
+      "passed": false
+    },
+    {
+      "agreement": 0.9692,
+      "item": "key_point",
+      "kappa": 0.904,
+      "pairs": 65,
+      "passed": true
+    },
+    {
+      "agreement": 1.0,
+      "item": "rejection",
+      "kappa": 1.0,
+      "pairs": 37,
+      "passed": true
+    },
+    {
+      "agreement": 0.95,
+      "item": "accuracy",
+      "kappa": 0.8864,
+      "pairs": 20,
+      "passed": true
+    },
+    {
+      "agreement": 0.9,
+      "item": "unsupported_claim",
+      "kappa": 0.6923,
+      "pairs": 20,
+      "passed": true
+    },
+    {
+      "agreement": 1.0,
+      "item": "identifier_accuracy",
+      "kappa": 1.0,
+      "pairs": 20,
+      "passed": true
+    },
+    {
+      "agreement": 0.9,
+      "item": "interface_separation",
+      "kappa": 0.8,
+      "pairs": 20,
+      "passed": true
+    },
+    {
+      "agreement": 1.0,
+      "item": "version_status",
+      "kappa": 1.0,
+      "pairs": 20,
+      "passed": true
+    },
+    {
+      "agreement": 1.0,
+      "item": "prior_knowledge",
+      "kappa": null,
+      "pairs": 20,
+      "passed": null
+    }
+  ],
+  "labeled_records": 20,
+  "total_records": 20
+}

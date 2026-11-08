@@ -2,10 +2,10 @@
   "failed_items": [],
   "judge": {
     "calls": "4",
-    "cost_krw": "22.6",
+    "cost_krw": "24.6",
     "model": "gemini-3.8-flash",
     "samples": "1",
-    "version": "v2-885fe14db546"
+    "version": "citation v3-96ee909bf92c, rubric v2-75cc0f62234d"
   },
   "languages": [
     {
@@ -43,11 +43,7 @@
           "prior_knowledge": 1.0,
           "unsupported_claim": 1.0
         },
-        "quality_score": {
-          "ci_high": 1.0,
-          "ci_low": 1.0,
-          "mean": 1.0
-        }
+        "quality_score": null
       },
       "language": "en",
       "latency_ms": {

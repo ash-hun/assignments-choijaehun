@@ -1,6 +1,6 @@
 # 평가 Report: validity-shuffled-citations-88a29b81eca7
 
-- 설정: `validity-shuffled-citations`, config_id `1251bc031bf2`, git `81670c5`
+- 설정: `validity-shuffled-citations`, config_id `1251bc031bf2`, git `6c0c7e6`
 - 인덱스: `chunks_uv_docs_66b32940`, 답변 모델 `claude-haiku-5-5`, 거절 임계값 0.6375
 - 근거 수 top_k 5, 검색 지표 깊이 10
 - 기록하지 못한 문항 0개
@@ -47,17 +47,16 @@
 
 ## 생성(Judge)
 
-- Judge `gemini-3.8-flash`, 프롬프트 `v2-885fe14db546`, 표본 1회 다수결. 답한 문항만 판정한다
+- Judge `gemini-3.8-flash`, 프롬프트 `citation v3-96ee909bf92c, rubric v2-75cc0f62234d`, 표본 1회 다수결. 답한 문항만 판정한다
 
 | 지표 | en |
 |---|---|
 | 판정한 답 / 판정 실패 | 30 / 0 |
-| Citation Precision | 0.091 [0.032, 0.171] |
+| Citation Precision(참고값, 사람 대비 kappa 미달) | 0.093 [0.034, 0.173] |
 | uv 답변 정확성 | 0.767 [0.633, 0.900] |
 | 핵심 요점 포함률 | 0.883 [0.789, 0.964] |
-| uv 답변 품질 점수 | 0.906 [0.861, 0.951] |
 
-품질 항목별 통과율(해당 없음 제외):
+품질 항목별 통과율(해당 없음 제외, 참고값). 검증 조건을 통과한 항목이 없어 uv 답변 품질 점수는 내지 않는다:
 
 | 지표 | en |
 |---|---|
