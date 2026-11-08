@@ -171,7 +171,7 @@
 | `app/service/ingest/sparse_encoder.py` | service | `SparseEncoder`: BM25 sparse 벡터(문서 쪽 k1, b 가중, crc32 해시, 질의는 단어마다 1). Query와 공유. 구현됨 |
 | `app/service/ingest/sentence_embedder.py` | service | 시맨틱 분할용 문장 임베딩. 같은 문장은 한 번만 임베딩 |
 | `app/client/embedding_client.py` | client | 배치 임베딩, 잘림 없는 토큰 수와 토큰 위치(Query와 공유). 로컬 fastembed, Qwen3-Embedding-0.6B(확정) |
-| `app/repository/qdrant_chunk_repository.py` | repository | `ensure_collection`, `upsert`, 검색(dense, sparse, RRF 결합). 선정된 DB |
+| `app/repository/qdrant_chunk_repository.py` | repository | `ensure_collection`, `upsert`, 검색(dense, 점수를 함께 주는 dense, sparse, RRF 결합). 선정된 DB |
 | `app/schema/chunk_schema.py` | schema | Document, Chunk 모델. chunk_id는 (doc_id, text)의 sha256 |
 | `app/schema/vector_schema.py` | schema | sparse 벡터, 인덱스 계약 |
 
@@ -243,7 +243,7 @@
 | `app/repository/chunk_repository.py` | repository | `search` |
 | `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출 |
 | `app/client/embedding_client.py` | client | 질의 벡터화 |
-| `app/schema/query_schema.py` | schema | 요청과 응답 모델 |
+| `app/schema/query_schema.py` | schema | 요청과 응답 모델. 지금은 인용을 정리한 답변(`ParsedAnswer`)만 있음 |
 
 **테스트**
 
@@ -254,7 +254,7 @@
 | 단위 | `tests/unit/test_query_prompt_builder.py` |
 | 통합 | `tests/integ/test_query.py` |
 
-**제약과 미구현**: 전부 미구현.
+**제약과 미구현**: `prompt_builder`, `citation_parser`, `evidence_checker`와 단위 테스트만 구현. 거절 임계값은 `research/refusal_threshold.md`에서 정한다. `query_service`, `chunk_retriever`, API 층, 통합 테스트는 미구현.
 
 ### query_stream: 스트리밍 질의응답
 
@@ -290,7 +290,7 @@
 | `database` | 후보 DB별 기능 검사 6종, 적재 시간, 질의 지연 p50과 p95, 메모리 사용량, numpy 전수 비교 대비 ANN 재현율. 구현됨(`make db-bench`) |
 | `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 근거 재현율, 문서 단위 Recall@5(영어, 한국어 질의), bootstrap 신뢰구간, 색인 시간, 질의 임베딩 지연. 구현됨(`make embed-bench`). 교차 확인은 `embedding_crosscheck` |
 | `embedding_crosscheck` | 확정 Chunking 청크로 Qwen3와 e5를 다시 색인해 Hit@5, MRR, 근거 보존@5와 @10, e5 잘림 청크 수 측정과 사전 규칙 판정. 구현됨(`make embed-check`) |
-| `refusal_threshold` | dev set 답 있음/답 없음 문항의 dense 최고 점수 분포와 임계값별 오거절, 미거절 비율 |
+| `refusal_threshold` | dev set 답 있음/답 없음 문항의 dense 최고 점수 분포와 임계값별 오거절, 미거절 비율, 언어별 오거절 상한(5%) 판정. 구현됨(`make refusal-calib`) |
 | `llm` | 생성 후보별 Faithfulness, 인용 형식 준수율, 거절률, 문항당 비용과 지연 |
 
 **구현 파일**
@@ -314,6 +314,8 @@
 | `app/service/eval/chunking_benchmark.py` | service | 설정별 색인과 정확 검색, 근거 보존율, 근거 보존@k(`evidence_covered`), 질의당 근거 토큰 수, 사전 규칙 판정(`pick_best`) |
 | `app/cli/embedding_crosscheck_cli.py` | cli | 확정 Chunking(`structure-512-77`)으로 Embedding 상위 두 모델(Qwen3, e5) 재측정, 결과와 판정 저장 |
 | `app/service/eval/embedding_crosscheck.py` | service | 모델 최대 입력을 넘는 청크 수(`truncated_chunks`), 교차 확인 사전 규칙 판정(`judge`: Hit@5 짝지은 차이, 근거 보존@5, 비용) |
+| `app/cli/refusal_calibration_cli.py` | cli | 확정 구성으로 색인, dev set 전 문항의 dense 최고 점수 측정, 결과와 판정 저장 |
+| `app/service/eval/refusal_calibrator.py` | service | 임계값 후보별 언어별 오거절, 거절 비율과 사전 규칙 판정(`pick_threshold`) |
 | `app/service/eval/database_benchmark.py` | service | 기능 검사, 적재, 지연, ANN 재현율 측정 |
 | `app/service/eval/vector_projector.py` | service | 무작위 투영으로 차원 변경, numpy 전수 비교 |
 | `app/service/eval/term_hasher.py` | service | 기능 검사용 임시 sparse 인코더 |
@@ -330,10 +332,10 @@
 | 단위 | `tests/unit/test_selection_run_vector_projector.py` |
 | 단위 | `tests/unit/test_selection_run_retrieval_metric.py` |
 | 단위 | `tests/unit/test_selection_run_tokenizer_benchmark.py` |
-| 단위 | `tests/unit/test_selection_run_chunking_benchmark.py`, `tests/unit/test_selection_run_embedding_crosscheck.py` |
-| 통합 | `tests/integ/test_selection_run.py`(Chunking 선정과 Embedding 교차 확인 파이프라인: 분할, 색인, 검색, 지표, 잘림 수, 판정. 벡터 DB와 임베딩 모델은 메모리 대체 객체) |
+| 단위 | `tests/unit/test_selection_run_chunking_benchmark.py`, `tests/unit/test_selection_run_embedding_crosscheck.py`, `tests/unit/test_selection_run_refusal_calibrator.py` |
+| 통합 | `tests/integ/test_selection_run.py`(Chunking 선정, Embedding 교차 확인, 거절 임계값 보정 파이프라인: 분할, 색인, 검색, 지표, 잘림 수, 점수, 판정. 벡터 DB와 임베딩 모델은 메모리 대체 객체) |
 
-**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저, Chunking, Embedding 교차 확인 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
+**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저, Chunking, Embedding 교차 확인, 거절 임계값 보정 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
 
 ---
 

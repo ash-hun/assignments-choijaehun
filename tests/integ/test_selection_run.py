@@ -1,4 +1,4 @@
-"""selection_run 기능의 Chunking 선정과 Embedding 교차 확인 파이프라인 통합 테스트. 분할, 색인, 검색, 지표, 판정을 이어서 돌린다."""
+"""selection_run 기능의 Chunking 선정, Embedding 교차 확인, 거절 임계값 보정 파이프라인 통합 테스트. 분할, 색인, 검색, 지표, 판정을 이어서 돌린다."""
 import re
 import zlib
 import asyncio
@@ -6,12 +6,15 @@ import numpy as np
 
 from app.service.eval.chunking_benchmark import ChunkingRun, ChunkingBenchmark, pick_best
 from app.service.eval.embedding_crosscheck import ModelResult, judge, truncated_chunks
+from app.service.eval.refusal_calibrator import TopScore, pick_threshold
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.chunk_splitter import ChunkMethod, ChunkSplitter
+from app.service.eval.embedding_benchmark import EmbeddingBenchmark
 from app.service.ingest.sentence_embedder import SentenceEmbedder
 from app.schema.vector_schema import SparseTerms, IndexContract
 from app.schema.gold_schema import GoldItem, GoldEvidence
 from app.client.embedding_client import EmbeddingClient
+from app.cli.refusal_calibration_cli import top_scores
 from app.schema.chunk_schema import Chunk, Document
 
 WORD = re.compile(r"\w+")
@@ -67,8 +70,13 @@ class MemoryChunkRepository(QdrantChunkRepository):
         self.collections[name].update({c.chunk_id: dense[i] for i, c in enumerate(chunks)})
 
     async def search_dense(self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None) -> list[str]:
-        scored = sorted(self.collections[name].items(), key=lambda item: (-float(item[1] @ vector), item[0]))
-        return [chunk_id for chunk_id, _ in scored[:k]]
+        return [chunk_id for chunk_id, _ in await self.search_dense_scored(name, vector, k, exact, doc_id)]
+
+    async def search_dense_scored(
+        self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None,
+    ) -> list[tuple[str, float]]:
+        scored = sorted(((cid, float(v @ vector)) for cid, v in self.collections[name].items()), key=lambda item: (-item[1], item[0]))
+        return scored[:k]
 
 
 def gold(language: str) -> list[GoldItem]:
@@ -148,3 +156,28 @@ def test_embedding_crosscheck_counts_truncation_and_judges_tied_models_by_covera
     assert (first.truncated_chunks, second.truncated_chunks > 0) == (0, True)
     assert (verdict.chosen, verdict.reason) == ("memory-short", "tied_challenger_cheaper")
     assert repository.collections == {}
+
+
+def test_refusal_calibration_scores_every_item_and_keeps_answerable_items_above_the_threshold() -> None:
+    repository = MemoryChunkRepository()
+    client = MemoryEmbeddingClient()
+    splitter = ChunkSplitter("structure", 40, 0, client.token_count, client.token_offsets)
+    chunks = [c for d in DOCUMENTS for c in splitter.split(d)]
+    unanswerable = GoldItem(
+        id=GoldItem.make_id("dev", "unanswerable", 1), split="dev", type="unanswerable", question="Kubernetes autoscaler replicas?",
+        answerable=False, reference_answer="", evidence=[], origin="llm_draft_reviewed",
+    )
+    items = {"en": gold("en") + [unanswerable]}
+
+    async def measure() -> list[TopScore]:
+        contract = IndexContract(embedding_model=client.model_name, tokenizer="model-native", chunk_config_hash=splitter.name)
+        await EmbeddingBenchmark(repository).index(client, "calib", contract, chunks)
+        return await top_scores(repository, client, "calib", items, {c.chunk_id: c.doc_id for c in chunks})
+
+    scores = asyncio.run(measure())
+    verdict = pick_threshold(scores)
+
+    assert len(scores) == 3
+    assert [s.doc_id for s in scores if s.answerable] == ["cache.md", "lock.md"]
+    assert verdict.chosen.false_refusal == {"en": 0.0}
+    assert verdict.chosen.unanswerable_refused == {"en": 1.0}

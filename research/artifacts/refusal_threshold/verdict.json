@@ -1,0 +1,863 @@
+{
+  "max_false_refusal": 0.05,
+  "chosen": {
+    "threshold": 0.637474,
+    "false_refusal": {
+      "en": 0.0,
+      "ko": 0.0
+    },
+    "unanswerable_refused": {
+      "en": 0.5,
+      "ko": 0.625
+    }
+  },
+  "curve": [
+    {
+      "threshold": 0.0,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.0,
+        "ko": 0.0
+      }
+    },
+    {
+      "threshold": 0.5253669999999999,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.125,
+        "ko": 0.0
+      }
+    },
+    {
+      "threshold": 0.570113,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.125,
+        "ko": 0.125
+      }
+    },
+    {
+      "threshold": 0.597505,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.25,
+        "ko": 0.125
+      }
+    },
+    {
+      "threshold": 0.6073205,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.375,
+        "ko": 0.125
+      }
+    },
+    {
+      "threshold": 0.6148264999999999,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.375,
+        "ko": 0.25
+      }
+    },
+    {
+      "threshold": 0.6178809999999999,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.25
+      }
+    },
+    {
+      "threshold": 0.620049,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.375
+      }
+    },
+    {
+      "threshold": 0.623793,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.5
+      }
+    },
+    {
+      "threshold": 0.637474,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.625
+      }
+    },
+    {
+      "threshold": 0.6574295,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0333
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.625
+      }
+    },
+    {
+      "threshold": 0.668264,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.0667
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.625
+      }
+    },
+    {
+      "threshold": 0.671241,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.1
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.625
+      }
+    },
+    {
+      "threshold": 0.6732765,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.1333
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.625
+      }
+    },
+    {
+      "threshold": 0.6770185,
+      "false_refusal": {
+        "en": 0.0,
+        "ko": 0.1333
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.75
+      }
+    },
+    {
+      "threshold": 0.679631,
+      "false_refusal": {
+        "en": 0.0333,
+        "ko": 0.1333
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.75
+      }
+    },
+    {
+      "threshold": 0.688042,
+      "false_refusal": {
+        "en": 0.0333,
+        "ko": 0.1333
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.6980695,
+      "false_refusal": {
+        "en": 0.0333,
+        "ko": 0.1667
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7004410000000001,
+      "false_refusal": {
+        "en": 0.0667,
+        "ko": 0.1667
+      },
+      "unanswerable_refused": {
+        "en": 0.5,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7009565,
+      "false_refusal": {
+        "en": 0.0667,
+        "ko": 0.1667
+      },
+      "unanswerable_refused": {
+        "en": 0.625,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7034035000000001,
+      "false_refusal": {
+        "en": 0.0667,
+        "ko": 0.2
+      },
+      "unanswerable_refused": {
+        "en": 0.625,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.708512,
+      "false_refusal": {
+        "en": 0.0667,
+        "ko": 0.2
+      },
+      "unanswerable_refused": {
+        "en": 0.75,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7140205,
+      "false_refusal": {
+        "en": 0.1,
+        "ko": 0.2
+      },
+      "unanswerable_refused": {
+        "en": 0.75,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7173160000000001,
+      "false_refusal": {
+        "en": 0.1333,
+        "ko": 0.2
+      },
+      "unanswerable_refused": {
+        "en": 0.75,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.721622,
+      "false_refusal": {
+        "en": 0.1333,
+        "ko": 0.2333
+      },
+      "unanswerable_refused": {
+        "en": 0.75,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7258830000000001,
+      "false_refusal": {
+        "en": 0.1333,
+        "ko": 0.2667
+      },
+      "unanswerable_refused": {
+        "en": 0.75,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7300275,
+      "false_refusal": {
+        "en": 0.1333,
+        "ko": 0.2667
+      },
+      "unanswerable_refused": {
+        "en": 0.875,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7351685,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.2667
+      },
+      "unanswerable_refused": {
+        "en": 0.875,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.73714,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.2667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 0.875
+      }
+    },
+    {
+      "threshold": 0.7382584999999999,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.2667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7398929999999999,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.3
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.746116,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.3333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.752946,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.3667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7548115,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.4
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.755451,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.4333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7559865,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.4667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7594065,
+      "false_refusal": {
+        "en": 0.1667,
+        "ko": 0.5
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.765807,
+      "false_refusal": {
+        "en": 0.2,
+        "ko": 0.5
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7694025,
+      "false_refusal": {
+        "en": 0.2,
+        "ko": 0.5333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7703234999999999,
+      "false_refusal": {
+        "en": 0.2,
+        "ko": 0.5667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7746185,
+      "false_refusal": {
+        "en": 0.2333,
+        "ko": 0.5667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7793490000000001,
+      "false_refusal": {
+        "en": 0.2333,
+        "ko": 0.6
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7803145,
+      "false_refusal": {
+        "en": 0.2667,
+        "ko": 0.6
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7809135,
+      "false_refusal": {
+        "en": 0.3,
+        "ko": 0.6
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7815190000000001,
+      "false_refusal": {
+        "en": 0.3333,
+        "ko": 0.6
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7819665,
+      "false_refusal": {
+        "en": 0.3667,
+        "ko": 0.6
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7843285,
+      "false_refusal": {
+        "en": 0.4,
+        "ko": 0.6
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.78677,
+      "false_refusal": {
+        "en": 0.4,
+        "ko": 0.6333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7880665,
+      "false_refusal": {
+        "en": 0.4333,
+        "ko": 0.6333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.789953,
+      "false_refusal": {
+        "en": 0.4333,
+        "ko": 0.6667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.791488,
+      "false_refusal": {
+        "en": 0.4333,
+        "ko": 0.7
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7924385,
+      "false_refusal": {
+        "en": 0.4333,
+        "ko": 0.7333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7937335000000001,
+      "false_refusal": {
+        "en": 0.4333,
+        "ko": 0.7667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.7964180000000001,
+      "false_refusal": {
+        "en": 0.4333,
+        "ko": 0.8
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.799129,
+      "false_refusal": {
+        "en": 0.4667,
+        "ko": 0.8
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8005055,
+      "false_refusal": {
+        "en": 0.5,
+        "ko": 0.8
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8045245000000001,
+      "false_refusal": {
+        "en": 0.5333,
+        "ko": 0.8
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.808751,
+      "false_refusal": {
+        "en": 0.5333,
+        "ko": 0.8333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8109379999999999,
+      "false_refusal": {
+        "en": 0.5667,
+        "ko": 0.8333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8138485,
+      "false_refusal": {
+        "en": 0.5667,
+        "ko": 0.8667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.815275,
+      "false_refusal": {
+        "en": 0.6,
+        "ko": 0.8667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.818681,
+      "false_refusal": {
+        "en": 0.6333,
+        "ko": 0.8667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8236604999999999,
+      "false_refusal": {
+        "en": 0.6667,
+        "ko": 0.8667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8269344999999999,
+      "false_refusal": {
+        "en": 0.7,
+        "ko": 0.8667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8290815,
+      "false_refusal": {
+        "en": 0.7,
+        "ko": 0.9
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8299035,
+      "false_refusal": {
+        "en": 0.7333,
+        "ko": 0.9
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8318315000000001,
+      "false_refusal": {
+        "en": 0.7667,
+        "ko": 0.9
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8355535000000001,
+      "false_refusal": {
+        "en": 0.8,
+        "ko": 0.9
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.837744,
+      "false_refusal": {
+        "en": 0.8333,
+        "ko": 0.9
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8389345,
+      "false_refusal": {
+        "en": 0.8333,
+        "ko": 0.9333
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.852039,
+      "false_refusal": {
+        "en": 0.8333,
+        "ko": 0.9667
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.866822,
+      "false_refusal": {
+        "en": 0.8333,
+        "ko": 1.0
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8722265,
+      "false_refusal": {
+        "en": 0.8667,
+        "ko": 1.0
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.875084,
+      "false_refusal": {
+        "en": 0.9,
+        "ko": 1.0
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8846875000000001,
+      "false_refusal": {
+        "en": 0.9333,
+        "ko": 1.0
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.8973545,
+      "false_refusal": {
+        "en": 0.9667,
+        "ko": 1.0
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    },
+    {
+      "threshold": 0.900691,
+      "false_refusal": {
+        "en": 1.0,
+        "ko": 1.0
+      },
+      "unanswerable_refused": {
+        "en": 1.0,
+        "ko": 1.0
+      }
+    }
+  ]
+}
