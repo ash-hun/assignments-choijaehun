@@ -49,7 +49,7 @@ RAG QA 서비스의 구성 요소를 하나씩 고정해 가며 고른 과정이
 
 ### 11. 생성 성능 평가
 
-확정 지표는 Citation Precision, Refusal Accuracy, uv 답변 정확성(핵심 요점, 금지 내용 없음), uv 답변 품질 점수(규칙 2항목, Judge 5항목), 운영 지표(TTFT, TPOT, Latency, 질의당 비용)다. 정의, 선정 이유, 통과 기준은 [research/gold_metric_selection.md](../../research/gold_metric_selection.md). 아래 루브릭은 초안이고, 검수 중인 9항목 초안은 그 문서의 "uv 문서 루브릭" 절에 있다. 일반 지표는 "근거에 충실한가"를 보지만, uv 문서에서 실제로 틀리기 쉬운 지점(명령 혼동, 식별자 철자, 낡은 동작)은 따로 보지 않으면 놓친다.
+확정 지표는 Citation Precision, Refusal Accuracy, uv 답변 정확성(핵심 요점, 금지 내용 없음), uv 답변 품질 점수(규칙 1항목, Judge 5항목), 운영 지표(TTFT, TPOT, Latency, 질의당 비용)다. 정의, 선정 이유, 통과 기준은 [research/gold_metric_selection.md](../../research/gold_metric_selection.md). 아래 루브릭은 계획 당시 초안이고, 확정한 v1 8항목은 그 문서의 "uv 문서 루브릭" 절에 있다. 일반 지표는 "근거에 충실한가"를 보지만, uv 문서에서 실제로 틀리기 쉬운 지점(명령 혼동, 식별자 철자, 낡은 동작)은 따로 보지 않으면 놓친다.
 
 **uv 문서 루브릭(계획 당시 초안, 최신 초안은 research/gold_metric_selection.md)**
 
