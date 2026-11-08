@@ -75,7 +75,7 @@ Ingest를 질의 요청 경로 밖에서 돌리는 이유: 질의마다 정제�
 | 4 | Embedding 선정 | DB, 고정 문자 길이 청크, dense 검색 | 근거 단위 Hit@5, MRR | `research/embedding_selection.md` |
 | 5 | 토크나이저 선정 | DB, 임베딩, 고정 길이 청크 | 목표 토큰 초과 비율, BM25 Hit@5 | `research/tokenizer_selection.md`(확정: 길이는 Qwen3 토큰, BM25는 `word`) |
 | 6 | Chunking 전략 선정 | DB, 임베딩, 토크나이저. 크기 상한은 임베딩 최대 입력 | Hit@5, 근거 보존율, 근거 토큰 수 | `research/chunking_selection.md`(확정: 문서 구조 분할, 512 Qwen3 토큰, 겹침 15%. 근거 보존@k 추가) |
-| 7 | Embedding 교차 확인 | 확정된 Chunking | 상위 2개의 Hit@5 순위 유지 여부 | `research/embedding_selection.md`에 추가 |
+| 7 | Embedding 교차 확인 | 확정된 Chunking | 상위 2개의 Hit@5 순위 유지 여부, 근거 보존@5 | `research/embedding_selection.md`에 추가(확정: Qwen3-Embedding-0.6B 유지) |
 | 8 | 프롬프트, 인용 파서, 거절 판정 구현과 임계값 보정 | 확정된 검색 전체 | 답 있음/답 없음 문항의 dense 최고 점수 분포 | `research/refusal_threshold.md` |
 | 9 | LLM 선정 | 검색 결과, 프롬프트, 임계값 | 인용 형식 준수율, 거절률, 비용, 첫 토큰 지연 | `research/llm_selection.md` |
 
@@ -180,6 +180,7 @@ sparse 적재를 통과 조건으로 두는 이유: BM25 토크나이저는 5단
 | 질문 | 단순 청킹으로 고른 임베딩이 확정된 Chunking에서도 여전히 낫는가 |
 | 방법 | 4단계 상위 2개 모델을 6단계 확정 Chunking으로 다시 색인해 Hit@5, MRR 비교 |
 | 판정 | 순위 유지면 확정. 뒤집혔는데 차이가 신뢰구간 안이면 원래 선택 유지. 신뢰구간 밖이면 임베딩을 바꾸고 6단계를 다시 실행 |
+| 실행 전 보완 | 4단계의 "동률이고 청크가 512 이하면 비용 규칙으로 e5" 조건과 위 판정이 동률에서 엇갈려, 실행 전에 하나로 정했다. Hit@5 차이가 없으면 근거 보존@5가 두 언어 모두 기존 이상일 때만 e5로 바꾼다(`research/embedding_selection.md`) |
 
 ### 8. 프롬프트, 인용 파서, 거절 판정 구현과 임계값 보정
 

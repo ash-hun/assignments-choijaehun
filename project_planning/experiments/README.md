@@ -7,10 +7,10 @@ RAG QA 서비스의 구성 요소를 하나씩 고정해 가며 고른 과정이
 | 1 | 데이터셋 | 확정 | `uv_docs` (astral-sh/uv 문서 81개, 약 181쪽) | [01_dataset.md](01_dataset.md) |
 | 2 | 선정용 질의셋(dev set) | 완료 | 영어 38문항과 한국어 번역 38문항, 근거 구절 62개 | [02_dev_set.md](02_dev_set.md) |
 | 3 | 벡터 데이터베이스 | 확정 | Qdrant (gRPC 연결) | [03_database.md](03_database.md) |
-| 4 | 임베딩 모델 | 잠정 확정 | Qwen3-Embedding-0.6B. 7단계에서 2위 multilingual-e5-large와 다시 비교 | [04_embedding.md](04_embedding.md) |
+| 4 | 임베딩 모델 | 확정(7단계) | Qwen3-Embedding-0.6B. 2위는 multilingual-e5-large | [04_embedding.md](04_embedding.md) |
 | 5 | 토크나이저 | 확정 | 청크 길이는 Qwen3 토큰 수로 재고, BM25는 `word` 토큰화 | [05_tokenizer.md](05_tokenizer.md) |
 | 6 | Chunking 전략 | 확정 | 문서 구조 분할, 512 Qwen3 토큰, 겹침 15%(`structure-512-77`). 사전 규칙의 선택(재귀 분할)을 Hit@5와 근거 보존@k 기준으로 바꿈 | [06_chunking.md](06_chunking.md) |
-| 7 | 임베딩 교차 확인 | 예정 | 확정한 Chunking으로 Qwen3와 e5를 다시 비교 | |
+| 7 | 임베딩 교차 확인 | 확정 | Qwen3 유지. Hit@5는 같고, e5는 청크 33%가 최대 입력에서 잘려 근거 보존@5가 0.10~0.13 낮음 | [07_embedding_crosscheck.md](07_embedding_crosscheck.md) |
 | 8 | 프롬프트, 인용 파서, 거절 임계값 | 예정 | 거절 판정은 dense 최고 점수 기준 | |
 | 9 | LLM | 예정 | 인용 형식 준수율, 거절률, 비용, 첫 토큰 지연으로 비교 | |
 | 10 | 검색 성능 평가 | 예정 | 확정한 검색 구성을 test set으로 평가. Recall, Precision, F1, MRR, nDCG | |

@@ -1,0 +1,40 @@
+{
+  "incumbent": "Qwen/Qwen3-Embedding-0.6B",
+  "challenger": "intfloat/multilingual-e5-large",
+  "hit_at_5_diff": {
+    "en": {
+      "mean": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+    },
+    "ko": {
+      "mean": 0.0333,
+      "ci_low": 0.0,
+      "ci_high": 0.1
+    }
+  },
+  "mrr_diff": {
+    "en": {
+      "mean": 0.07,
+      "ci_low": -0.0289,
+      "ci_high": 0.175
+    },
+    "ko": {
+      "mean": -0.1197,
+      "ci_low": -0.2514,
+      "ci_high": 0.0056
+    }
+  },
+  "coverage_at_5": {
+    "en": {
+      "Qwen/Qwen3-Embedding-0.6B": 0.8667,
+      "intfloat/multilingual-e5-large": 0.7333
+    },
+    "ko": {
+      "Qwen/Qwen3-Embedding-0.6B": 0.8,
+      "intfloat/multilingual-e5-large": 0.7
+    }
+  },
+  "chosen": "Qwen/Qwen3-Embedding-0.6B",
+  "reason": "tied_challenger_coverage_lower"
+}

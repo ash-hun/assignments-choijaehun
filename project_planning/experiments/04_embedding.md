@@ -1,6 +1,6 @@
 # 4. 임베딩 모델 선정
 
-**결론(잠정): Qwen/Qwen3-Embedding-0.6B.** 2위 intfloat/multilingual-e5-large와 Chunking 확정 뒤 7단계에서 다시 비교한다.
+**결론: Qwen/Qwen3-Embedding-0.6B.** 여기서는 잠정으로 두었고, 7단계에서 확정 Chunking으로 2위 intfloat/multilingual-e5-large와 다시 비교해 확정했다([07_embedding_crosscheck.md](07_embedding_crosscheck.md)).
 
 ## 질문
 
