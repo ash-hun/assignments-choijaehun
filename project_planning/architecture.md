@@ -109,7 +109,7 @@
 │   ├── schema/eval_schema.py
 │   └── common/logger.py, settings.py, content_hasher.py, text_tokenizer.py
 ├── prompts/                     # answer_v1.md, judge_faithfulness_v1.md 등. 해시를 결과에 기록
-├── configs/                     # baseline.yaml, hybrid.yaml, selection/*.yaml
+├── configs/                     # baseline.toml, hybrid.toml
 ├── data/
 │   ├── corpus/manifest.json     # 원문 URL, 고정 버전, 파일별 sha256
 │   ├── corpus/raw/              # 다운로드 결과. 라이선스에 따라 커밋 여부 결정

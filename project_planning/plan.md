@@ -212,7 +212,7 @@ Judge 모델은 Part B에서 Judge 신뢰성 측정과 함께 고른다.
 | 조사 | 기존 RAG 평가 체계(RAGAS, ARES, RAGChecker, TruLens 등)의 지표 정의와 판정 방식 조사. 채택, 변형, 미채택 항목과 이유 기록 |
 | Gold Set 설계 | 유형 분포, 필드 구조, 구축 방법, dev/test 분리 규칙 확정 |
 | 파일럿 | test set 10문항으로 지표 전체를 먼저 돌려 판정 불가, 모호 사례 수집 후 루브릭 수정 |
-| 지표 타당성 검증 | 의도적으로 망가뜨린 시스템에서 지표가 실제로 떨어지는지 확인. 검색 결과를 무작위 청크로 바꾸면 Recall과 Faithfulness가 떨어져야 하고, 거절 로직을 끄면 Refusal Accuracy가 떨어져야 한다. 떨어지지 않는 지표는 측정하려는 것을 측정하지 못하는 것으로 보고 재설계 |
+| 지표 타당성 검증 | 의도적으로 망가뜨린 시스템에서 지표가 실제로 떨어지는지 확인. 검색 결과를 무작위 청크로 바꾸면 Recall과 루브릭 핵심 요점이 떨어져야 하고, 거절 로직을 끄면 Refusal Accuracy가 떨어져야 한다. 떨어지지 않는 지표는 측정하려는 것을 측정하지 못하는 것으로 보고 재설계 |
 | Judge 검증 | 반복 일치율, 사람 라벨 대비 kappa(아래 Part B 절) |
 | 산출물 | `research/gold_metric_selection.md`, `data/gold/dev_set.jsonl`, `data/gold/test_set.jsonl` |
 
@@ -292,7 +292,7 @@ Response { status: "answered" | "insufficient_context",
 - 구축 방법: 문서에서 LLM으로 초안 생성, 사람이 전부 검토하고 수정, 일부는 직접 작성
 - 편향과 한계 기록: LLM 초안은 Chunk 경계 안에서 답이 나오는 질문으로 쏠린다. 작성자가 한 명이라 질문 문체가 단조롭다
 
-### Metric (선정 실험 결과로 확정. 아래는 후보)
+### Metric (아래는 계획 당시 후보. 확정 목록은 `research/gold_metric_selection.md`)
 
 | Metric | 방식 | 선정 이유 | 맹점 |
 |---|---|---|---|
@@ -314,7 +314,7 @@ Response { status: "answered" | "insufficient_context",
 |---|---|---|
 | 질문 | 확정한 검색 구성이 필요한 근거를 빠짐없이, 잡음 적게, 위쪽 순위로 가져오는가 | 확정한 전체 파이프라인의 답이 근거에 충실하고 uv 문서 기준으로 정확한가 |
 | 입력 | test set 답 있는 문항(영어, 한국어) | test set 전체 문항(답 없는 문항 포함) |
-| 지표 | Recall@k, Precision@k, F1@k(k는 5, 10), MRR@10, nDCG@10 | Faithfulness, Answer Correctness, Refusal Accuracy, Citation Precision, uv 문서 루브릭 점수 |
+| 지표 | Recall@k, Precision@k, F1@k(k는 5, 10), MRR@10, nDCG@10 | Citation Precision, Refusal Accuracy, uv 문서 루브릭 통합 점수(핵심 요점 = Answer Correctness 포함), TTFT, TPOT, Latency, 질의당 비용 |
 | 판정 방식 | 규칙 기반(근거 구절 60자 창 일치) | Judge(생성 모델과 다른 계열, 3회 다수결) |
 | 보고 | 언어별, 문항 유형별 값과 bootstrap 95% 구간 | 항목별 통과율, 문항 점수 분포, 유형별 값, Judge 3회 일치율 |
 | 산출물 | `reports/<run_id>/`의 검색 지표 | `reports/<run_id>/`의 생성 지표, `research/gold_metric_selection.md`의 루브릭 검증 |
@@ -329,9 +329,20 @@ uv 문서 루브릭 항목(초안, 파일럿에서 수정): 핵심 요점(accept
 - Human Alignment: 20개 답변을 사람이 같은 루브릭으로 라벨링하고 Judge와의 일치율, Cohen's kappa 보고
 - Judge 프롬프트와 루브릭은 버전 파일로 두고 해시를 결과에 기록
 
+### 실시간 누적 평가
+
+Gold Set 평가에 더해, 실제 사용자 질의마다 정답 없이 잴 수 있는 지표를 누적해 대시보드로 보여준다. 설계 전문은 `research/gold_metric_selection.md`의 "실시간 누적 평가" 절.
+
+- 기록: 질의 하나가 기록 하나. 요청 id가 UNIQUE 키이고, 모든 기록에 `config_id`(인덱스 계약 해시, 프롬프트 버전, 답변 모델)를 붙인다. 저장소는 SQLite(compose named volume)
+- 지표: 즉시 지표(거절률, 루브릭 규칙 항목, TTFT, TPOT, Latency, 비용, 검색 최고 점수 분포)는 응답 직후, Judge 지표(Citation Precision, 핵심 요점을 뺀 루브릭 Judge 항목)는 백그라운드 채점 뒤 반영
+- 표시: 누적 평균과 95% 구간, 최근 50건 이동 창, 같은 `config_id`의 Gold Set 기준선
+- 비용 상한: Judge 샘플링 비율과 예산 상한(기본 ₩3,000). 넘으면 채점만 멈춘다
+- 응답 경로와 분리: 기록 저장과 채점이 실패해도 응답은 나간다. 재시작하면 채점이 안 된 기록을 다시 꺼낸다
+- 정답이 필요한 지표(검색 Recall 등, 루브릭 핵심 요점, Refusal Accuracy)는 실시간에서 재지 않는다
+
 ### 자동화와 재현성
 
-- 단일 명령: `make eval CONFIG=configs/baseline.yaml`
+- 단일 명령: `make eval CONFIG=configs/baseline.toml`
 - 산출물: `reports/<run_id>/results.jsonl`(문항별 원시 결과), `summary.md`(지표 표, 유형별 분해)
 - 기록 항목: git commit hash, corpus manifest 해시, gold set 해시, 생성과 Judge와 Embedding 모델 이름과 버전, 토크나이저, 프롬프트 해시, seed, 설정 전체
 - LLM 응답 캐시: 요청 내용 해시를 키로 저장해 같은 설정 재실행 시 같은 결과와 0원 비용을 보장
@@ -346,7 +357,7 @@ uv 문서 루브릭 항목(초안, 파일럿에서 수정): 핵심 요점(accept
 
 ### 1차 가설 후보(추천)
 
-- 가설: Dense 단독 검색에 BM25 Sparse 검색을 RRF로 결합하면 고유명사, 설정 키, 버전 번호가 들어간 질의에서 Recall@k가 오르고, 그 결과 Answer Correctness가 오른다. Faithfulness는 유지된다
+- 가설: Dense 단독 검색에 BM25 Sparse 검색을 RRF로 결합하면 고유명사, 설정 키, 버전 번호가 들어간 질의에서 Recall@k가 오르고, 그 결과 루브릭 핵심 요점(Answer Correctness) 통과율이 오른다. Citation Precision은 유지된다
 - 근거: Dense 임베딩은 의미 유사도에 강하고 정확한 토큰 일치에 약하다. 함정 유형 문항이 이 약점을 겨냥한다
 - 측정: Baseline과 Hybrid를 test set, 같은 seed로 실행. 10단계 검색 지표와 11단계 생성 지표를 전체와 유형별로, paired bootstrap 95% 신뢰구간, 지연시간과 비용과 함께 비교
 
@@ -385,8 +396,9 @@ README의 Part C 절에 Hypothesis, Result(표와 그래프), Analysis(유형별
 | 18 | Part B | 검색 성능 평가(Recall, Precision, F1, MRR, nDCG) |
 | 19 | Part B | 생성 성능 평가(공통 지표와 uv 문서 루브릭) |
 | 20 | Part B | Judge 일관성과 Human Alignment 측정(루브릭 항목별 kappa 포함) |
-| 21 | Part C | Hybrid 실험과 분석 |
-| 22 | 문서 | README 전체, 한계와 향후 과제(증분 Ingest API 포함), CI 설계 논의 |
+| 21 | Part B | 실시간 누적 평가(기록, 백그라운드 Judge, 집계 API, 대시보드) |
+| 22 | Part C | Hybrid 실험과 분석 |
+| 23 | 문서 | README 전체, 한계와 향후 과제(증분 Ingest API 포함), CI 설계 논의 |
 
 ## 비용 추정(추정치, 모델 가격 확인 후 갱신)
 
