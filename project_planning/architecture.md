@@ -35,6 +35,7 @@
 | compose 서비스 | 이미지 | 수명 | 명령 |
 |---|---|---|---|
 | `qdrant` | `qdrant/qdrant:v1.20.0` | 상시 | 기본. 데이터베이스 선정 실험에서 확정. 색인은 named volume `qdrant_data`에 남는다. 포트는 열지 않는다 |
+| `evaldb` | `postgres:17.6-alpine` | 상시 | 평가 기록 저장소. Gold Set 평가와 실시간 질의의 기록을 남긴다. named volume `eval_data`, 포트는 열지 않고 비밀번호는 `EVAL_DB_PASSWORD`로만 받는다 |
 | `api` | 프로젝트 이미지 `runtime` 단계 | 상시 | `uvicorn app.main:app`. 호스트 `127.0.0.1:8000`에만 포트를 연다. healthcheck는 `/ready` |
 | `batch` | 프로젝트 이미지 `runtime` 단계(api와 같음) | 일회성, `profiles: [batch]` | `python -m <모듈>`. `make corpus`, `make ingest`, `make eval` 등이 감싼다 |
 | `batch-korean` | 프로젝트 이미지 `korean` 단계(`runtime` + JRE + `korean` 의존성 그룹) | 일회성, `profiles: [batch]` | 토크나이저 선정 실험(`make tok-bench`) 전용. 형태소 분석기 비교에 JVM이 필요해 운영 이미지와 분리 |
@@ -59,7 +60,7 @@
 
 ```
 .
-├── compose.yaml                 # qdrant, api(Query 구현 후 추가), batch(일회성), batch-korean(토크나이저 실험), dev(테스트), 선정 실험 후보 DB(profile dbbench)
+├── compose.yaml                 # qdrant, evaldb, api, batch(일회성), batch-korean(토크나이저 실험), dev(테스트), 선정 실험 후보 DB(profile dbbench)
 ├── Dockerfile
 ├── Makefile                     # corpus, ingest, serve, eval, select, test 별칭
 ├── pyproject.toml / uv.lock
@@ -73,7 +74,8 @@
 │   ├── api/error_mapper.py      # 예외를 HTTP 상태와 에러 본문으로 변환
 │   ├── cli/corpus_cli.py
 │   ├── cli/ingest_cli.py
-│   ├── cli/eval_cli.py          # run, gold-draft, agreement 하위 명령
+│   ├── cli/eval_cli.py          # gold-draft, gold-translate, gold-check 하위 명령
+│   ├── cli/eval_run_cli.py      # make eval. 설정 파일 하나로 Gold Set 평가
 │   ├── cli/selection_cli.py     # 선정 실험 실행(closed-book, 토크나이저, 임베딩, LLM)
 │   ├── service/ingest/
 │   │   ├── ingest_service.py
@@ -88,17 +90,17 @@
 │   │   ├── prompt_builder.py
 │   │   └── citation_parser.py
 │   ├── service/eval/
-│   │   ├── eval_service.py
-│   │   ├── gold_set_loader.py
+│   │   ├── eval_service.py      # 문항마다 실제 질의 경로(스트리밍)로 답을 받아 기록
+│   │   ├── eval_summarizer.py   # 언어별 지표 요약과 bootstrap 구간
 │   │   ├── gold_drafter.py
 │   │   ├── retrieval_metric.py
-│   │   ├── refusal_metric.py
 │   │   ├── judge_metric.py
 │   │   ├── agreement_service.py
 │   │   ├── agreement_calculator.py
 │   │   ├── selection_service.py # 선정 실험 조립. 파이프라인 모듈을 설정만 바꿔 재사용
 │   │   └── report_writer.py
-│   ├── repository/chunk_repository.py   # 선정된 벡터 DB 구현. ensure_collection, upsert(ingest), search(query)
+│   ├── repository/qdrant_chunk_repository.py # 선정된 벡터 DB 구현. ensure_collection, upsert(ingest), search(query)
+│   ├── repository/eval_record_repository.py  # 평가 기록 저장소(PostgreSQL)
 │   ├── client/llm_client.py
 │   ├── client/embedding_client.py
 │   ├── client/llm_cache.py
@@ -110,6 +112,7 @@
 │   └── common/logger.py, settings.py, content_hasher.py, text_tokenizer.py
 ├── prompts/                     # answer_v1.md, judge_faithfulness_v1.md 등. 해시를 결과에 기록
 ├── configs/                     # baseline.toml, hybrid.toml
+├── reports/<run_id>/            # make eval 결과: manifest.json, results.jsonl, summary.json, summary.md
 ├── data/
 │   ├── corpus/manifest.json     # 원문 URL, 고정 버전, 파일별 sha256
 │   ├── corpus/raw/              # 다운로드 결과. 라이선스에 따라 커밋 여부 결정

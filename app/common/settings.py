@@ -46,6 +46,18 @@ class Settings(BaseSettings):
     answer_max_tokens: int = 1500
     # 동시 호출 상한(llm_concurrency)에서 이 시간 넘게 기다리면 503을 돌려준다.
     llm_queue_timeout_seconds: float = 10.0
+    # 답변 모델 단가(100만 토큰당 원, VAT 별도). research/llm_selection.md의 엘리스 Serverless 요금.
+    answer_input_krw_per_mtok: float = 141.0
+    answer_output_krw_per_mtok: float = 708.0
+    # 평가 기록 저장소(compose의 evaldb). 내부 네트워크 전용이고 비밀번호는 EVAL_DB_PASSWORD로만 받는다.
+    eval_db_host: str = "evaldb"
+    eval_db_port: int = 5432
+    eval_db_name: str = "eval"
+    eval_db_user: str = "eval"
+    eval_db_password: SecretStr | None = None
+    reports_dir: Path = Path("reports")
+    # 컨테이너 안에는 .git이 없어 Makefile이 넘긴다. Report와 manifest에 기록만 하고 run_id에는 넣지 않는다.
+    git_commit: str = "unknown"
     # 설정되면 /v1/* 요청에 X-API-Key가 필요하다. 없으면 로컬 개발용으로 검사하지 않는다.
     api_key: SecretStr | None = None
 

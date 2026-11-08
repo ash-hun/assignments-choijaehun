@@ -4,7 +4,9 @@ import zlib
 import numpy as np
 
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
+from app.repository.eval_record_repository import EvalRecordRepository
 from app.schema.vector_schema import SparseTerms, IndexContract
+from app.schema.eval_schema import EvalRecord, EvalManifest
 from app.client.embedding_client import EmbeddingClient
 from app.common.upstream_error import VectorStoreError
 from app.schema.chunk_schema import Chunk
@@ -83,6 +85,10 @@ class MemoryChunkRepository(QdrantChunkRepository):
         scored = sorted(((cid, float(v @ vector)) for cid, v in self.collections[name].items()), key=lambda item: (-item[1], item[0]))
         return scored[:k]
 
+    async def all_chunks(self, name: str) -> list[Chunk]:
+        self._check()
+        return sorted(self.chunks[name].values(), key=lambda c: c.chunk_id)
+
     async def search_dense_chunks(self, name: str, vector: np.ndarray, k: int) -> list[tuple[Chunk, float]]:
         self._check()
         return [(self.chunks[name][cid], score) for cid, score in await self.search_dense_scored(name, vector, k)]
@@ -90,3 +96,21 @@ class MemoryChunkRepository(QdrantChunkRepository):
     def _check(self) -> None:
         if self.down:
             raise VectorStoreError("vector store unavailable")
+
+
+class MemoryEvalRecordRepository(EvalRecordRepository):
+    def __init__(self) -> None:
+        self.runs: dict[str, EvalManifest] = {}
+        self.rows: dict[str, EvalRecord] = {}
+
+    async def ensure_schema(self) -> None:
+        pass
+
+    async def upsert_run(self, run_id: str, manifest: EvalManifest) -> None:
+        self.runs[run_id] = manifest
+
+    async def records(self, run_id: str) -> list[EvalRecord]:
+        return sorted((r for r in self.rows.values() if r.run_id == run_id), key=lambda r: r.record_id)
+
+    async def upsert_record(self, record: EvalRecord) -> None:
+        self.rows[record.record_id] = record

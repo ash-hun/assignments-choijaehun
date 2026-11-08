@@ -127,6 +127,7 @@
 | `meta.retrieval_scores` | float[] | 검색 청크의 dense 코사인 유사도(내림차순) |
 | `meta.dropped_citations` | int | 존재하지 않는 번호라 버린 인용 수 |
 | `meta.latency_ms` | int | 서버 처리 시간 |
+| `meta.retrieval_ms` | int \| null | 질의 임베딩과 벡터 검색에 걸린 시간. `latency_ms`와 `first_token_ms`에 포함된다 |
 | `meta.usage` | object | `input_tokens`, `output_tokens`. 검색 단계에서 거절하면 0 |
 | `meta.first_token_ms` | int \| null | 스트리밍 응답에서 첫 `token` 이벤트까지 걸린 시간(검색 포함). 비스트리밍이나 토큰이 없으면 null |
 

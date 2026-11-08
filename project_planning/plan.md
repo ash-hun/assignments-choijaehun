@@ -333,7 +333,7 @@ uv 문서 루브릭 항목(초안, 파일럿에서 수정): 핵심 요점(accept
 
 Gold Set 평가에 더해, 실제 사용자 질의마다 정답 없이 잴 수 있는 지표를 누적해 대시보드로 보여준다. 설계 전문은 `research/gold_metric_selection.md`의 "실시간 누적 평가" 절.
 
-- 기록: 질의 하나가 기록 하나. 요청 id가 UNIQUE 키이고, 모든 기록에 `config_id`(인덱스 계약 해시, 프롬프트 버전, 답변 모델)를 붙인다. 저장소는 SQLite(compose named volume)
+- 기록: 질의 하나가 기록 하나. 요청 id가 UNIQUE 키이고, 모든 기록에 `config_id`(인덱스 계약 해시, 프롬프트 버전, 답변 모델)를 붙인다. 저장소는 PostgreSQL 컨테이너(`evaldb`, compose named volume `eval_data`)
 - 지표: 즉시 지표(거절률, 품질 점수의 규칙 항목, TTFT, TPOT, Latency, 비용, 검색 최고 점수 분포)는 응답 직후, Judge 지표(Citation Precision, uv 답변 품질 점수의 Judge 항목)는 백그라운드 채점 뒤 반영
 - 표시: 누적 평균과 95% 구간, 최근 50건 이동 창, 같은 `config_id`의 Gold Set 기준선
 - 비용 상한: Judge 샘플링 비율과 예산 상한(기본 ₩3,000). 넘으면 채점만 멈춘다

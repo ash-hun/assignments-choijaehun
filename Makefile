@@ -1,4 +1,4 @@
-.PHONY: build corpus ingest serve stop profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
+.PHONY: build corpus ingest serve stop eval profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -22,7 +22,14 @@ serve:
 	docker compose up -d --build api
 
 stop:
-	docker compose stop api qdrant
+	docker compose stop api qdrant evaldb
+
+# Gold Set 평가. 같은 설정, 데이터, 인덱스면 같은 run_id라 기록된 문항은 다시 부르지 않는다(비용 0).
+CONFIG ?= configs/baseline.toml
+GIT_COMMIT = $(shell git rev-parse --short HEAD)$(shell git diff --quiet HEAD -- app configs || echo -dirty)
+eval:
+	docker compose up -d --wait qdrant evaldb
+	docker compose run --rm --build -e GIT_COMMIT=$(GIT_COMMIT) batch app.cli.eval_run_cli --config $(CONFIG)
 
 profile:
 	$(BATCH) app.cli.corpus_cli profile

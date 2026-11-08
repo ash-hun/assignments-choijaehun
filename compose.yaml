@@ -1,4 +1,4 @@
-# 운영 구성은 qdrant와 api다. batch, batch-korean, dev와 선정 실험 후보 DB는 profile로 묶어 `docker compose up`에서 뜨지 않는다.
+# 운영 구성은 qdrant, evaldb, api다. batch, batch-korean, dev와 선정 실험 후보 DB는 profile로 묶어 `docker compose up`에서 뜨지 않는다.
 name: elice-rag-qa
 
 x-app: &app
@@ -25,6 +25,8 @@ services:
       - ./data:/workspace/data
       - ./research:/workspace/research
       - ./.cache:/workspace/.cache
+      - ./configs:/workspace/configs:ro
+      - ./reports:/workspace/reports
 
   # 토크나이저 선정 실험용 배치. 형태소 분석기(korean 의존성 그룹)와 JVM이 더 들어 있다.
   batch-korean:
@@ -67,6 +69,22 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  # 평가 기록 저장소. Gold Set 평가와 실시간 질의의 기록을 남긴다. 포트를 열지 않고 compose 내부 네트워크로만 접속한다.
+  # 비밀번호는 .env의 EVAL_DB_PASSWORD로만 받는다. 비어 있으면 postgres 이미지가 기동을 거부한다.
+  evaldb:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: eval
+      POSTGRES_DB: eval
+      POSTGRES_PASSWORD: ${EVAL_DB_PASSWORD:-}
+    volumes:
+      - eval_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "eval", "-d", "eval"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   # 데이터베이스 선정 실험 후보. 내부 네트워크 전용 실험 DB라 비밀번호 대신 trust 인증을 쓴다. 운영 구성에서는 쓰지 않는다.
   pgvector:
     image: pgvector/pgvector:0.8.6-pg17
@@ -93,3 +111,4 @@ services:
 
 volumes:
   qdrant_data:
+  eval_data:
