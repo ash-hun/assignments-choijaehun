@@ -168,7 +168,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 |---|---|
 | `document_loader` 파서 | 데이터셋 |
 | `common/text_tokenizer.py` BM25 토큰화, 청크 길이 단위 | 토크나이저(확정: BM25는 `word`, 길이는 선정 임베딩 토크나이저 토큰 수 `EmbeddingClient.token_count`) |
-| `chunk_splitter` 분할 방식, 크기, 겹침 | Chunking 전략 |
+| `chunk_splitter` 분할 방식, 크기, 겹침 | Chunking 전략(확정: `structure-512-77`, 문서 구조 분할, 512 Qwen3 토큰, 겹침 77토큰) |
 | `chunk_repository` 구현, compose 벡터 DB 서비스, 컬렉션 명명 방식 | 데이터베이스(확정: Qdrant, `app/repository/qdrant_chunk_repository.py`) |
 | `embedding_client` 모델과 호출 방식(API 또는 로컬) | Embedding(잠정: Qwen3-Embedding-0.6B, 로컬 fastembed. 2위 multilingual-e5-large와 교차 확인 예정) |
 | `llm_client` 생성 모델 | LLM |
