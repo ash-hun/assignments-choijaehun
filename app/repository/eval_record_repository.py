@@ -3,6 +3,7 @@ from psycopg import AsyncConnection
 from psycopg.types.json import Jsonb
 
 from app.schema.eval_schema import EvalRecord, EvalManifest
+from app.schema.judge_schema import JudgeResult
 
 # 스키마는 코드가 맞춘다. 몇 번 실행해도 같은 테이블과 인덱스가 된다.
 SCHEMA = """
@@ -24,6 +25,16 @@ CREATE TABLE IF NOT EXISTS eval_record (
 );
 CREATE INDEX IF NOT EXISTS eval_record_source_config ON eval_record (source, config_id, created_at);
 CREATE INDEX IF NOT EXISTS eval_record_run ON eval_record (run_id);
+CREATE TABLE IF NOT EXISTS judge_result (
+    record_id text NOT NULL REFERENCES eval_record (record_id) ON DELETE CASCADE,
+    kind text NOT NULL CHECK (kind IN ('citation', 'rubric')),
+    sample integer NOT NULL,
+    judge_model text NOT NULL,
+    prompt_version text NOT NULL,
+    ok boolean NOT NULL,
+    body jsonb NOT NULL,
+    PRIMARY KEY (record_id, kind, sample, judge_model, prompt_version)
+);
 """
 
 
@@ -59,3 +70,22 @@ class EvalRecordRepository:
             (record.record_id, record.run_id, record.source, record.config_id, record.item_id, record.status,
              Jsonb(record.model_dump(mode="json"))),
         )
+
+    async def upsert_judgment(self, result: JudgeResult) -> None:
+        """(기록, 종류, 표본, Judge 모델, 프롬프트 버전)이 같으면 덮어쓴다."""
+        await self._conn.execute(
+            "INSERT INTO judge_result (record_id, kind, sample, judge_model, prompt_version, ok, body) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s) "
+            "ON CONFLICT (record_id, kind, sample, judge_model, prompt_version) DO UPDATE SET ok = EXCLUDED.ok, body = EXCLUDED.body",
+            (result.record_id, result.kind, result.sample, result.judge_model, result.prompt_version, result.ok,
+             Jsonb(result.model_dump(mode="json"))),
+        )
+
+    async def judgments(self, run_id: str) -> list[JudgeResult]:
+        """실행 하나의 판정 전부. 기록, 종류, 표본 순."""
+        cursor = await self._conn.execute(
+            "SELECT j.body FROM judge_result j JOIN eval_record r ON r.record_id = j.record_id "
+            "WHERE r.run_id = %s ORDER BY j.record_id, j.kind, j.sample, j.prompt_version",
+            (run_id,),
+        )
+        return [JudgeResult.model_validate(row[0]) for row in await cursor.fetchall()]

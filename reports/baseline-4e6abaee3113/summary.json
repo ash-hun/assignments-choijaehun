@@ -2,6 +2,13 @@
   "failed_items": [
     "264cbe39-bf6e-56a3-bec0-d923c1c56498"
   ],
+  "judge": {
+    "calls": "354",
+    "cost_krw": "2635.4",
+    "model": "gemini-3.8-flash",
+    "samples": "3",
+    "version": "citation v3-96ee909bf92c, rubric v2-75cc0f62234d"
+  },
   "languages": [
     {
       "answerable_false_refusal": {
@@ -12,6 +19,43 @@
       "cost_krw_per_item": 0.9178,
       "cost_krw_total": 36.7127,
       "items": 40,
+      "judge": {
+        "accuracy": {
+          "ci_high": 0.9032,
+          "ci_low": 0.5806,
+          "mean": 0.7419
+        },
+        "agreement": {
+          "accuracy": 1.0,
+          "citation_precision": 0.9677,
+          "identifier_accuracy": 0.9355,
+          "interface_separation": 0.9677,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.8387,
+          "version_status": 1.0
+        },
+        "citation_precision": {
+          "ci_high": 1.0,
+          "ci_low": 0.964,
+          "mean": 0.9874
+        },
+        "failed": 0,
+        "judged": 31,
+        "key_point_rate": {
+          "ci_high": 0.9435,
+          "ci_low": 0.7554,
+          "mean": 0.8548
+        },
+        "quality_items": {
+          "identifier_accuracy": 1.0,
+          "interface_separation": 1.0,
+          "no_dropped_citation": 1.0,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.8065,
+          "version_status": 1.0
+        },
+        "quality_score": null
+      },
       "language": "en",
       "latency_ms": {
         "count": 31,
@@ -124,6 +168,43 @@
       "cost_krw_per_item": 1.0328,
       "cost_krw_total": 40.2785,
       "items": 39,
+      "judge": {
+        "accuracy": {
+          "ci_high": 0.7857,
+          "ci_low": 0.4286,
+          "mean": 0.6071
+        },
+        "agreement": {
+          "accuracy": 0.9643,
+          "citation_precision": 0.9286,
+          "identifier_accuracy": 0.9643,
+          "interface_separation": 1.0,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.8214,
+          "version_status": 1.0
+        },
+        "citation_precision": {
+          "ci_high": 0.9862,
+          "ci_low": 0.8855,
+          "mean": 0.9416
+        },
+        "failed": 0,
+        "judged": 28,
+        "key_point_rate": {
+          "ci_high": 0.881,
+          "ci_low": 0.622,
+          "mean": 0.7607
+        },
+        "quality_items": {
+          "identifier_accuracy": 1.0,
+          "interface_separation": 1.0,
+          "no_dropped_citation": 1.0,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.8571,
+          "version_status": 1.0
+        },
+        "quality_score": null
+      },
       "language": "ko",
       "latency_ms": {
         "count": 28,

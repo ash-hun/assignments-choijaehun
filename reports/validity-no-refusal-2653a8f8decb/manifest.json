@@ -1,0 +1,32 @@
+{
+  "answer_max_tokens": 1500,
+  "answer_model": "claude-haiku-5-5",
+  "answer_seed": null,
+  "answer_temperature": 0.0,
+  "bootstrap_seed": 2026,
+  "collection": "chunks_uv_docs_66b32940",
+  "config": {
+    "concurrency": 4,
+    "gold_files": [
+      "data/gold/test_set.jsonl"
+    ],
+    "judge_samples": 1,
+    "name": "validity-no-refusal",
+    "retrieval_depth": 10,
+    "top_k": 5,
+    "variant": "no_refusal"
+  },
+  "config_id": "1251bc031bf2",
+  "corpus_manifest_hash": "f9940b8ac60d8e3fe654af8d613f76406fd95106dce93dcb0456ae4ef7dfe514",
+  "git_commit": "6c0c7e6",
+  "gold_hashes": {
+    "data/gold/test_set.jsonl": "75181413ac87c507132a0082889950afc42cacf5c0526749e3715450841498a3"
+  },
+  "index_contract": {
+    "chunk_config_hash": "structure-512-77",
+    "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
+    "tokenizer": "word"
+  },
+  "prompt_hash": "5834bfb9a233",
+  "refusal_threshold": 0.6375
+}

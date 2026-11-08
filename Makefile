@@ -1,4 +1,4 @@
-.PHONY: build corpus ingest serve stop eval profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
+.PHONY: build corpus ingest serve stop eval validity label-sheet agreement profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -26,10 +26,31 @@ stop:
 
 # Gold Set 평가. 같은 설정, 데이터, 인덱스면 같은 run_id라 기록된 문항은 다시 부르지 않는다(비용 0).
 CONFIG ?= configs/baseline.toml
+# 예: EVAL_ARGS="--judge-limit 10"(파일럿)
+EVAL_ARGS ?=
 GIT_COMMIT = $(shell git rev-parse --short HEAD)$(shell git diff --quiet HEAD -- app configs || echo -dirty)
 eval:
 	docker compose up -d --wait qdrant evaldb
-	docker compose run --rm --build -e GIT_COMMIT=$(GIT_COMMIT) batch app.cli.eval_run_cli --config $(CONFIG)
+	docker compose run --rm --build -e GIT_COMMIT=$(GIT_COMMIT) batch app.cli.eval_run_cli --config $(CONFIG) $(EVAL_ARGS)
+
+# 지표 타당성 검증: 망가뜨린 변형 5종을 평가하고 기준선과 비교한다(research/artifacts/judge_validity).
+validity:
+	$(MAKE) eval CONFIG=configs/validity_random_chunks.toml || true
+	$(MAKE) eval CONFIG=configs/validity_no_refusal.toml || true
+	$(MAKE) eval CONFIG=configs/validity_shuffled_citations.toml || true
+	$(MAKE) eval CONFIG=configs/validity_swapped_context.toml || true
+	$(MAKE) eval CONFIG=configs/validity_stripped_citations.toml || true
+	$(BATCH) app.cli.judge_check_cli validity
+
+# 사람 라벨 시트(data/gold/human_labels_sheet.md)와 채울 라벨 파일. 라벨 파일이 있으면 덮어쓰지 않는다.
+label-sheet:
+	docker compose up -d --wait qdrant evaldb
+	$(BATCH) app.cli.judge_check_cli label-sheet
+
+# 사람 라벨 대비 Judge 일치율과 Cohen's kappa(research/artifacts/judge_agreement).
+agreement:
+	docker compose up -d --wait evaldb
+	$(BATCH) app.cli.judge_check_cli agreement
 
 profile:
 	$(BATCH) app.cli.corpus_cli profile

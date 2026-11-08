@@ -14,7 +14,7 @@ RAG QA 서비스의 구성 요소를 하나씩 고정해 가며 고른 과정이
 | 8 | 프롬프트, 인용 파서, 거절 임계값 | 확정 | dense 최고 점수 0.6375 미만이면 거절. dev set 오거절 0%, 답 없음 거절 영어 4/8, 한국어 5/8. 나머지는 근거 부족 토큰으로 판정 | [08_prompt_and_refusal.md](08_prompt_and_refusal.md) |
 | 9 | LLM | 확정 | claude-haiku-5-5. gemini-3.8-flash는 한국어 오거절 0.133으로 품질 하한(10%) 미달. 문항당 약 ₩0.9 | [09_llm.md](09_llm.md) |
 | 10 | 검색 성능 평가 | 완료 | test set Recall@5 영어 0.773, 한국어 0.703. multi_doc이 가장 약하고 한국어 trap Recall@5 0.500. Part C 기준선 | [10_retrieval_eval.md](10_retrieval_eval.md) |
-| 11 | 생성 성능 평가 | 예정 | 확정한 전체 파이프라인을 test set으로 평가. uv 답변 정확성과 품질 점수 | |
+| 11 | 생성 성능 평가 | 완료 | uv 답변 정확성 영어 0.742, 한국어 0.607. 답 없는 문항 거절 100%. multi_doc과 답 잘림(14%)이 주된 손실. Citation Precision과 품질 항목은 검증 미달로 참고값 | [11_generation_eval.md](11_generation_eval.md) |
 
 1~9단계는 dev set으로 구성 요소를 **고르는** 실험이고, 10, 11단계는 고른 구성의 성능을 test set으로 **재는** 실험이다. 10, 11단계의 측정 방식은 Part C(개선 실험)의 기준선과 개선안 비교에도 그대로 쓴다.
 

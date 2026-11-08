@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 from app.schema.query_schema import QueryStatus
 
 EvalSource = Literal["gold", "live"]
+# 지표 타당성 검증용 변형(research/gold_metric_selection.md의 "지표 타당성 검증"). none이 실제 서비스 구성이다.
+EvalVariant = Literal["none", "random_chunks", "no_refusal", "shuffled_citations", "swapped_context", "stripped_citations"]
 
 
 class EvalConfig(BaseModel):
@@ -17,6 +19,9 @@ class EvalConfig(BaseModel):
     top_k: int = Field(default=5, ge=1, le=20)
     retrieval_depth: int = Field(default=10, ge=1, le=50)
     concurrency: int = Field(default=4, ge=1, le=16)
+    variant: EvalVariant = "none"
+    # 답마다 Judge를 몇 번 부를지. 0이면 Judge를 부르지 않는다. Gold Set 평가는 3회 다수결이다.
+    judge_samples: int = Field(default=3, ge=0, le=5)
 
 
 class EvalManifest(BaseModel):
@@ -38,8 +43,14 @@ class EvalManifest(BaseModel):
     git_commit: str
 
     def run_id(self) -> str:
-        """config 이름과 git commit을 뺀 값의 해시 앞 12자리를 붙인다. 같은 입력이면 같은 run_id다."""
+        """config 이름과 git commit을 뺀 값의 해시 앞 12자리를 붙인다. 같은 입력이면 같은 run_id다.
+
+        Judge 표본 수는 생성 기록을 바꾸지 않아 빼고, 변형이 없으면(none) 변형 필드도 빼서 기존 실행의 run_id를 유지한다.
+        """
         body = self.model_dump(exclude={"git_commit"})
+        body["config"].pop("judge_samples")
+        if self.config.variant == "none":
+            body["config"].pop("variant")
         digest = hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
         return f"{self.config.name}-{digest}"
 

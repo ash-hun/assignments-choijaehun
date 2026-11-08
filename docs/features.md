@@ -15,11 +15,11 @@
 | 기능 ID | 경로 | 기능 | 진입점 | 상태 |
 |---|---|---|---|---|
 | `corpus_fetch` | Ingest | manifest에 고정된 원문 다운로드와 해시 검증 | `make corpus` | 구현됨 |
-| `eval_run` | Eval | test set 전체 채점과 Report 생성 | `make eval CONFIG=...` | 구현됨(Judge 지표 제외) |
+| `eval_run` | Eval | test set 전체 채점(검색, 거절, 운영, Judge 지표)과 Report 생성, 지표 타당성 검증 | `make eval CONFIG=...`, `make validity` | 구현됨 |
 | `gold_draft` | Eval | 문서에서 Gold Set 초안 생성, 번역 묶음 생성, Gold 파일 검증 | `make gold-draft`, `make gold-translate`, `make gold-check` | 구현됨(dev, test) |
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
-| `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make agreement` | 미구현 |
+| `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make label-sheet`, `make agreement` | 구현됨 |
 | `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 미구현 |
 | `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(dense 검색) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
@@ -65,33 +65,45 @@
 
 ### eval_run: 평가 실행
 
-**설명**: 설정 파일 하나로 test set 전체(영어, 한국어)를 실제 질의 경로(`query_builder`로 API와 같은 조립, 스트리밍)에 넣고, 문항마다 검색 지표, 거절, 인용 규칙, 운영 수치(검색 지연, TTFT, TPOT, Latency, 비용)를 평가 기록 저장소(PostgreSQL `evaldb`)에 남긴 뒤 언어별 Report를 쓴다. 재현에 필요한 값(git commit, Gold와 원문 해시, 인덱스 계약, 답변 모델과 생성 조건, 프롬프트 해시, bootstrap seed)을 manifest로 남긴다.
+**설명**: 설정 파일 하나로 test set 전체(영어, 한국어)를 실제 질의 경로(`query_builder`로 API와 같은 조립, 스트리밍)에 넣고, 문항마다 검색 지표, 거절, 인용 규칙, 운영 수치(검색 지연, TTFT, TPOT, Latency, 비용)를 평가 기록 저장소(PostgreSQL `evaldb`)에 남긴다. 답한 문항은 Judge(gemini-3.8-flash)가 인용 대조와 루브릭으로 3회 판정하고, 다수결로 uv 답변 정확성을 만들고, Citation Precision과 품질 6항목 통과율은 검증 조건에 못 미쳐 참고값으로 낸다(uv 답변 품질 점수는 채택 항목이 없어 내지 않는다). 재현에 필요한 값(git commit, Gold와 원문 해시, 인덱스 계약, 답변 모델과 생성 조건, 프롬프트 해시, Judge 프롬프트 버전, bootstrap seed)을 manifest와 Report에 남긴다. 설정의 `variant`로 일부러 망가뜨린 파이프라인(무작위 청크, 거절 끔, 인용 섞기, Judge 근거 바꿔치기)을 돌려 지표 타당성을 검증한다.
 
 **입력과 결과**
 
 | 입력 | 결과 |
 |---|---|
-| `make eval` (`CONFIG=configs/baseline.toml`) | `qdrant`, `evaldb`를 띄우고 평가. `reports/<run_id>/`에 `manifest.json`, `results.jsonl`, `summary.json`, `summary.md` |
-| 같은 설정, 데이터, 인덱스로 다시 실행 | 같은 run_id. 기록된 문항은 LLM을 부르지 않고 같은 Report를 다시 쓴다(비용 0) |
+| `make eval` (`CONFIG=configs/baseline.toml`) | `qdrant`, `evaldb`를 띄우고 평가와 Judge. `reports/<run_id>/`에 `manifest.json`, `results.jsonl`(기록과 판정), `summary.json`, `summary.md` |
+| 같은 설정, 데이터, 인덱스로 다시 실행 | 같은 run_id. 기록된 문항은 LLM을, 성공한 판정은 Judge를 부르지 않고 같은 Report를 다시 쓴다(비용 0) |
+| Judge 프롬프트 문구 변경 | 그 종류(인용, 루브릭)의 버전(해시)만 바뀌어 그 종류만 새로 판정한다. 이전 판정은 버전별로 남는다 |
 | 일부 문항에서 LLM 호출 실패 | 그 문항만 기록하지 않고 Report에 id를 남긴 뒤 종료 코드 1. 다음 실행이 그 문항만 다시 부른다 |
-| `EVAL_DB_PASSWORD` 없음, 인덱스 계약 불일치 | 시작 전에 실패 |
+| Judge 출력이 스키마나 규칙(목록 길이, 해당 없음 불가 항목의 na)을 어김 | 그 판정은 실패로 저장되고 집계에서 빠진다. 다음 실행에서 다시 부른다(같은 요청은 캐시) |
+| `make eval EVAL_ARGS="--judge-limit 10"` | 파일럿. 답한 기록 앞 10개만 Judge |
+| `make validity` | 변형 5종(무작위 청크, 거절 끔, 인용 섞기, 근거 바꿔치기, 인용 지우기)을 영어 40문항, Judge 1회로 평가하고 기준선 첫 표본과 짝지어 비교. `research/artifacts/judge_validity/results.json`. 기대한 하락이 하나라도 없으면 종료 코드 1 |
+| `EVAL_DB_PASSWORD` 없음, Judge 엔드포인트 없음, 인덱스 계약 불일치 | 시작 전에 실패 |
 
-**처리 흐름**: `eval_run_cli`에서 설정과 Gold 파일 로드, manifest와 run_id 계산, `open_query_service`, `EvalRecordRepository.ensure_schema`와 `upsert_run`, `all_chunks`, `EvalService.run`(문항마다 `ChunkRetriever.retrieve` 깊이 10으로 순위 지표, `QueryService.answer_stream`으로 답), `summarize_records`, `write_report` 순.
+**처리 흐름**: `eval_run_cli`에서 설정과 Gold 파일 로드, manifest와 run_id 계산, `open_query_service`, 변형 선택(`variant_parts`), `EvalRecordRepository.ensure_schema`와 `upsert_run`, `all_chunks`, `EvalService.run`, `JudgeService.judge`(답마다 같은 검색기로 근거 청크를 다시 찾고 인용 대조, 루브릭 호출), `aggregate`, `summarize_records`, `write_report` 순.
 
 **구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/eval_run_cli.py` | cli | 설정, manifest, run_id, 연결 조립 |
+| `app/cli/eval_run_cli.py` | cli | 설정, manifest, run_id, 변형, 연결과 Judge 조립 |
+| `app/cli/judge_check_cli.py` | cli | `validity`, `label-sheet`, `agreement` |
 | `app/service/eval/eval_service.py` | service | 기록이 없는 문항만 동시 실행, 기록 저장, 실패 문항 분리 |
-| `app/service/eval/eval_summarizer.py` | service | 언어별 검색, 거절, 인용, 운영 지표 요약과 bootstrap 구간 |
+| `app/service/eval/judge_service.py` | service | 성공한 판정이 없는 (기록, 종류, 표본)만 Judge 호출. 인용은 8개씩 나눠 부름. 캐시와 저장소 |
+| `app/service/eval/judge_prompt.py` | service | Judge 프롬프트(인용 v3, 루브릭 v2), 구조화 출력 스키마, 종류별 버전 해시, 경계 태그 중화 |
+| `app/service/eval/judge_metric.py` | service | (문장, 인용 번호) 분리, Judge 출력 검증, 표본 다수결과 일치 |
+| `app/service/eval/validity_variant.py` | service | 무작위 청크 검색기(근거 바꿔치기에도 씀), 거절하지 않는 판정기, 인용 섞기, 인용 지우기 |
+| `app/service/eval/validity_checker.py` | service | 기준선과 변형의 짝지은 차이와 판정 |
+| `app/service/eval/eval_summarizer.py` | service | 언어별 검색, 거절, 인용, 운영, Judge 지표 요약과 bootstrap 구간 |
 | `app/service/eval/retrieval_metric.py` | service | `rank_score`(Recall@k, Precision@k, F1@k, MRR, nDCG@10), `relevant_chunk_ids` |
 | `app/service/eval/report_writer.py` | service | Report 파일. 생성 시각을 넣지 않음 |
 | `app/service/query/query_builder.py` | service | API와 평가가 같이 쓰는 질의 파이프라인 조립 |
-| `app/repository/eval_record_repository.py` | repository | PostgreSQL 스키마(`IF NOT EXISTS`), 실행과 기록 upsert |
+| `app/repository/eval_record_repository.py` | repository | PostgreSQL 스키마(`IF NOT EXISTS`), 실행, 기록, 판정 upsert |
 | `app/repository/qdrant_chunk_repository.py` | repository | `all_chunks`: 인덱스 전체 청크(nDCG 이상적 순위용) |
-| `app/schema/eval_schema.py` | schema | `EvalConfig`, `EvalManifest`(run_id), `RankScore`, `EvalRecord` |
-| `configs/baseline.toml` | 설정 | 기준선 평가 설정 |
+| `app/client/llm_cache.py` | client | Judge 응답 캐시(`.cache/judge_responses.jsonl`) |
+| `app/schema/eval_schema.py` | schema | `EvalConfig`(변형, Judge 표본 수), `EvalManifest`(run_id), `RankScore`, `EvalRecord` |
+| `app/schema/judge_schema.py` | schema | `RubricJudgment`, `JudgeResult`, `RecordJudgment`, `HumanLabel` |
+| `configs/baseline.toml`, `configs/validity_*.toml` | 설정 | 기준선과 타당성 검증 변형 |
 
 **테스트**
 
@@ -99,10 +111,12 @@
 |---|---|
 | 단위 | `tests/unit/test_eval_run_rank_score.py` |
 | 단위 | `tests/unit/test_eval_run_eval_summarizer.py` |
+| 단위 | `tests/unit/test_eval_run_judge_metric.py` |
+| 단위 | `tests/unit/test_eval_run_validity_checker.py` |
 | 단위 | `tests/unit/test_eval_run_llm_cache.py` |
-| 통합 | `tests/integ/test_eval_run.py`(기록, 재실행 시 LLM 미호출, 실패 문항 재시도, Report 재작성) |
+| 통합 | `tests/integ/test_eval_run.py`(기록, 재실행 시 LLM 미호출, 실패 문항 재시도, Report 재작성, Judge 표본별 1회 호출과 재사용) |
 
-**제약과 미구현**: Judge 지표(Citation Precision, uv 답변 정확성, uv 답변 품질 점수의 Judge 항목)는 다음 단계. 실시간 기록(`source=live`)은 `live_eval`에서 같은 저장소를 쓴다. 저장소 연결이 끊긴 경우의 재시도는 없다(재실행으로 복구).
+**제약과 미구현**: 실시간 기록(`source=live`)은 `live_eval`에서 같은 저장소를 쓴다. 저장소 연결이 끊긴 경우의 재시도는 없다(재실행으로 복구).
 
 ### gold_draft: Gold Set 초안 생성
 
@@ -200,15 +214,21 @@
 
 ### judge_agreement: Judge 신뢰성 측정
 
-**설명**: 같은 입력으로 Judge를 3회 돌린 판정 일치율과, 사람 라벨(`data/gold/human_labels.jsonl`) 대비 일치율과 Cohen's kappa를 계산한다. Judge 모델 선정 근거로도 쓴다.
+**설명**: Judge 3회 표본의 일치율은 `make eval` Report의 "표본 일치율" 표에 나온다. 사람 라벨은 `make label-sheet`가 판정이 있는 기준선 답 20개를 유형을 돌아가며 골라(seed 2026) 읽을 시트와 채울 라벨 파일을 만들고, 사람이 채운 뒤 `make agreement`가 항목별 일치율과 Cohen's kappa(기준 0.60)를 계산한다.
+
+**입력과 결과**
+
+| 입력 | 결과 |
+|---|---|
+| `make label-sheet` | `data/gold/human_labels_sheet.md`(질문, 답, 인용 판정 대상, 요점, 금지, 근거 문서), `data/gold/human_labels.jsonl`(빈칸 null). 라벨 파일이 있으면 덮어쓰지 않는다 |
+| `make agreement` | 다 채운 라벨만 Judge 3회 다수결과 비교. 인용, 요점, 금지는 하나가 한 쌍. `research/artifacts/judge_agreement/results.json` |
 
 **구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/eval_cli.py` | cli | `agreement` 하위 명령 |
-| `app/service/eval/agreement_service.py` | service | 반복 실행과 비교 조립 |
-| `app/service/eval/agreement_calculator.py` | service | 일치율, kappa 계산 |
+| `app/cli/judge_check_cli.py` | cli | `label-sheet`, `agreement` |
+| `app/service/eval/agreement_calculator.py` | service | 일치율, Cohen's kappa |
 
 **테스트**
 
@@ -216,7 +236,7 @@
 |---|---|
 | 단위 | `tests/unit/test_judge_agreement_agreement_calculator.py` |
 
-**제약과 미구현**: 전부 미구현.
+**제약과 미구현**: 라벨러가 한 명이라 사람 사이 일치도는 재지 않는다.
 
 ### live_eval: 실시간 누적 평가
 

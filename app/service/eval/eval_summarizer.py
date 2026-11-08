@@ -3,6 +3,7 @@ import statistics
 from pydantic import BaseModel
 
 from app.service.eval.retrieval_metric import MetricSummary, bootstrap
+from app.schema.judge_schema import RecordJudgment
 from app.schema.eval_schema import EvalRecord
 
 RANK_FIELDS = ["recall_at_5", "recall_at_10", "precision_at_5", "precision_at_10", "f1_at_5", "f1_at_10",
@@ -17,6 +18,19 @@ class LatencySummary(BaseModel):
     count: int
     median: float | None
     p95: float | None
+
+
+class JudgeSummary(BaseModel):
+    """Judge 지표. 답한 문항만 판정하고, 판정에 실패한 기록은 빼고 센다. agreement는 표본이 모두 같았던 기록의 비율이다."""
+
+    judged: int
+    failed: int
+    citation_precision: MetricSummary | None
+    accuracy: MetricSummary | None
+    key_point_rate: MetricSummary | None
+    quality_score: MetricSummary | None
+    quality_items: dict[str, float]
+    agreement: dict[str, float]
 
 
 class LanguageSummary(BaseModel):
@@ -39,12 +53,48 @@ class LanguageSummary(BaseModel):
     refused_latency_ms: LatencySummary
     cost_krw_per_item: float
     cost_krw_total: float
+    judge: JudgeSummary | None = None
 
 
-def summarize_records(records: list[EvalRecord], threshold: float) -> list[LanguageSummary]:
-    """언어 이름 순으로 요약한다. 같은 기록이면 같은 요약이 나온다."""
-    return [_language(language, [r for r in records if (r.language or "unknown") == language], threshold)
-            for language in sorted({r.language or "unknown" for r in records})]
+def summarize_records(
+    records: list[EvalRecord], threshold: float, judgments: dict[str, RecordJudgment] | None = None,
+) -> list[LanguageSummary]:
+    """언어 이름 순으로 요약한다. 같은 기록이면 같은 요약이 나온다. judgments가 없으면 Judge 지표를 비워 둔다."""
+    summaries = []
+    for language in sorted({r.language or "unknown" for r in records}):
+        group = [r for r in records if (r.language or "unknown") == language]
+        summary = _language(language, group, threshold)
+        if judgments is not None:
+            summary.judge = summarize_judgments([judgments[r.record_id] for r in group if r.record_id in judgments])
+        summaries.append(summary)
+    return summaries
+
+
+def summarize_judgments(judged: list[RecordJudgment]) -> JudgeSummary:
+    """기록별 판정을 지표별 평균과 구간, 품질 항목별 통과율, 항목별 표본 일치율로 묶는다."""
+    ok = [j for j in judged if not j.failed]
+    items: dict[str, list[bool]] = {}
+    agreement: dict[str, list[bool]] = {}
+    for j in ok:
+        for name, value in j.quality_items.items():
+            if value is not None:
+                items.setdefault(name, []).append(value)
+        for name, same in j.agreement.items():
+            agreement.setdefault(name, []).append(same)
+    return JudgeSummary(
+        judged=len(judged), failed=len(judged) - len(ok),
+        citation_precision=_mean([j.citation_precision for j in ok]),
+        accuracy=_mean([None if j.accuracy is None else float(j.accuracy) for j in ok]),
+        key_point_rate=_mean([j.key_point_rate for j in ok]),
+        quality_score=_mean([j.quality_score for j in ok]),
+        quality_items={k: round(statistics.fmean(v), 4) for k, v in sorted(items.items())},
+        agreement={k: round(statistics.fmean(v), 4) for k, v in sorted(agreement.items())},
+    )
+
+
+def _mean(values: list[float | None]) -> MetricSummary | None:
+    present = [v for v in values if v is not None]
+    return bootstrap(present) if present else None
 
 
 def tpot_ms(record: EvalRecord) -> float | None:

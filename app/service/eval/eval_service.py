@@ -1,6 +1,7 @@
 """Gold Set 평가 실행. 문항마다 실제 질의 경로(스트리밍)로 답을 받고, 검색 지표와 운영 수치를 기록 저장소에 남긴다."""
 import asyncio
 from pydantic import BaseModel
+from collections.abc import Callable
 
 from app.service.eval.retrieval_metric import rank_score, relevant_chunk_ids
 from app.repository.eval_record_repository import EvalRecordRepository
@@ -36,7 +37,9 @@ class EvalService:
 
     def __init__(
         self, query: QueryService, retriever: ChunkRetriever, repository: EvalRecordRepository, price: TokenPrice,
+        answer_transform: Callable[[str], str] | None = None,
     ) -> None:
+        self._answer_transform = answer_transform
         self._query = query
         self._retriever = retriever
         self._repository = repository
@@ -84,7 +87,8 @@ class EvalService:
             language=item.language, type=item.type, answerable=item.answerable, question=item.question,
             status=response.status,
             refusal_stage=("retrieval" if usage.output_tokens == 0 else "generation") if refused else None,
-            answer=response.answer, cited_chunk_ids=[c.chunk_id for c in response.citations],
+            answer=self._answer_transform(response.answer) if self._answer_transform and not refused else response.answer,
+            cited_chunk_ids=[c.chunk_id for c in response.citations],
             dropped_citations=meta.dropped_citations, retrieved_chunk_ids=retrieved, retrieval_scores=meta.retrieval_scores,
             top_score=meta.retrieval_scores[0] if meta.retrieval_scores else None, rank=rank,
             retrieval_ms=meta.retrieval_ms, first_token_ms=meta.first_token_ms, latency_ms=meta.latency_ms,

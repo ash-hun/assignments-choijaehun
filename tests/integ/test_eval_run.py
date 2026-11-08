@@ -1,4 +1,5 @@
-"""eval_run 기능의 파이프라인 통합 테스트. 실제 질의 경로(검색, 거절, 스트리밍 생성)에 메모리 저장소와 대체 LLM을 넣어 돌린다."""
+"""eval_run 기능의 파이프라인 통합 테스트. 실제 질의 경로(검색, 거절, 스트리밍 생성)와 Judge에 메모리 저장소와 대체 LLM을 넣어 돌린다."""
+import json
 import asyncio
 from typing import Any
 from pathlib import Path
@@ -14,9 +15,12 @@ from app.service.query.chunk_retriever import ChunkRetriever
 from app.schema.eval_schema import EvalConfig, EvalManifest
 from app.service.query.query_service import QueryService
 from app.service.eval.report_writer import write_report
+from app.service.eval.judge_service import JudgeService
 from app.common.upstream_error import LlmFailureError
+from app.service.eval.judge_metric import aggregate
 from app.schema.vector_schema import IndexContract
 from app.service.query.llm_gate import LlmGate
+from app.client.llm_cache import LlmCache
 from app.schema.chunk_schema import Chunk
 
 CACHE = "The cache directory defaults to the user cache folder and can be moved with UV_CACHE_DIR."
@@ -39,7 +43,7 @@ class CountingLlm(LlmClient):
         raise AssertionError("evaluation uses the streaming path")
 
     async def stream(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
-                     temperature: float | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
+                     temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
         self.calls += 1
         if self.failure:
             raise self.failure
@@ -119,3 +123,58 @@ def test_failed_items_are_not_recorded_and_the_next_run_fills_them() -> None:
 
     assert first.failed == [str(ITEMS[0].id)] and len(first.records) == 1
     assert second.failed == [] and second.reused == 1 and len(second.records) == 2
+
+
+class JudgeLlm(LlmClient):
+    def __init__(self) -> None:
+        self.calls = 0
+
+    @property
+    def model(self) -> str:
+        return "judge"
+
+    async def complete(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
+                       temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> LlmCompletion:
+        self.calls += 1
+        if "<claims>" in messages[-1].content:
+            body: dict[str, Any] = {"judgments": [{"id": 0, "supported": True}]}
+        else:
+            body = {"key_points": [True], "rejections": [], "unsupported_claim": "pass", "identifier_accuracy": "pass",
+                    "interface_separation": "na", "version_status": "na", "prior_knowledge": "pass", "reason": ""}
+        return LlmCompletion(text=json.dumps(body), model="judge", input_tokens=100, output_tokens=10)
+
+    async def stream(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
+                     temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
+        completion = await self.complete(messages, seed, max_completion_tokens, temperature, json_schema)
+        yield LlmDelta(text=completion.text)
+        yield completion
+
+
+def test_judge_scores_answered_records_once_per_sample_and_reuses_stored_judgments(tmp_path: Path) -> None:
+    service, records, _, chunks = build()
+    outcome = run(service, chunks)
+    retriever = ChunkRetriever(*_memory_index(chunks))
+    judge_llm = JudgeLlm()
+    judge = JudgeService(judge_llm, LlmCache(tmp_path / "judge.jsonl"), records, retriever, chunks, 2)
+    items = {str(i.id): i for i in ITEMS}
+
+    first = asyncio.run(judge.judge("t-run", outcome.records, items, 3, 2))
+    calls = judge_llm.calls
+    second = asyncio.run(judge.judge("t-run", outcome.records, items, 3, 2))
+
+    assert calls == 6 and judge_llm.calls == 6
+    assert len(first) == len(second) == 6 and all(r.ok for r in second)
+    answered = next(r for r in outcome.records if r.status == "answered")
+    judged = aggregate(answered, [r for r in second if r.record_id == answered.record_id], has_criteria=True)
+    assert judged.accuracy is True and judged.citation_precision == 1.0 and judged.agreement["accuracy"] is True
+
+
+def _memory_index(chunks: list[Chunk]) -> tuple[MemoryChunkRepository, MemoryEmbeddingClient, str]:
+    repository, embedding = MemoryChunkRepository(), MemoryEmbeddingClient()
+
+    async def index() -> None:
+        await repository.ensure_collection(COLLECTION, 256, IndexContract(embedding_model="m", tokenizer="word", chunk_config_hash="c"))
+        await repository.upsert(COLLECTION, chunks, embedding.embed_documents([c.text for c in chunks]), [])
+
+    asyncio.run(index())
+    return repository, embedding, COLLECTION

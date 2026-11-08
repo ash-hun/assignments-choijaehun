@@ -1,0 +1,8 @@
+# 지표 타당성 검증 변형(stripped_citations). 실제 답에서 [n] 인용을 모두 지운다. 영어 test set만, Judge 1회.
+name = "validity-stripped-citations"
+gold_files = ["data/gold/test_set.jsonl"]
+top_k = 5
+retrieval_depth = 10
+concurrency = 4
+variant = "stripped_citations"
+judge_samples = 1

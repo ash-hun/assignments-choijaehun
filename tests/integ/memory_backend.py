@@ -7,6 +7,7 @@ from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.schema.vector_schema import SparseTerms, IndexContract
 from app.schema.eval_schema import EvalRecord, EvalManifest
+from app.schema.judge_schema import JudgeResult
 from app.client.embedding_client import EmbeddingClient
 from app.common.upstream_error import VectorStoreError
 from app.schema.chunk_schema import Chunk
@@ -102,6 +103,7 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
     def __init__(self) -> None:
         self.runs: dict[str, EvalManifest] = {}
         self.rows: dict[str, EvalRecord] = {}
+        self.judged: dict[tuple[str, str, int, str, str], JudgeResult] = {}
 
     async def ensure_schema(self) -> None:
         pass
@@ -114,3 +116,10 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
 
     async def upsert_record(self, record: EvalRecord) -> None:
         self.rows[record.record_id] = record
+
+    async def upsert_judgment(self, result: JudgeResult) -> None:
+        self.judged[(result.record_id, result.kind, result.sample, result.judge_model, result.prompt_version)] = result
+
+    async def judgments(self, run_id: str) -> list[JudgeResult]:
+        ids = {r.record_id for r in self.rows.values() if r.run_id == run_id}
+        return [self.judged[k] for k in sorted(self.judged) if k[0] in ids]

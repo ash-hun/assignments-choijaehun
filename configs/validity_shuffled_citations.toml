@@ -1,0 +1,8 @@
+# 지표 타당성 검증 변형(shuffled_citations). 영어 test set만, Judge 1회. 기준선(baseline.toml)과 같은 문항끼리 비교한다.
+name = "validity-shuffled-citations"
+gold_files = ["data/gold/test_set.jsonl"]
+top_k = 5
+retrieval_depth = 10
+concurrency = 4
+variant = "shuffled_citations"
+judge_samples = 1
