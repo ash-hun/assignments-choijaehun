@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     llm_seed: int = 42
     # gpt-6.1-terra처럼 기본값(1) 외 temperature를 거부하는 모델이 있어 기본은 보내지 않는다.
     llm_temperature: float | None = None
+    # LLM 선정 실험 후보의 엔드포인트. 모델명을 키로 하는 JSON(LLM_CANDIDATE_URLS)이고 저장소에 두지 않는다.
+    llm_candidate_urls: dict[str, str] = {}
 
 
 @lru_cache(maxsize=1)

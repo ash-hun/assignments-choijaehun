@@ -83,7 +83,7 @@
 | `app/service/eval/refusal_metric.py` | service | 거절 정확도 |
 | `app/service/eval/judge_metric.py` | service | Judge 기반 지표 |
 | `app/service/eval/report_writer.py` | service | results.jsonl, summary.md |
-| `app/client/llm_cache.py` | client | 요청 해시 기반 응답 캐시 |
+| `app/client/llm_cache.py` | client | 요청 해시 기반 응답 캐시(`LlmCache`). 구현됨(LLM 선정 실험에서 사용) |
 | `app/schema/gold_schema.py` | schema | Gold 문항 모델 |
 | `app/schema/eval_schema.py` | schema | 문항별 결과, 요약 모델 |
 
@@ -94,6 +94,7 @@
 | 단위 | `tests/unit/test_eval_run_retrieval_metric.py` |
 | 단위 | `tests/unit/test_eval_run_refusal_metric.py` |
 | 단위 | `tests/unit/test_eval_run_judge_metric.py` |
+| 단위 | `tests/unit/test_eval_run_llm_cache.py` |
 | 통합 | `tests/integ/test_eval_run.py` |
 
 **제약과 미구현**: 지표 목록은 Gold Set 및 Metric 선정 실험 후 확정.
@@ -241,7 +242,7 @@
 | `app/service/query/prompt_builder.py` | service | 번호 매긴 근거와 지시문 조립 |
 | `app/service/query/citation_parser.py` | service | `[n]` 추출, 존재하지 않는 번호 제거 |
 | `app/repository/chunk_repository.py` | repository | `search` |
-| `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출 |
+| `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출. seed, temperature는 None이면 보내지 않음 |
 | `app/client/embedding_client.py` | client | 질의 벡터화 |
 | `app/schema/query_schema.py` | schema | 요청과 응답 모델. 지금은 인용을 정리한 답변(`ParsedAnswer`)만 있음 |
 
@@ -291,7 +292,7 @@
 | `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 근거 재현율, 문서 단위 Recall@5(영어, 한국어 질의), bootstrap 신뢰구간, 색인 시간, 질의 임베딩 지연. 구현됨(`make embed-bench`). 교차 확인은 `embedding_crosscheck` |
 | `embedding_crosscheck` | 확정 Chunking 청크로 Qwen3와 e5를 다시 색인해 Hit@5, MRR, 근거 보존@5와 @10, e5 잘림 청크 수 측정과 사전 규칙 판정. 구현됨(`make embed-check`) |
 | `refusal_threshold` | dev set 답 있음/답 없음 문항의 dense 최고 점수 분포와 임계값별 오거절, 미거절 비율, 언어별 오거절 상한(5%) 판정. 구현됨(`make refusal-calib`) |
-| `llm` | 생성 후보별 Faithfulness, 인용 형식 준수율, 거절률, 문항당 비용과 지연 |
+| `llm` | 생성 후보별 인용 형식 준수율, 지운 인용 비율, 답 있음 오거절, 답 없음 거절, 문항당 비용과 지연, 사전 규칙 판정. 응답 캐시로 재실행 비용 0. 구현됨(`make llm-bench`) |
 
 **구현 파일**
 
@@ -316,6 +317,8 @@
 | `app/service/eval/embedding_crosscheck.py` | service | 모델 최대 입력을 넘는 청크 수(`truncated_chunks`), 교차 확인 사전 규칙 판정(`judge`: Hit@5 짝지은 차이, 근거 보존@5, 비용) |
 | `app/cli/refusal_calibration_cli.py` | cli | 확정 구성으로 색인, dev set 전 문항의 dense 최고 점수 측정, 결과와 판정 저장 |
 | `app/service/eval/refusal_calibrator.py` | service | 임계값 후보별 언어별 오거절, 거절 비율과 사전 규칙 판정(`pick_threshold`) |
+| `app/cli/llm_selection_cli.py` | cli | 확정 검색 구성으로 dev set 근거 검색, 후보별 생성, 결과와 판정 저장 |
+| `app/service/eval/llm_benchmark.py` | service | 두 단계 거절(점수, 근거 부족 토큰), 인용 파싱, 응답 캐시를 거친 후보별 생성(`LlmBenchmark`), 요약(`summarize_llm`), 판정(`pick_llm`) |
 | `app/service/eval/database_benchmark.py` | service | 기능 검사, 적재, 지연, ANN 재현율 측정 |
 | `app/service/eval/vector_projector.py` | service | 무작위 투영으로 차원 변경, numpy 전수 비교 |
 | `app/service/eval/term_hasher.py` | service | 기능 검사용 임시 sparse 인코더 |
@@ -332,10 +335,10 @@
 | 단위 | `tests/unit/test_selection_run_vector_projector.py` |
 | 단위 | `tests/unit/test_selection_run_retrieval_metric.py` |
 | 단위 | `tests/unit/test_selection_run_tokenizer_benchmark.py` |
-| 단위 | `tests/unit/test_selection_run_chunking_benchmark.py`, `tests/unit/test_selection_run_embedding_crosscheck.py`, `tests/unit/test_selection_run_refusal_calibrator.py` |
-| 통합 | `tests/integ/test_selection_run.py`(Chunking 선정, Embedding 교차 확인, 거절 임계값 보정 파이프라인: 분할, 색인, 검색, 지표, 잘림 수, 점수, 판정. 벡터 DB와 임베딩 모델은 메모리 대체 객체) |
+| 단위 | `tests/unit/test_selection_run_chunking_benchmark.py`, `tests/unit/test_selection_run_embedding_crosscheck.py`, `tests/unit/test_selection_run_refusal_calibrator.py`, `tests/unit/test_selection_run_llm_benchmark.py` |
+| 통합 | `tests/integ/test_selection_run.py`(Chunking 선정, Embedding 교차 확인, 거절 임계값 보정, LLM 선정 파이프라인: 분할, 색인, 검색, 생성, 캐시 재사용, 지표, 잘림 수, 점수, 판정. LLM은 대체 객체. 벡터 DB와 임베딩 모델은 메모리 대체 객체) |
 
-**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저, Chunking, Embedding 교차 확인, 거절 임계값 보정 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
+**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저, Chunking, Embedding 교차 확인, 거절 임계값 보정, LLM 선정 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
 
 ---
 

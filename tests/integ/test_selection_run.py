@@ -1,21 +1,28 @@
-"""selection_run 기능의 Chunking 선정, Embedding 교차 확인, 거절 임계값 보정 파이프라인 통합 테스트. 분할, 색인, 검색, 지표, 판정을 이어서 돌린다."""
+"""selection_run 기능의 선정 파이프라인 통합 테스트(Chunking, Embedding 교차 확인, 거절 임계값, LLM). 분할, 색인, 검색, 생성, 지표, 판정을 이어서 돌린다."""
 import re
 import zlib
 import asyncio
 import numpy as np
+from typing import Any
+from pathlib import Path
 
+from app.service.eval.llm_benchmark import LlmAnswer, LlmBenchmark, LlmCandidate, RetrievedItem, summarize_llm
 from app.service.eval.chunking_benchmark import ChunkingRun, ChunkingBenchmark, pick_best
 from app.service.eval.embedding_crosscheck import ModelResult, judge, truncated_chunks
 from app.service.eval.refusal_calibrator import TopScore, pick_threshold
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.chunk_splitter import ChunkMethod, ChunkSplitter
+from app.client.llm_client import ChatMessage, LlmClient, LlmCompletion
 from app.service.eval.embedding_benchmark import EmbeddingBenchmark
 from app.service.ingest.sentence_embedder import SentenceEmbedder
+from app.service.query.prompt_builder import INSUFFICIENT_CONTEXT
 from app.schema.vector_schema import SparseTerms, IndexContract
+from app.service.query.evidence_checker import EvidenceChecker
 from app.schema.gold_schema import GoldItem, GoldEvidence
 from app.client.embedding_client import EmbeddingClient
 from app.cli.refusal_calibration_cli import top_scores
 from app.schema.chunk_schema import Chunk, Document
+from app.client.llm_cache import LlmCache
 
 WORD = re.compile(r"\w+")
 CACHE = "The cache directory defaults to the user cache folder and can be moved with UV_CACHE_DIR."
@@ -181,3 +188,44 @@ def test_refusal_calibration_scores_every_item_and_keeps_answerable_items_above_
     assert [s.doc_id for s in scores if s.answerable] == ["cache.md", "lock.md"]
     assert verdict.chosen.false_refusal == {"en": 0.0}
     assert verdict.chosen.unanswerable_refused == {"en": 1.0}
+
+
+class ScriptedLlmClient(LlmClient):
+    def __init__(self) -> None:
+        self.calls = 0
+
+    @property
+    def model(self) -> str:
+        return "scripted"
+
+    async def complete(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
+                       temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> LlmCompletion:
+        self.calls += 1
+        text = INSUFFICIENT_CONTEXT if "Kubernetes" in messages[-1].content else "Set UV_CACHE_DIR [1][7]."
+        return LlmCompletion(text=text, model="scripted", input_tokens=100, output_tokens=10)
+
+
+def test_llm_selection_refuses_by_score_then_token_and_reuses_cached_answers(tmp_path: Path) -> None:
+    chunks = [Chunk(chunk_id=Chunk.make_id("cache.md", CACHE), doc_id="cache.md", ordinal=0, text=CACHE)]
+    items = [
+        RetrievedItem(item_id="a", language="en", type="factual", answerable=True, question="Where is the cache?", top_score=0.9, chunks=chunks),
+        RetrievedItem(item_id="b", language="en", type="unanswerable", answerable=False, question="Kubernetes HPA?", top_score=0.9, chunks=chunks),
+        RetrievedItem(item_id="c", language="en", type="unanswerable", answerable=False, question="Nexus policy?", top_score=0.1, chunks=chunks),
+    ]
+    candidate = LlmCandidate(name="scripted", input_krw_per_mtok=1000.0, output_krw_per_mtok=4000.0, temperature=None, seeds=[42])
+    llm = ScriptedLlmClient()
+
+    def measure() -> list[LlmAnswer]:
+        benchmark = LlmBenchmark(EvidenceChecker(0.5), LlmCache(tmp_path / "responses.jsonl"), 2)
+        return asyncio.run(benchmark.run(llm, candidate, items))
+
+    first = measure()
+    second = measure()
+    [summary] = summarize_llm(candidate, first)
+
+    assert llm.calls == 2
+    assert [(a.stage, a.refused) for a in first] == [("generation", False), ("generation", True), ("retrieval", True)]
+    assert (first[0].citations, first[0].dropped_citations) == ([1], 1)
+    assert (summary.format_compliance, summary.dropped_citation_rate, summary.unanswerable_refusal) == (1.0, 0.5, 1.0)
+    assert summary.cost_krw_per_item == round((2 * 100 * 1000 + 2 * 10 * 4000) / 1e6 / 3, 4)
+    assert [a.model_dump(exclude={"latency_ms"}) for a in first] == [a.model_dump(exclude={"latency_ms"}) for a in second]
