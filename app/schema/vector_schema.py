@@ -1,6 +1,8 @@
 """벡터 DB 저장소가 주고받는 sparse 벡터와 인덱스 계약 모델."""
 from pydantic import BaseModel, Field, model_validator
 
+from app.common.content_hasher import sha256_text
+
 # sparse 벡터 index 공간 크기. pgvector sparsevec 차원 상한(10억) 안에서 해시 충돌이 적은 크기다.
 SPARSE_DIM = 1 << 20
 
@@ -24,3 +26,7 @@ class IndexContract(BaseModel):
     embedding_model: str = Field(min_length=1)
     tokenizer: str = Field(min_length=1)
     chunk_config_hash: str = Field(min_length=1)
+
+    def collection_name(self, corpus: str) -> str:
+        """계약이 같으면 같은 이름. 설정을 바꾸면 새 컬렉션이 생기고, Query는 자기 설정으로 만든 이름이 없으면 기동하지 않는다."""
+        return f"chunks_{corpus}_{sha256_text(self.model_dump_json())[:8]}"

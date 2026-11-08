@@ -19,6 +19,9 @@ class Chunk(BaseModel):
     doc_id: str
     ordinal: int = Field(ge=0)
     text: str = Field(min_length=1)
+    # 인용을 출처로 바꿀 때 쓰는 문서 정보. 청크 id에는 넣지 않는다.
+    title: str = ""
+    url: str = ""
 
     @staticmethod
     def make_id(doc_id: str, text: str) -> str:

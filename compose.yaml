@@ -1,4 +1,4 @@
-# 벡터 DB는 데이터베이스 선정 실험 후 하나만 운영 구성에 남기고, API 서버는 Query 경로 구현 뒤에 추가한다.
+# 운영 구성은 qdrant와 api다. batch, batch-korean, dev와 선정 실험 후보 DB는 profile로 묶어 `docker compose up`에서 뜨지 않는다.
 name: elice-rag-qa
 
 x-app: &app
@@ -40,12 +40,34 @@ services:
       - ./research:/workspace/research
       - ./.cache:/workspace/.cache
 
-  # 데이터베이스 선정 실험 후보. 포트를 열지 않고 compose 내부 네트워크로만 접속한다.
+  # Query API 서버. 호스트의 localhost에만 포트를 연다(API_KEY 없이 외부에 노출되면 누구나 크레딧을 쓴다).
+  api:
+    <<: *app
+    build:
+      context: .
+      target: runtime
+    image: elice-rag-qa:runtime
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./.cache:/workspace/.cache
+    depends_on:
+      - qdrant
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  # 선정된 벡터 DB. 포트를 열지 않고 compose 내부 네트워크로만 접속한다. 색인은 named volume에 남는다.
   qdrant:
     image: qdrant/qdrant:v1.20.0
-    profiles: [dbbench]
+    volumes:
+      - qdrant_data:/qdrant/storage
 
-  # 내부 네트워크 전용 실험 DB라 비밀번호 대신 trust 인증을 쓴다. 운영 구성에서는 쓰지 않는다.
+  # 데이터베이스 선정 실험 후보. 내부 네트워크 전용 실험 DB라 비밀번호 대신 trust 인증을 쓴다. 운영 구성에서는 쓰지 않는다.
   pgvector:
     image: pgvector/pgvector:0.8.6-pg17
     profiles: [dbbench]
@@ -68,3 +90,6 @@ services:
       - ./app:/workspace/app:ro
       - ./tests:/workspace/tests:ro
       - ./pyproject.toml:/workspace/pyproject.toml:ro
+
+volumes:
+  qdrant_data:
