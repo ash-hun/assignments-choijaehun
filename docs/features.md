@@ -6,7 +6,7 @@
 
 고정된 공개 문서셋을 근거로 질문에 답하고, 답에 출처를 붙이며, 근거가 없으면 답하지 않는 질의응답 서비스. 시스템은 오프라인 Ingest 경로(쓰기)와 온라인 Query 경로(읽기)로 나뉘고, 같은 저장소에 선정 실험과 Gold Set 기반 평가 도구를 함께 둔다.
 
-범위 밖: 사용자 인증, 문서 업로드 API, 다중 턴 대화, 웹 화면.
+범위 밖: 사용자 인증, 문서 업로드 API, 다중 턴 대화. 화면은 실시간 평가 대시보드 하나만 둔다.
 
 ---
 
@@ -20,6 +20,7 @@
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make agreement` | 미구현 |
+| `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 미구현 |
 | `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(dense 검색) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
@@ -93,7 +94,7 @@
 | 단위 | `tests/unit/test_eval_run_llm_cache.py` |
 | 통합 | `tests/integ/test_eval_run.py` |
 
-**제약과 미구현**: 지표 목록은 Gold Set 및 Metric 선정 실험 후 확정.
+**제약과 미구현**: 지표 목록은 `research/gold_metric_selection.md`에서 확정. 결과는 `reports/<run_id>/`와 함께 평가 기록 저장소에 `source=gold`로 넣어 `live_eval`의 기준선으로 쓴다.
 
 ### gold_draft: Gold Set 초안 생성
 
@@ -206,6 +207,24 @@
 | 단위 | `tests/unit/test_judge_agreement_agreement_calculator.py` |
 
 **제약과 미구현**: 전부 미구현.
+
+### live_eval: 실시간 누적 평가
+
+**설명**: `query`, `query_stream` 응답마다 기록을 남기고, 백그라운드 Judge가 뒤따라 채점하고, 집계기가 누적 평균, 95% 구간, 최근 50건 이동 창을 계산해 API와 대시보드로 보낸다. 같은 `config_id`의 Gold Set 평가값을 기준선으로 겹친다. 지표 정의는 `research/gold_metric_selection.md`.
+
+**처리 흐름**: `query_service` 응답 뒤 `eval_recorder`가 저장, `judge_worker`가 채점 안 된 기록을 꺼내 `judge_metric`으로 판정, `metric_aggregator`가 집계, `metrics_router`가 응답.
+
+**구현 파일(예정)**
+
+| 파일 | 층 | 역할 |
+|---|---|---|
+| `app/api/metrics_router.py` | api | `/v1/metrics`, `/v1/metrics/stream`, `/dashboard` |
+| `app/service/eval/eval_recorder.py` | service | 질의 기록 저장. 실패해도 응답에 영향 없음 |
+| `app/service/eval/judge_worker.py` | service | 큐, 샘플링, 예산 상한, 재시작 시 미채점 기록 재처리 |
+| `app/service/eval/metric_aggregator.py` | service | 누적 평균, Wilson 구간, 이동 창 |
+| `app/repository/eval_record_repository.py` | repository | SQLite 기록과 판정 upsert |
+
+**제약과 미구현**: 전부 미구현. Judge 신뢰성 기준을 통과한 항목만 대시보드에 올린다.
 
 ### query: 질의응답
 
