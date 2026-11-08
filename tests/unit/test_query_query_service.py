@@ -41,7 +41,7 @@ class FixedLlm(LlmClient):
         return LlmCompletion(text=self.text, model="fixed", input_tokens=50, output_tokens=5)
 
     async def stream(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
-                     temperature: float | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
+                     temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
         self.calls += 1
         for start in range(0, len(self.text), 4):
             yield LlmDelta(text=self.text[start:start + 4])

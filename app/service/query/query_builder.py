@@ -22,6 +22,8 @@ class QueryParts:
 
     service: QueryService
     retriever: ChunkRetriever
+    llm: LlmClient
+    gate: LlmGate
     repository: QdrantChunkRepository
     collection: str
     contract: IndexContract
@@ -44,13 +46,15 @@ async def open_query_service(settings: Settings) -> AsyncIterator[QueryParts]:
     sdk = AsyncOpenAI(api_key=settings.elice_serverless_api_key.get_secret_value(), base_url=settings.answer_llm_base_url,
                       timeout=settings.llm_timeout_seconds, max_retries=settings.llm_max_retries)
     retriever = ChunkRetriever(repository, embedding, collection)
+    llm = LlmClient(sdk, settings.answer_llm_model)
+    gate = LlmGate(settings.llm_concurrency, settings.llm_queue_timeout_seconds)
     service = QueryService(
-        retriever, EvidenceChecker(settings.refusal_threshold),
-        LlmClient(sdk, settings.answer_llm_model), LlmGate(settings.llm_concurrency, settings.llm_queue_timeout_seconds),
+        retriever, EvidenceChecker(settings.refusal_threshold), llm, gate,
         settings.embedding_model, settings.default_top_k, settings.answer_temperature, settings.answer_seed, settings.answer_max_tokens,
     )
     try:
-        yield QueryParts(service=service, retriever=retriever, repository=repository, collection=collection, contract=contract)
+        yield QueryParts(service=service, retriever=retriever, llm=llm, gate=gate, repository=repository, collection=collection,
+                         contract=contract)
     finally:
         await sdk.close()
         await qdrant.close()

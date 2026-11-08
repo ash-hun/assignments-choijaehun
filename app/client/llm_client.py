@@ -84,8 +84,17 @@ class LlmClient:
 
     async def stream(
         self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int, temperature: float | None = None,
+        json_schema: dict[str, Any] | None = None,
     ) -> AsyncIterator[LlmDelta | LlmCompletion]:
-        """스트리밍 채팅 호출. 텍스트 조각을 LlmDelta로 흘리고, 끝나면 전체 텍스트와 토큰 수를 담은 LlmCompletion을 한 번 낸다."""
+        """스트리밍 채팅 호출. 텍스트 조각을 LlmDelta로 흘리고, 끝나면 전체 텍스트와 토큰 수를 담은 LlmCompletion을 한 번 낸다.
+
+        게이트웨이는 비스트리밍 호출의 출력을 2,000토큰으로 묶지만 스트리밍은 그보다 길게 받는다. json_schema는 complete와 같다.
+        """
+        response_format = (
+            {"type": "json_schema", "json_schema": {"name": "output", "schema": json_schema, "strict": True}}
+            if json_schema
+            else None
+        )
         parts: list[str] = []
         input_tokens = output_tokens = 0
         model = self._model
@@ -96,6 +105,7 @@ class LlmClient:
                 seed=omit if seed is None else seed,
                 max_completion_tokens=max_completion_tokens,
                 temperature=omit if temperature is None else temperature,
+                response_format=omit if response_format is None else cast(ResponseFormatJSONSchema, response_format),
                 stream=True,
                 stream_options={"include_usage": True},
             )

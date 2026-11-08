@@ -39,7 +39,7 @@ class ScriptedLlm(LlmClient):
         return LlmCompletion(text=self._text(messages), model="scripted", input_tokens=40, output_tokens=6)
 
     async def stream(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
-                     temperature: float | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
+                     temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
         text = self._text(messages)
         for piece in text.split(" "):
             yield LlmDelta(text=piece + " ")
