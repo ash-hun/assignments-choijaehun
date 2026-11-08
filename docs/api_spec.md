@@ -97,7 +97,7 @@
 | `GET` | `/health` | 프로세스 생존 확인. 항상 200 | 구현됨 |
 | `GET` | `/ready` | 벡터 DB 연결과 인덱스 계약 일치 시 200, 아니면 503 | 구현됨 |
 | `POST` | `/v1/query` | 질의응답 | 구현됨 |
-| `POST` | `/v1/query/stream` | 질의응답 SSE 스트리밍 | 미구현 |
+| `POST` | `/v1/query/stream` | 질의응답 SSE 스트리밍 | 구현됨 |
 
 ### POST /v1/query
 
@@ -128,6 +128,7 @@
 | `meta.dropped_citations` | int | 존재하지 않는 번호라 버린 인용 수 |
 | `meta.latency_ms` | int | 서버 처리 시간 |
 | `meta.usage` | object | `input_tokens`, `output_tokens`. 검색 단계에서 거절하면 0 |
+| `meta.first_token_ms` | int \| null | 스트리밍 응답에서 첫 `token` 이벤트까지 걸린 시간(검색 포함). 비스트리밍이나 토큰이 없으면 null |
 
 #### 재호출하면
 
@@ -145,7 +146,7 @@
 | `final` | `/v1/query` Response Body와 같은 구조 | 생성 종료 후 한 번. 검색 단계에서 거절되면 `token` 없이 이것만 |
 | `error` | `{ "detail": str, "status_code": int }` | 스트림 시작 후 업스트림 실패나 타임아웃. 이후 연결 종료 |
 
-스트림 시작 전에 난 에러(401, 422, 503)는 일반 HTTP 에러로 응답한다. `token`으로 흘린 텍스트에는 검증 전 `[n]`이 그대로 들어 있다. 클라이언트는 `final`의 `citations`를 기준으로 인용을 렌더링한다.
+첫 이벤트 전에 난 에러(401, 422, 검색 실패와 동시 호출 상한 초과 503, 첫 토큰 전 LLM 실패 502와 타임아웃 504)는 일반 HTTP 에러로 응답한다. `token`으로 흘린 텍스트에는 검증 전 `[n]`이 그대로 들어 있다. 클라이언트는 `final`의 `answer`와 `citations`를 기준으로 렌더링한다. 모델이 근거 부족 토큰을 내면 그 토큰은 `token`으로 흘리지 않고 `final`의 `status=insufficient_context`로만 알린다. LLM 동시 호출 자리는 스트림이 끝나거나 클라이언트가 연결을 끊을 때 돌려준다.
 
 #### 재호출하면
 

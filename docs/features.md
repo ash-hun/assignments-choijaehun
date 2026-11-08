@@ -21,7 +21,7 @@
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make agreement` | 미구현 |
 | `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(dense 검색) |
-| `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 미구현 |
+| `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
 
 ---
@@ -264,23 +264,25 @@
 
 ### query_stream: 스트리밍 질의응답
 
-**설명**: `query`와 같은 파이프라인을 쓰고 생성 토큰을 `token` 이벤트로 흘린 뒤, 검증한 인용 목록과 메타를 `final` 이벤트로 보낸다. 검색 단계에서 거절되면 `token` 없이 `final`만 보낸다.
+**설명**: `query`와 같은 파이프라인을 쓰고 생성 토큰을 `token` 이벤트로 흘린 뒤, 검증한 인용 목록과 메타(첫 토큰 지연 포함)를 `final` 이벤트로 보낸다. 검색 단계에서 거절되면 `token` 없이 `final`만 보낸다. 첫 이벤트 전 실패는 HTTP 상태로, 그 뒤 실패는 `error` 이벤트로 알린다.
 
 **구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/api/query_router.py` | api | SSE 응답 |
-| `app/service/query/query_service.py` | service | 생성 단계 스트림 버전 |
-| `app/client/llm_client.py` | client | 스트리밍 채팅 호출 |
+| `app/api/query_router.py` | api | SSE 응답. 첫 이벤트를 받은 뒤 응답 시작, 끊기면 생성기를 닫음 |
+| `app/api/error_mapper.py` | api | `describe`: 스트림 `error` 이벤트의 상태와 메시지 |
+| `app/service/query/query_service.py` | service | `answer_stream`: 근거 부족 토큰이 새지 않게 앞부분을 보류하며 흘리고 마지막에 `QueryResponse` |
+| `app/client/llm_client.py` | client | `stream`: 텍스트 조각(`LlmDelta`)과 마지막 사용량(`LlmCompletion`) |
 
 **테스트**
 
 | 종류 | 파일 |
 |---|---|
-| 통합 | `tests/integ/test_query_stream.py` |
+| 단위 | `tests/unit/test_query_query_service.py`(스트림 토큰과 final 일치, 근거 부족 토큰 보류) |
+| 통합 | `tests/integ/test_query.py`(token 뒤 final, JSON 응답과 같은 인용, 점수 거절 시 final만, 도중 실패 error 이벤트, 첫 이벤트 전 실패 503) |
 
-**제약과 미구현**: 스트리밍 중 흘린 텍스트에는 검증 전 `[n]`이 그대로 있다. 존재하지 않는 번호는 `final`의 인용 목록에서만 빠진다. 전부 미구현.
+**제약과 미구현**: 스트리밍 중 흘린 텍스트에는 검증 전 `[n]`이 그대로 있다. 존재하지 않는 번호는 `final`의 답변과 인용 목록에서만 빠진다. 모델이 근거 부족 토큰 앞에 다른 말을 붙이면 그 말은 `token`으로 나간다(최종 상태는 `final`이 정한다). LLM 동시 호출 자리는 스트림이 끝날 때까지 잡혀 있다.
 
 ### selection_run: 선정 실험
 

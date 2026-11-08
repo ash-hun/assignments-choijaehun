@@ -57,6 +57,13 @@ class QueryMeta(BaseModel):
     dropped_citations: int
     latency_ms: int
     usage: TokenUsage
+    first_token_ms: int | None = Field(default=None, description="스트리밍 응답에서 첫 token 이벤트까지 걸린 시간. 비스트리밍이면 null")
+
+
+class StreamToken(BaseModel):
+    """스트리밍 중 흘려보내는 생성 텍스트 조각. 인용 번호는 검증 전 그대로다."""
+
+    text: str
 
 
 class QueryResponse(BaseModel):

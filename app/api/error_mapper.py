@@ -17,11 +17,16 @@ MAPPING: list[tuple[type[UpstreamError], int, str]] = [
 ]
 
 
+def describe(error: Exception) -> tuple[int, str]:
+    """예외의 HTTP 상태와 공개 메시지. 스트림 도중 실패를 error 이벤트로 보낼 때도 같은 표를 쓴다."""
+    return next(((s, d) for kind, s, d in MAPPING if isinstance(error, kind)), (502, "upstream failure"))
+
+
 def register_error_handlers(app: FastAPI, retry_after_seconds: float) -> None:
     """UpstreamError 하위 예외를 한 곳에서 처리한다."""
 
     async def handle(request: Request, error: Exception) -> JSONResponse:
-        status, detail = next(((s, d) for kind, s, d in MAPPING if isinstance(error, kind)), (502, "upstream failure"))
+        status, detail = describe(error)
         logger.warning("upstream_error", kind=type(error).__name__, status=status, cause=type(error.__cause__).__name__)
         headers = {"Retry-After": str(math.ceil(retry_after_seconds))} if isinstance(error, LlmBusyError) else None
         return JSONResponse(status_code=status, content={"detail": detail}, headers=headers)

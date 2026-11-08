@@ -1,4 +1,5 @@
 """query 기능의 HTTP 통합 테스트. 실제 앱(라우터, 미들웨어, 인증, 에러 매핑)에 메모리 저장소, 임베딩, 대체 LLM을 넣어 돌린다."""
+import json
 import asyncio
 from typing import Any
 from pydantic import SecretStr
@@ -7,16 +8,16 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 
 from tests.integ.memory_backend import MemoryChunkRepository, MemoryEmbeddingClient
+from app.client.llm_client import LlmDelta, ChatMessage, LlmClient, LlmCompletion
 from app.common.upstream_error import LlmFailureError, LlmTimeoutError
-from app.client.llm_client import ChatMessage, LlmClient, LlmCompletion
 from app.service.query.prompt_builder import INSUFFICIENT_CONTEXT
 from app.service.query.evidence_checker import EvidenceChecker
 from app.service.query.chunk_retriever import ChunkRetriever
 from app.service.query.query_service import QueryService
-from app.common.settings import Settings
 from app.service.query.llm_gate import LlmGate
 from app.api.query_runtime import QueryRuntime
 from app.schema.chunk_schema import Chunk
+from app.common.settings import Settings
 from app.main import create_app
 
 CACHE = "The cache directory defaults to the user cache folder and can be moved with UV_CACHE_DIR."
@@ -35,8 +36,20 @@ class ScriptedLlm(LlmClient):
                        temperature: float | None = None, json_schema: dict[str, Any] | None = None) -> LlmCompletion:
         if self.failure:
             raise self.failure
-        text = INSUFFICIENT_CONTEXT if "lockfile" in messages[-1].content.split("<question>")[1] else "Set UV_CACHE_DIR [1]."
-        return LlmCompletion(text=text, model="scripted", input_tokens=40, output_tokens=6)
+        return LlmCompletion(text=self._text(messages), model="scripted", input_tokens=40, output_tokens=6)
+
+    async def stream(self, messages: list[ChatMessage], seed: int | None, max_completion_tokens: int,
+                     temperature: float | None = None) -> AsyncIterator[LlmDelta | LlmCompletion]:
+        text = self._text(messages)
+        for piece in text.split(" "):
+            yield LlmDelta(text=piece + " ")
+            if self.failure:
+                raise self.failure
+        yield LlmCompletion(text=text, model="scripted", input_tokens=40, output_tokens=6)
+
+    @staticmethod
+    def _text(messages: list[ChatMessage]) -> str:
+        return INSUFFICIENT_CONTEXT if "lockfile" in messages[-1].content.split("<question>")[1] else "Set UV_CACHE_DIR [1]."
 
 
 @contextmanager
@@ -117,3 +130,45 @@ def test_ready_reports_the_collection_when_the_contract_matches() -> None:
 
     assert response.status_code == 200
     assert response.json()["collection"].startswith("chunks_uv_docs_")
+
+
+def events(body: str) -> list[tuple[str, dict[str, Any]]]:
+    frames = [f for f in body.split("\n\n") if f.strip()]
+    parsed = []
+    for frame in frames:
+        name, data = frame.split("\n", 1)
+        parsed.append((name.removeprefix("event: "), json.loads(data.removeprefix("data: "))))
+    return parsed
+
+
+def test_stream_sends_tokens_then_final_with_the_same_citations_as_the_json_endpoint() -> None:
+    question = {"question": "Where is the cache directory UV_CACHE_DIR?"}
+    with serve() as (client, _, _):
+        stream = client.post("/v1/query/stream", json=question)
+        plain = client.post("/v1/query", json=question).json()
+
+    parsed = events(stream.text)
+    assert stream.headers["content-type"].startswith("text/event-stream")
+    assert [name for name, _ in parsed[:-1]] == ["token"] * (len(parsed) - 1) and parsed[-1][0] == "final"
+    assert parsed[-1][1]["citations"] == plain["citations"]
+    assert parsed[-1][1]["meta"]["first_token_ms"] is not None
+
+
+def test_stream_refused_by_score_sends_only_final_and_mid_stream_failure_sends_error() -> None:
+    with serve() as (client, _, llm):
+        refused = events(client.post("/v1/query/stream", json={"question": "kubernetes autoscaler replicas"}).text)
+        llm.failure = LlmTimeoutError("llm request timed out")
+        broken = events(client.post("/v1/query/stream", json={"question": "cache directory UV_CACHE_DIR"}).text)
+
+    assert [name for name, _ in refused] == ["final"]
+    assert refused[0][1]["status"] == "insufficient_context"
+    assert broken[0][0] == "token"
+    assert broken[-1] == ("error", {"detail": "llm request timed out", "status_code": 504})
+
+
+def test_stream_failure_before_the_first_event_is_a_plain_http_error() -> None:
+    with serve() as (client, repository, _):
+        repository.down = True
+        response = client.post("/v1/query/stream", json={"question": "cache directory UV_CACHE_DIR"})
+
+    assert (response.status_code, response.json()) == (503, {"detail": "vector store unavailable"})
