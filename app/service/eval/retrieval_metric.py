@@ -1,4 +1,6 @@
-"""근거 단위 검색 지표. 검색된 청크에 Gold 근거 구절이 들어 있는지로 Hit@k, 근거 재현율, MRR을 계산한다."""
+"""근거 단위 검색 지표. 검색된 청크에 Gold 근거 구절이 들어 있는지로 Hit@k, 근거 재현율, MRR을 계산하고 bootstrap 구간을 붙인다."""
+import random
+import statistics
 from pydantic import BaseModel
 
 from app.service.eval.evidence_matcher import normalize
@@ -10,6 +12,8 @@ from app.schema.chunk_schema import Chunk
 # 특정 구절의 60자 원문이 다른 곳에 우연히 있을 가능성은 낮고, 청크 경계에서 끊긴 긴 문장도 잡을 수 있다.
 ANCHOR_CHARS = 60
 ANCHOR_STRIDE = 30
+BOOTSTRAP_SAMPLES = 2000
+BOOTSTRAP_SEED = 2026
 
 
 class RetrievalScore(BaseModel):
@@ -23,6 +27,26 @@ class RetrievalScore(BaseModel):
     evidence_recall_at_10: float
     doc_recall_at_5: bool
     reciprocal_rank: float
+
+
+class MetricSummary(BaseModel):
+    """지표 하나의 평균과 문항 bootstrap 95% 신뢰구간."""
+
+    mean: float
+    ci_low: float
+    ci_high: float
+
+
+class RetrievalSummary(BaseModel):
+    """문항 묶음 하나의 검색 지표 요약."""
+
+    questions: int
+    hit_at_5: MetricSummary
+    hit_at_10: MetricSummary
+    mrr_at_10: MetricSummary
+    evidence_recall_at_10: MetricSummary
+    doc_recall_at_5: MetricSummary
+    by_type_hit_at_5: dict[str, float]
 
 
 def evidence_anchors(quote: str) -> list[str]:
@@ -68,3 +92,43 @@ def score(item: GoldItem, ranked: list[Chunk]) -> RetrievalScore:
         doc_recall_at_5=bool(set(item.gold_doc_ids) & {c.doc_id for c in ranked[:5]}),
         reciprocal_rank=1 / first if first else 0.0,
     )
+
+
+def summarize(scores: list[RetrievalScore]) -> RetrievalSummary:
+    """문항별 판정을 지표별 평균과 구간, 유형별 Hit@5로 묶는다."""
+    by_type: dict[str, list[float]] = {}
+    for s in scores:
+        by_type.setdefault(s.type, []).append(float(s.hit_at_5))
+    return RetrievalSummary(
+        questions=len(scores),
+        hit_at_5=bootstrap([float(s.hit_at_5) for s in scores]),
+        hit_at_10=bootstrap([float(s.hit_at_10) for s in scores]),
+        mrr_at_10=bootstrap([s.reciprocal_rank for s in scores]),
+        evidence_recall_at_10=bootstrap([s.evidence_recall_at_10 for s in scores]),
+        doc_recall_at_5=bootstrap([float(s.doc_recall_at_5) for s in scores]),
+        by_type_hit_at_5={t: round(statistics.fmean(v), 4) for t, v in sorted(by_type.items())},
+    )
+
+
+def bootstrap(values: list[float]) -> MetricSummary:
+    """문항을 복원 추출해 평균의 95% 구간을 구한다. seed가 고정이라 같은 입력이면 같은 구간이다."""
+    rng = random.Random(BOOTSTRAP_SEED)
+    means = sorted(statistics.fmean(rng.choices(values, k=len(values))) for _ in range(BOOTSTRAP_SAMPLES))
+    return MetricSummary(
+        mean=round(statistics.fmean(values), 4),
+        ci_low=round(means[int(0.025 * BOOTSTRAP_SAMPLES)], 4),
+        ci_high=round(means[int(0.975 * BOOTSTRAP_SAMPLES) - 1], 4),
+    )
+
+
+def paired_difference(a: list[float], b: list[float]) -> MetricSummary:
+    """같은 문항에 대한 두 설정 점수 차(a - b)의 평균과 95% 구간. 구간이 0을 포함하면 차이 없음으로 본다."""
+    return bootstrap([x - y for x, y in zip(a, b)])
+
+
+def paired_against(best: list[RetrievalScore], other: list[RetrievalScore]) -> dict[str, MetricSummary]:
+    """같은 문항 순서의 두 판정 목록으로 Hit@5와 MRR의 짝지은 차이(best - other)를 구한다."""
+    return {
+        "hit_at_5_diff": paired_difference([float(s.hit_at_5) for s in best], [float(s.hit_at_5) for s in other]),
+        "mrr_diff": paired_difference([s.reciprocal_rank for s in best], [s.reciprocal_rank for s in other]),
+    }

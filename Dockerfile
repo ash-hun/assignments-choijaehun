@@ -18,6 +18,15 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY app ./app
 USER app
 
+# 토크나이저 선정 실험 전용. Okt, Kkma(KoNLPy)가 JVM을 써서 운영 이미지와 분리한다.
+FROM runtime AS korean
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends default-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+RUN uv sync --frozen --no-dev --no-install-project --group korean
+USER app
+
 FROM base AS dev
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project
