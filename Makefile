@@ -1,4 +1,4 @@
-.PHONY: build corpus profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
+.PHONY: build corpus ingest serve stop profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -11,6 +11,18 @@ build:
 
 corpus:
 	$(BATCH) app.cli.corpus_cli fetch
+
+# 운영 Qdrant를 띄우고 확정 구성으로 색인한다. 같은 원문과 설정이면 다시 돌려도 같은 상태가 된다(CPU에서 약 5분).
+ingest:
+	docker compose up -d qdrant
+	$(BATCH) app.cli.ingest_cli
+
+# API 서버(http://localhost:8000). 색인과 설정의 인덱스 계약이 다르면 기동하지 않는다.
+serve:
+	docker compose up -d --build api
+
+stop:
+	docker compose stop api qdrant
 
 profile:
 	$(BATCH) app.cli.corpus_cli profile

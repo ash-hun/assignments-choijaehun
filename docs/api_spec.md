@@ -2,10 +2,9 @@
 
 | 항목 | 값 |
 |---|---|
-| Last Updated | 2026-11-07 |
 | Base URL | `http://localhost:8000` |
 | 데이터 포맷 | JSON (UTF-8) |
-| 인증 | 없음 |
+| 인증 | `API_KEY` 환경변수가 설정되면 `/v1/*`에 `X-API-Key` 헤더 필수. 비어 있으면 없음 |
 
 ---
 
@@ -39,14 +38,15 @@
 | 명령 | 실제 실행 | 설명 | 실패 시 |
 |---|---|---|---|
 | `make corpus` | `docker compose run --rm batch app.cli.corpus_cli fetch` | manifest 기준 원문 다운로드와 sha256 검증 | 해시 불일치 파일 이름을 출력하고 종료 코드 1 |
-| `make ingest` | `docker compose run --rm batch app.cli.ingest_cli` | 정제부터 인덱스 저장까지 | 실패한 단계와 문서를 출력하고 종료 코드 1. 이미 저장된 Chunk는 유지 |
+| `make ingest` | `docker compose up -d qdrant` 후 `docker compose run --rm batch app.cli.ingest_cli` | 정제부터 인덱스 저장, 사라진 청크 삭제까지 | 예외를 출력하고 종료 코드 1. 이미 저장된 Chunk는 유지 |
+| `make serve` | `docker compose up -d --build api` | API 서버 기동(`127.0.0.1:8000`) | 인덱스 계약이 다르거나 컬렉션이 없으면 기동 실패 |
 
 `batch` 서비스는 API 서버와 같은 이미지를 쓰고 `profiles: [batch]`로 묶여 `docker compose up`에서는 뜨지 않는다. HTTP로는 노출하지 않는다. 문서 단위 증분 Ingest API는 미구현이며 README 향후 과제에 설계만 둔다.
 
 ### 재실행하면
 
 - `make corpus`: 해시가 같은 파일은 다시 받지 않는다.
-- `make ingest`: chunk_id가 내용 해시라 upsert로 같은 상태로 수렴한다. 중간에 죽으면 다시 실행하면 된다. Chunk 설정이나 임베딩 모델을 바꾸면 컬렉션 이름이 달라져 새 컬렉션이 생기고 기존 컬렉션은 그대로 남는다.
+- `make ingest`: chunk_id가 내용 해시라 upsert로 같은 상태로 수렴하고, 이번 실행에 없는 청크는 지운다. 중간에 죽으면 다시 실행하면 된다. 컬렉션 이름은 인덱스 계약(임베딩 모델, BM25 토크나이저, Chunk 설정)의 해시(`chunks_<corpus>_<해시8>`)라, 설정을 바꾸면 새 컬렉션이 생기고 기존 컬렉션은 그대로 남는다.
 
 ---
 
@@ -57,9 +57,9 @@
 | 순서 | 단계 | 입력 | 출력 | 모듈 |
 |---|---|---|---|---|
 | 1 | 질문 수신 | 요청 본문 | 검증된 `QueryRequest` | `query_router` |
-| 2 | 검색 | 질문 | top-k Chunk와 점수 | `chunk_retriever`, `embedding_client`, `text_tokenizer`, `chunk_repository` |
+| 2 | 검색 | 질문 | top-k Chunk와 dense 점수 | `chunk_retriever`, `embedding_client`, `qdrant_chunk_repository` |
 | 3 | 근거 충분성 판정 | 검색 점수 | 계속 또는 거절 | `evidence_checker` |
-| 4 | LLM 답변 생성 | 번호 매긴 근거와 질문 | `[n]` 인용이 들어간 답변 또는 근거 부족 토큰 | `prompt_builder`, `llm_client`, `evidence_checker` |
+| 4 | LLM 답변 생성 | 번호 매긴 근거와 질문 | `[n]` 인용이 들어간 답변 또는 근거 부족 토큰 | `prompt_builder`, `llm_gate`, `llm_client`, `evidence_checker` |
 | 5 | Citation 반환 | 답변과 근거 | 검증된 인용 목록, `QueryResponse` | `citation_parser` |
 
 ### 공통 규약
@@ -75,9 +75,9 @@
 | 200 | 정상. 근거 부족으로 답하지 않은 경우도 200이며 `status`로 구분 |
 | 401 | `API_KEY`가 설정됐는데 `X-API-Key`가 없거나 틀림 |
 | 422 | 요청 본문이 스키마에 맞지 않음 |
-| 502 | LLM 또는 Embedding 엔드포인트 호출 실패(재시도 소진) |
+| 502 | LLM 엔드포인트 호출 실패(재시도 소진) |
 | 503 | 벡터 DB 연결 실패, 또는 LLM 동시 호출 상한 대기 한도 초과(`Retry-After` 포함) |
-| 504 | LLM 또는 Embedding 엔드포인트 타임아웃 |
+| 504 | LLM 엔드포인트 타임아웃 |
 
 에러 본문에는 내부 예외 메시지, 스택, 비밀값을 넣지 않는다. 대신 `X-Request-ID`로 서버 로그를 찾는다.
 
@@ -87,16 +87,16 @@
 
 | 헤더 | 방향 | 설명 |
 |---|---|---|
-| `X-Request-ID` | 요청, 응답 | 요청에 있으면 그대로 쓰고 없으면 서버가 만든다. 모든 로그에 붙고 응답 헤더로 돌아온다 |
+| `X-Request-ID` | 요청, 응답 | 요청 값이 `[A-Za-z0-9._-]{1,128}`이면 그대로 쓰고, 없거나 형식이 다르면 서버가 만든다(32자 hex). 모든 로그에 붙고 응답 헤더로 돌아온다 |
 | `X-API-Key` | 요청 | `API_KEY` 환경변수가 설정된 경우에만 필수. `/health`, `/ready`는 검사하지 않음 |
 
 ### 엔드포인트 목록
 
 | Method | Path | 설명 | 상태 |
 |---|---|---|---|
-| `GET` | `/health` | 프로세스 생존 확인. 항상 200 | 미구현 |
-| `GET` | `/ready` | 벡터 DB 연결과 인덱스 계약 일치 시 200, 아니면 503 | 미구현 |
-| `POST` | `/v1/query` | 질의응답 | 미구현 |
+| `GET` | `/health` | 프로세스 생존 확인. 항상 200 | 구현됨 |
+| `GET` | `/ready` | 벡터 DB 연결과 인덱스 계약 일치 시 200, 아니면 503 | 구현됨 |
+| `POST` | `/v1/query` | 질의응답 | 구현됨 |
 | `POST` | `/v1/query/stream` | 질의응답 SSE 스트리밍 | 미구현 |
 
 ### POST /v1/query
@@ -108,30 +108,30 @@
 | 필드 | 타입 | 필수 | 기본값 | 설명 |
 |---|---|---|---|---|
 | `question` | string | 예 | 없음 | 1자 이상 1000자 이하 |
-| `top_k` | int | 아니오 | 5 | 1 이상 20 이하 |
+| `top_k` | int | 아니오 | 5(서버 설정 `DEFAULT_TOP_K`) | 1 이상 20 이하. LLM에 넣는 근거 청크 수 |
 
 #### Response Body
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `status` | `"answered"` \| `"insufficient_context"` | 답변 여부 |
-| `answer` | string | 답변 본문. 거절 시 고정 안내 문구 |
+| `answer` | string | 답변 본문(존재하지 않는 인용 번호는 지움). 거절 시 고정 안내 문구 |
 | `citations[].ref` | int | 본문의 `[n]` 번호 |
 | `citations[].doc_id` | string | 문서 식별자 |
 | `citations[].title` | string | 문서 제목 |
-| `citations[].url` | string | 원문 위치 |
+| `citations[].url` | string | 색인한 판(고정 commit)의 GitHub 원문 위치 |
 | `citations[].chunk_id` | string | 근거 Chunk 식별자 |
-| `citations[].snippet` | string | 근거 발췌 |
+| `citations[].snippet` | string | 근거 청크 앞 300자 |
 | `meta.model` | string | 생성 모델 |
 | `meta.embedding_model` | string | Embedding 모델 |
-| `meta.retrieval_scores` | float[] | 검색 점수 |
+| `meta.retrieval_scores` | float[] | 검색 청크의 dense 코사인 유사도(내림차순) |
 | `meta.dropped_citations` | int | 존재하지 않는 번호라 버린 인용 수 |
-| `meta.latency_ms` | int | 처리 시간 |
-| `meta.usage` | object | 입력, 출력 토큰 수 |
+| `meta.latency_ms` | int | 서버 처리 시간 |
+| `meta.usage` | object | `input_tokens`, `output_tokens`. 검색 단계에서 거절하면 0 |
 
 #### 재호출하면
 
-읽기 전용이라 서버 상태가 바뀌지 않는다. 같은 질문과 같은 인덱스면 검색 결과는 같고, 생성은 temperature 0과 seed 고정이지만 모델 제공자 측 비결정성 때문에 문구가 달라질 수 있다.
+읽기 전용이라 서버 상태가 바뀌지 않는다. 같은 질문과 같은 인덱스면 검색 결과와 검색 단계 거절 여부는 같다. 생성은 temperature 0이지만 생성 모델(claude-haiku-5-5)이 seed를 받지 않아, 모델 제공자 측 비결정성 때문에 문구가 달라질 수 있다.
 
 ### POST /v1/query/stream
 
@@ -155,4 +155,4 @@
 
 ## 데이터 모델
 
-`app/schema/query_schema.py`의 `QueryRequest`, `QueryResponse`, `Citation`, `app/schema/chunk_schema.py`의 `Document`, `Chunk`, `app/schema/index_schema.py`의 `IndexContract`. 구현 후 필드를 코드에 맞춘다.
+`app/schema/query_schema.py`의 `QueryRequest`, `QueryResponse`, `Citation`, `QueryMeta`, `TokenUsage`, `app/schema/chunk_schema.py`의 `Document`, `Chunk`, `app/schema/vector_schema.py`의 `IndexContract`. OpenAPI 문서는 서버의 `/docs`에서 볼 수 있다.

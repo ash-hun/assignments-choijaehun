@@ -1,12 +1,21 @@
 """Qdrant에 청크와 dense, sparse 벡터를 저장하고 검색한다. 데이터베이스 선정 실험의 후보 구현이다."""
 import uuid
 import numpy as np
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http import models as qm
+from qdrant_client.http.exceptions import ResponseHandlingException, UnexpectedResponse
 
 from app.schema.vector_schema import SparseTerms, IndexContract
+from app.common.upstream_error import VectorStoreError
 from app.schema.chunk_schema import Chunk
 
+# Query 경로가 쓰는 메서드는 이 예외들을 VectorStoreError로 바꿔 API 층이 503으로 매핑하게 한다.
+# Query 경로는 REST로 연결해 연결 실패가 ResponseHandlingException으로 온다(gRPC 예외는 다루지 않는다).
+STORE_ERRORS = (UnexpectedResponse, ResponseHandlingException, OSError)
+CHUNK_FIELDS = ["chunk_id", "doc_id", "ordinal", "text", "title", "url"]
+DELETE_BATCH = 256
 DENSE = "dense"
 SPARSE = "sparse"
 UPSERT_BATCH = 128
@@ -38,10 +47,32 @@ class QdrantChunkRepository:
             await self._client.delete_collection(name)
 
     async def read_contract(self, name: str) -> IndexContract | None:
-        """컬렉션 metadata에서 인덱스 계약을 읽는다."""
-        info = await self._client.get_collection(name)
+        """컬렉션 metadata에서 인덱스 계약을 읽는다. 컬렉션이 없으면 None."""
+        async with _store_errors():
+            if not await self._client.collection_exists(name):
+                return None
+            info = await self._client.get_collection(name)
         metadata = info.config.metadata
         return IndexContract.model_validate(metadata) if metadata else None
+
+    async def search_dense_chunks(self, name: str, vector: np.ndarray, k: int) -> list[tuple[Chunk, float]]:
+        """코사인 유사도 상위 k개 청크와 점수. Query 경로용이라 HNSW 근사 검색을 쓴다."""
+        async with _store_errors():
+            result = await self._client.query_points(name, query=vector.tolist(), using=DENSE, limit=k, with_payload=CHUNK_FIELDS)
+        return [(Chunk.model_validate(p.payload or {}), float(p.score)) for p in result.points]
+
+    async def delete_except(self, name: str, keep: set[str]) -> int:
+        """keep에 없는 chunk_id의 포인트를 지운다. 원문이 바뀌어 사라진 청크를 남기지 않아 재실행 결과가 같은 상태로 수렴한다."""
+        stale: list[qm.ExtendedPointId] = []
+        offset: qm.ExtendedPointId | None = None
+        while True:
+            points, offset = await self._client.scroll(name, limit=DELETE_BATCH, offset=offset, with_payload=["chunk_id"])
+            stale += [p.id for p in points if (p.payload or {}).get("chunk_id") not in keep]
+            if offset is None:
+                break
+        for start in range(0, len(stale), DELETE_BATCH):
+            await self._client.delete(name, points_selector=qm.PointIdsList(points=stale[start:start + DELETE_BATCH]), wait=True)
+        return len(stale)
 
     async def upsert(self, name: str, chunks: list[Chunk], dense: np.ndarray, sparse: list[SparseTerms]) -> None:
         """chunk_id에서 계산한 포인트 id로 덮어쓴다."""
@@ -50,7 +81,7 @@ class QdrantChunkRepository:
                 qm.PointStruct(
                     id=str(uuid.uuid5(POINT_NAMESPACE, chunk.chunk_id)),
                     vector={DENSE: dense[i].tolist(), SPARSE: qm.SparseVector(indices=sparse[i].indices, values=sparse[i].values)},
-                    payload={"chunk_id": chunk.chunk_id, "doc_id": chunk.doc_id, "ordinal": chunk.ordinal, "text": chunk.text},
+                    payload=chunk.model_dump(include=set(CHUNK_FIELDS)),
                 )
                 for i, chunk in enumerate(chunks[start:start + UPSERT_BATCH], start=start)
             ]
@@ -101,3 +132,11 @@ def _doc_filter(doc_id: str | None) -> qm.Filter | None:
     if doc_id is None:
         return None
     return qm.Filter(must=[qm.FieldCondition(key="doc_id", match=qm.MatchValue(value=doc_id))])
+
+
+@asynccontextmanager
+async def _store_errors() -> AsyncIterator[None]:
+    try:
+        yield
+    except STORE_ERRORS as error:
+        raise VectorStoreError("vector store unavailable") from error

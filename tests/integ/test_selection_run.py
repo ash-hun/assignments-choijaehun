@@ -1,89 +1,31 @@
 """selection_run 기능의 선정 파이프라인 통합 테스트(Chunking, Embedding 교차 확인, 거절 임계값, LLM). 분할, 색인, 검색, 생성, 지표, 판정을 이어서 돌린다."""
-import re
-import zlib
 import asyncio
-import numpy as np
 from typing import Any
 from pathlib import Path
 
 from app.service.eval.llm_benchmark import LlmAnswer, LlmBenchmark, LlmCandidate, RetrievedItem, summarize_llm
 from app.service.eval.chunking_benchmark import ChunkingRun, ChunkingBenchmark, pick_best
 from app.service.eval.embedding_crosscheck import ModelResult, judge, truncated_chunks
+from tests.integ.memory_backend import MemoryChunkRepository, MemoryEmbeddingClient
 from app.service.eval.refusal_calibrator import TopScore, pick_threshold
-from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.chunk_splitter import ChunkMethod, ChunkSplitter
 from app.client.llm_client import ChatMessage, LlmClient, LlmCompletion
 from app.service.eval.embedding_benchmark import EmbeddingBenchmark
 from app.service.ingest.sentence_embedder import SentenceEmbedder
 from app.service.query.prompt_builder import INSUFFICIENT_CONTEXT
-from app.schema.vector_schema import SparseTerms, IndexContract
 from app.service.query.evidence_checker import EvidenceChecker
 from app.schema.gold_schema import GoldItem, GoldEvidence
-from app.client.embedding_client import EmbeddingClient
 from app.cli.refusal_calibration_cli import top_scores
 from app.schema.chunk_schema import Chunk, Document
+from app.schema.vector_schema import IndexContract
 from app.client.llm_cache import LlmCache
 
-WORD = re.compile(r"\w+")
 CACHE = "The cache directory defaults to the user cache folder and can be moved with UV_CACHE_DIR."
 LOCK = "The lockfile records exact resolved versions so installs are reproducible across machines."
 DOCUMENTS = [
     Document(doc_id="cache.md", title="Cache", text=f"# Cache\n\nIntro text about caching.\n\n## Location\n\n{CACHE}\n"),
     Document(doc_id="lock.md", title="Lock", text=f"# Lockfile\n\nIntro text about locking.\n\n## Purpose\n\n{LOCK}\n"),
 ]
-
-
-class MemoryEmbeddingClient(EmbeddingClient):
-    def __init__(self) -> None:
-        pass
-
-    @property
-    def model_name(self) -> str:
-        return "memory-bag-of-words"
-
-    def embed_documents(self, texts: list[str]) -> np.ndarray:
-        return self._vectors(texts)
-
-    def embed_queries(self, texts: list[str]) -> np.ndarray:
-        return self._vectors(texts)
-
-    def token_count(self, text: str) -> int:
-        return len(WORD.findall(text)) + 1
-
-    def token_offsets(self, text: str) -> list[tuple[int, int]]:
-        return [m.span() for m in WORD.finditer(text)]
-
-    def _vectors(self, texts: list[str]) -> np.ndarray:
-        vectors = np.zeros((len(texts), 256), dtype=np.float32)
-        for row, text in enumerate(texts):
-            for word in WORD.findall(text.lower()):
-                vectors[row, zlib.crc32(word.encode()) % 256] += 1.0
-        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
-        normalized: np.ndarray = vectors / np.where(norms == 0, 1, norms)
-        return normalized
-
-
-class MemoryChunkRepository(QdrantChunkRepository):
-    def __init__(self) -> None:
-        self.collections: dict[str, dict[str, np.ndarray]] = {}
-
-    async def ensure_collection(self, name: str, dim: int, contract: IndexContract) -> None:
-        self.collections.setdefault(name, {})
-
-    async def drop_collection(self, name: str) -> None:
-        self.collections.pop(name, None)
-
-    async def upsert(self, name: str, chunks: list[Chunk], dense: np.ndarray, sparse: list[SparseTerms]) -> None:
-        self.collections[name].update({c.chunk_id: dense[i] for i, c in enumerate(chunks)})
-
-    async def search_dense(self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None) -> list[str]:
-        return [chunk_id for chunk_id, _ in await self.search_dense_scored(name, vector, k, exact, doc_id)]
-
-    async def search_dense_scored(
-        self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None,
-    ) -> list[tuple[str, float]]:
-        scored = sorted(((cid, float(v @ vector)) for cid, v in self.collections[name].items()), key=lambda item: (-item[1], item[0]))
-        return scored[:k]
 
 
 def gold(language: str) -> list[GoldItem]:

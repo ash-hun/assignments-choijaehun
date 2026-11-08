@@ -32,6 +32,10 @@ class CorpusManifest(BaseModel):
     source: CorpusSource
     files: list[CorpusFile]
 
+    def file_url(self, path: str) -> str:
+        """고정 commit의 원문 위치. 색인한 판과 같은 내용을 가리키도록 브랜치가 아닌 commit으로 만든다."""
+        return f"https://github.com/{self.source.repo}/blob/{self.source.commit}/{self.source.include_prefix}{path}"
+
 
 class TreeEntry(BaseModel):
     """원격 저장소 트리의 파일 하나."""

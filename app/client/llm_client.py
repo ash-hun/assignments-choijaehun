@@ -1,10 +1,11 @@
 """엘리스 ML API(OpenAI 호환) 채팅 호출 클라이언트. 타임아웃과 재시도는 SDK 설정으로 건다."""
 from typing import Any, cast
 from pydantic import BaseModel
-from openai import AsyncOpenAI, omit
 from openai.types.chat import ChatCompletionMessageParam
+from openai import APIError, AsyncOpenAI, APITimeoutError, omit
 from openai.types.shared_params import ResponseFormatJSONSchema
 
+from app.common.upstream_error import LlmFailureError, LlmTimeoutError
 from app.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -52,14 +53,20 @@ class LlmClient:
             if json_schema
             else None
         )
-        response = await self._sdk.chat.completions.create(
-            model=self._model,
-            messages=cast(list[ChatCompletionMessageParam], [m.model_dump() for m in messages]),
-            seed=omit if seed is None else seed,
-            max_completion_tokens=max_completion_tokens,
-            temperature=omit if temperature is None else temperature,
-            response_format=omit if response_format is None else cast(ResponseFormatJSONSchema, response_format),
-        )
+        try:
+            response = await self._sdk.chat.completions.create(
+                model=self._model,
+                messages=cast(list[ChatCompletionMessageParam], [m.model_dump() for m in messages]),
+                seed=omit if seed is None else seed,
+                max_completion_tokens=max_completion_tokens,
+                temperature=omit if temperature is None else temperature,
+                response_format=omit if response_format is None else cast(ResponseFormatJSONSchema, response_format),
+            )
+        # 재시도는 SDK가 이미 했다. 여기서는 종류만 나눠 위로 올린다.
+        except APITimeoutError as error:
+            raise LlmTimeoutError("llm request timed out") from error
+        except APIError as error:
+            raise LlmFailureError("llm request failed") from error
         usage = response.usage
         return LlmCompletion(
             text=response.choices[0].message.content or "",

@@ -34,8 +34,8 @@
 
 | compose 서비스 | 이미지 | 수명 | 명령 |
 |---|---|---|---|
-| `qdrant` | `qdrant/qdrant:v1.20.0` | 상시 | 기본. 데이터베이스 선정 실험에서 확정. 지금은 실험 profile(`dbbench`)에만 있고 Ingest 구현 때 운영 구성으로 옮김 |
-| `api` | 프로젝트 이미지 | 상시 | `uvicorn app.main:app` |
+| `qdrant` | `qdrant/qdrant:v1.20.0` | 상시 | 기본. 데이터베이스 선정 실험에서 확정. 색인은 named volume `qdrant_data`에 남는다. 포트는 열지 않는다 |
+| `api` | 프로젝트 이미지 `runtime` 단계 | 상시 | `uvicorn app.main:app`. 호스트 `127.0.0.1:8000`에만 포트를 연다. healthcheck는 `/ready` |
 | `batch` | 프로젝트 이미지 `runtime` 단계(api와 같음) | 일회성, `profiles: [batch]` | `python -m <모듈>`. `make corpus`, `make ingest`, `make eval` 등이 감싼다 |
 | `batch-korean` | 프로젝트 이미지 `korean` 단계(`runtime` + JRE + `korean` 의존성 그룹) | 일회성, `profiles: [batch]` | 토크나이저 선정 실험(`make tok-bench`) 전용. 형태소 분석기 비교에 JVM이 필요해 운영 이미지와 분리 |
 | `dev` | 프로젝트 이미지 `dev` 단계(개발 의존성 포함) | 일회성, `profiles: [dev]`, 네트워크 없음 | `make test`, `make typecheck` |
@@ -133,9 +133,9 @@
 | 상태 | 쓰는 경로 | 위치 | 자연 키 | 재실행 시 |
 |---|---|---|---|---|
 | 원문 | Ingest | `data/corpus/raw/` | 파일 경로 + sha256 | 해시가 같으면 다시 받지 않음 |
-| Chunk와 벡터 | Ingest | 벡터 DB 컬렉션 `chunks_<corpus해시8>_<chunk설정해시8>_<임베딩모델>` | chunk_id = sha256(doc_id, section_path, text) | upsert로 같은 상태로 수렴 |
+| Chunk와 벡터 | Ingest | 벡터 DB 컬렉션 `chunks_<corpus>_<인덱스 계약 해시8>` | chunk_id = sha256(doc_id, text) 앞 32자 | upsert 후 이번 실행에 없는 청크를 지워 같은 상태로 수렴 |
 | 인덱스 계약 | Ingest | 컬렉션 메타데이터 | 컬렉션 이름 | 같은 값으로 덮어씀 |
-| LLM 응답 캐시 | Query, Eval | `.cache/llm.sqlite` | sha256(모델, 메시지, temperature, seed) | 캐시 적중 시 호출 0회 |
+| LLM 응답 캐시 | 선정 실험, Eval | 실험별 JSONL(`research/artifacts/llm_selection/responses.jsonl`) | sha256(모델, 메시지, seed, temperature, 출력 상한) | 캐시 적중 시 호출 0회. Query API는 캐시를 쓰지 않는다 |
 | 평가 결과 | Eval | `reports/<run_id>/` | run_id = sha256(설정, git hash, gold 해시, 프롬프트 해시) 앞 12자 | 같은 디렉토리를 덮어써 수렴 |
 
 컬렉션 이름에 Chunk 설정 해시와 임베딩 모델을 넣는 이유: 설정을 바꾸면 이전 설정의 Chunk가 같은 컬렉션에 남아 검색을 오염시킨다. 설정마다 컬렉션을 분리하면 선정 실험과 Part C에서 여러 설정을 나란히 비교할 수 있고 삭제 로직도 필요 없다.

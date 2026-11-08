@@ -7,12 +7,12 @@ from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
 
 from app.service.eval.embedding_benchmark import EmbeddingRun, EmbeddingBenchmark
+from app.common.settings import QWEN_QUERY_PREFIX, Settings, get_settings
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.chunk_splitter import FixedLengthSplitter
 from app.service.ingest.document_loader import load_documents
 from app.service.eval.retrieval_metric import paired_against
 from app.client.embedding_client import EmbeddingClient
-from app.common.settings import Settings, get_settings
 from app.schema.corpus_schema import CorpusManifest
 from app.schema.gold_schema import GoldItem
 from app.common.logger import get_logger
@@ -20,10 +20,6 @@ from app.common.logger import get_logger
 CHUNK_CHARS = 1000
 OUTPUT_DIR = "artifacts/embedding"
 BGE_QUERY = "Represent this sentence for searching relevant passages: "
-QWEN_QUERY = (
-    "Instruct: Given a question about the uv Python package manager, "
-    "retrieve documentation passages that answer the question\nQuery: "
-)
 
 logger = get_logger(__name__)
 
@@ -43,7 +39,7 @@ CANDIDATES = [
     EmbeddingCandidate(name="snowflake/snowflake-arctic-embed-m", max_tokens=512, query_prefix=BGE_QUERY),
     EmbeddingCandidate(name="nomic-ai/nomic-embed-text-v1.5", max_tokens=8192, query_prefix="search_query: ", document_prefix="search_document: "),
     EmbeddingCandidate(name="intfloat/multilingual-e5-large", max_tokens=512, query_prefix="query: ", document_prefix="passage: "),
-    EmbeddingCandidate(name="Qwen/Qwen3-Embedding-0.6B", max_tokens=32768, query_prefix=QWEN_QUERY),
+    EmbeddingCandidate(name="Qwen/Qwen3-Embedding-0.6B", max_tokens=32768, query_prefix=QWEN_QUERY_PREFIX),
 ]
 
 

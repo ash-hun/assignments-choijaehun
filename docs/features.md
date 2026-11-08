@@ -1,9 +1,5 @@
 # RAG QA 기능 정의서
 
-| 항목 | 값 |
-|---|---|
-| Last Updated | 2026-11-07 |
-
 ---
 
 ## 서비스 개요
@@ -21,10 +17,10 @@
 | `corpus_fetch` | Ingest | manifest에 고정된 원문 다운로드와 해시 검증 | `make corpus` | 구현됨 |
 | `eval_run` | Eval | test set 전체 채점과 Report 생성 | `make eval CONFIG=...` | 미구현 |
 | `gold_draft` | Eval | 문서에서 Gold Set 초안 생성, 번역 묶음 생성, Gold 파일 검증 | `make gold-draft`, `make gold-translate`, `make gold-check` | 구현됨(dev) |
-| `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 미구현 |
-| `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 일부 구현(로드, 정제, 고정 길이 분할, Qdrant 저장소) |
+| `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
+| `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make agreement` | 미구현 |
-| `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` | 미구현 |
+| `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(dense 검색) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 미구현 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
 
@@ -143,28 +139,30 @@
 | 파일 | 층 | 역할 |
 |---|---|---|
 | `app/api/health_router.py` | api | 두 엔드포인트 |
-| `app/repository/chunk_repository.py` | repository | 컬렉션 메타데이터 조회 |
+| `app/repository/qdrant_chunk_repository.py` | repository | `read_contract`(컬렉션 메타데이터 조회, 없으면 None) |
 
 **테스트**
 
 | 종류 | 파일 |
 |---|---|
-| 통합 | `tests/integ/test_health.py` |
+| 통합 | `tests/integ/test_query.py`(`/ready` 계약 일치와 벡터 DB 장애) |
 
-**제약과 미구현**: 전부 미구현.
+**제약과 미구현**: 없음.
 
 ### ingest: 색인
 
 **설명**: 원문을 정제, 청크, 임베딩해 벡터 DB에 upsert하고 컬렉션 메타데이터에 인덱스 계약(임베딩 모델, 토크나이저, Chunk 설정 해시)을 기록한다. 같은 입력으로 다시 돌리면 같은 상태로 수렴한다.
 
-**처리 흐름**: `ingest_cli`에서 `ingest_service.run`으로, `document_loader`, `text_cleaner`, `chunk_splitter`(`embedding_client.token_count`로 길이 측정), `embedding_client`, `sparse_encoder`(`text_tokenizer`로 BM25 토큰화), `chunk_repository.ensure_collection`, `chunk_repository.upsert` 순.
+**처리 흐름**: `ingest_cli`에서 `ingest_service.run`으로, `document_loader`, `text_cleaner`, `chunk_splitter`(`embedding_client.token_count`로 길이 측정), 청크에 문서 제목과 원문 URL(고정 commit) 부착, `embedding_client`, `sparse_encoder`(`text_tokenizer`로 BM25 토큰화), `ensure_collection`, `upsert`, `delete_except`(원문에서 사라진 청크 삭제) 순.
+
+**재실행하면**: 컬렉션 이름이 인덱스 계약의 해시라 같은 설정이면 같은 컬렉션에 upsert하고, 이번 실행에 없는 청크를 지워 같은 상태로 수렴한다. 설정을 바꾸면 새 컬렉션이 생기고 기존 컬렉션은 남는다.
 
 **구현 파일**
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/ingest_cli.py` | cli | 명령 진입점 |
-| `app/service/ingest/ingest_service.py` | service | 파이프라인 조립 |
+| `app/cli/ingest_cli.py` | cli | 명령 진입점. 설정에서 확정 구성을 조립 |
+| `app/service/ingest/ingest_service.py` | service | 파이프라인 조립(`IngestService`) |
 | `app/service/ingest/document_loader.py` | service | manifest 순서로 원문을 읽어 정제한 Document로 만듦. 구현됨 |
 | `app/service/ingest/text_cleaner.py` | service | front matter, HTML 주석, HTML 태그 제거. Markdown 링크와 `<name>` 같은 자리표시자는 유지(근거 인용과 대조하기 위해). 구현됨 |
 | `app/service/ingest/chunk_splitter.py` | service | `ChunkSplitter`: 임베딩 토큰 수 기준 고정 길이, 슬라이딩 윈도우(겹침 50%), 재귀(문단, 줄, 문장, 단어), 문서 구조(Markdown 제목 단위), 시맨틱(이웃 문장 임베딩 거리 95 백분위) 분할과 겹침. `FixedLengthSplitter`: 앞선 선정 실험이 쓴 문자 수 고정 분할 |
@@ -172,9 +170,10 @@
 | `app/service/ingest/sparse_encoder.py` | service | `SparseEncoder`: BM25 sparse 벡터(문서 쪽 k1, b 가중, crc32 해시, 질의는 단어마다 1). Query와 공유. 구현됨 |
 | `app/service/ingest/sentence_embedder.py` | service | 시맨틱 분할용 문장 임베딩. 같은 문장은 한 번만 임베딩 |
 | `app/client/embedding_client.py` | client | 배치 임베딩, 잘림 없는 토큰 수와 토큰 위치(Query와 공유). 로컬 fastembed, Qwen3-Embedding-0.6B(확정) |
-| `app/repository/qdrant_chunk_repository.py` | repository | `ensure_collection`, `upsert`, 검색(dense, 점수를 함께 주는 dense, sparse, RRF 결합). 선정된 DB |
+| `app/repository/qdrant_chunk_repository.py` | repository | `ensure_collection`, `upsert`, `delete_except`, 검색(dense, 점수를 함께 주는 dense, 청크를 돌려주는 dense, sparse, RRF 결합). 선정된 DB |
 | `app/schema/chunk_schema.py` | schema | Document, Chunk 모델. chunk_id는 (doc_id, text)의 sha256 |
-| `app/schema/vector_schema.py` | schema | sparse 벡터, 인덱스 계약 |
+| `app/schema/vector_schema.py` | schema | sparse 벡터, 인덱스 계약과 계약 해시로 만든 컬렉션 이름 |
+| `app/common/settings.py` | common | 확정 구성 값과 인덱스 계약 생성(`index_contract`, Ingest와 Query 공유) |
 
 **테스트**
 
@@ -184,9 +183,9 @@
 | 단위 | `tests/unit/test_ingest_text_tokenizer.py` |
 | 단위 | `tests/unit/test_ingest_sparse_encoder.py` |
 | 단위 | `tests/unit/test_ingest_sentence_embedder.py` |
-| 통합 | `tests/integ/test_ingest.py`(미구현) |
+| 통합 | `tests/integ/test_ingest.py`(재실행 수렴, 계약 기록, 사라진 문서의 청크 삭제) |
 
-**제약과 미구현**: `ingest_service`, `ingest_cli`, 인덱스 계약 기록은 미구현. 길이 단위(Qwen3 토큰)와 BM25 토큰화(`word`)는 토크나이저 선정에서 확정. 분할은 Chunking 선정에서 `structure-512-77`로 확정. 모델은 Embedding 교차 확인에서 Qwen3-Embedding-0.6B로 확정.
+**제약과 미구현**: 시맨틱 분할은 Ingest에서 받지 않는다. 길이 단위(Qwen3 토큰)와 BM25 토큰화(`word`)는 토크나이저 선정에서 확정. 분할은 Chunking 선정에서 `structure-512-77`로 확정. 모델은 Embedding 교차 확인에서 Qwen3-Embedding-0.6B로 확정.
 
 ### judge_agreement: Judge 신뢰성 측정
 
@@ -219,13 +218,14 @@
 | 문서에 근거가 있는 질문 | `status=answered`, 답변, 인용 목록 |
 | 검색 최고 점수가 임계값 미만인 질문 | LLM 호출 없이 `status=insufficient_context` |
 | 근거는 검색됐지만 답이 없는 질문 | 모델의 근거 부족 토큰을 감지해 `status=insufficient_context` |
-| 길이 제한을 넘은 질문 | 422 |
+| 빈 질문, 1000자를 넘은 질문, 범위 밖 `top_k` | 422 |
 | `API_KEY`가 설정됐는데 `X-API-Key`가 없거나 틀림 | 401 |
 | LLM 동시 호출 상한 대기 한도 초과 | 503, `Retry-After` |
-| LLM 또는 임베딩 호출 실패, 타임아웃 | 502, 504 |
-| 색인과 다른 임베딩 모델, 토크나이저 설정으로 기동 | 기동 실패 |
+| LLM 호출 실패, 타임아웃 | 502, 504 |
+| 벡터 DB 연결 실패 | 503 |
+| 색인과 다른 임베딩 모델, 토크나이저, Chunk 설정으로 기동 | 기동 실패 |
 
-**처리 흐름**: `query_router`에서 `query_service.answer`로, `chunk_retriever`(`embedding_client`, `text_tokenizer`, `chunk_repository.search`), `evidence_checker`(점수 임계값), `prompt_builder`, `llm_client`, `evidence_checker`(근거 부족 토큰), `citation_parser` 순.
+**처리 흐름**: `query_router`에서 `query_service.answer`로, `chunk_retriever`(`embedding_client`를 스레드에서 호출, `search_dense_chunks`), `evidence_checker`(점수 임계값), `prompt_builder`, `llm_gate`(동시 호출 상한), `llm_client`, `evidence_checker`(근거 부족 토큰), `citation_parser` 순.
 
 **구현 파일**
 
@@ -236,15 +236,18 @@
 | `app/api/request_middleware.py` | api | 요청 ID, 처리 시간 로그 |
 | `app/api/api_key_guard.py` | api | `X-API-Key` 검사 |
 | `app/api/error_mapper.py` | api | 예외를 HTTP 상태로 변환 |
+| `app/api/query_runtime.py` | api | 요청 사이에 공유하는 객체 묶음(`QueryRuntime`)과 라우터 의존성 |
 | `app/service/query/query_service.py` | service | 파이프라인 조립 |
-| `app/service/query/chunk_retriever.py` | service | dense 또는 hybrid 검색 |
+| `app/service/query/chunk_retriever.py` | service | dense 검색 |
+| `app/service/query/llm_gate.py` | service | LLM 동시 호출 상한과 대기 한도 |
 | `app/service/query/evidence_checker.py` | service | 점수 임계값과 근거 부족 토큰 판정 |
 | `app/service/query/prompt_builder.py` | service | 번호 매긴 근거와 지시문 조립 |
 | `app/service/query/citation_parser.py` | service | `[n]` 추출, 존재하지 않는 번호 제거 |
-| `app/repository/chunk_repository.py` | repository | `search` |
-| `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출. seed, temperature는 None이면 보내지 않음 |
+| `app/repository/qdrant_chunk_repository.py` | repository | `search_dense_chunks`. 저장소 오류를 `VectorStoreError`로 변환 |
+| `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출. seed, temperature는 None이면 보내지 않음. 타임아웃과 실패를 `LlmTimeoutError`, `LlmFailureError`로 변환 |
+| `app/common/upstream_error.py` | common | 외부 의존 실패 예외(`UpstreamError` 하위 4종) |
 | `app/client/embedding_client.py` | client | 질의 벡터화 |
-| `app/schema/query_schema.py` | schema | 요청과 응답 모델. 지금은 인용을 정리한 답변(`ParsedAnswer`)만 있음 |
+| `app/schema/query_schema.py` | schema | `QueryRequest`, `QueryResponse`, `Citation`, `QueryMeta`, `RetrievedChunk`, `ParsedAnswer` |
 
 **테스트**
 
@@ -253,9 +256,11 @@
 | 단위 | `tests/unit/test_query_citation_parser.py` |
 | 단위 | `tests/unit/test_query_evidence_checker.py` |
 | 단위 | `tests/unit/test_query_prompt_builder.py` |
-| 통합 | `tests/integ/test_query.py` |
+| 단위 | `tests/unit/test_query_query_service.py` |
+| 단위 | `tests/unit/test_query_llm_gate.py` |
+| 통합 | `tests/integ/test_query.py`(앱 전체에 메모리 저장소, 임베딩, 대체 LLM. 응답, 두 단계 거절, 401, 422, 요청 ID, 502, 503, 504, `/ready`) |
 
-**제약과 미구현**: `prompt_builder`, `citation_parser`, `evidence_checker`와 단위 테스트만 구현. 거절 임계값은 `research/refusal_threshold.md`에서 정한다. `query_service`, `chunk_retriever`, API 층, 통합 테스트는 미구현.
+**제약과 미구현**: 검색은 dense만 구현했다. hybrid(dense와 BM25를 RRF로 결합)는 Part C에서 설정으로 켠다. 색인에는 sparse 벡터가 이미 들어 있어 다시 색인할 필요가 없다. 임베딩은 로컬 모델이라 호출 타임아웃을 두지 않는다.
 
 ### query_stream: 스트리밍 질의응답
 
