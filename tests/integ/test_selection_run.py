@@ -1,10 +1,11 @@
-"""selection_run 기능의 Chunking 선정 파이프라인 통합 테스트. 분할, 색인, 검색, 지표, 판정을 이어서 돌린다."""
+"""selection_run 기능의 Chunking 선정과 Embedding 교차 확인 파이프라인 통합 테스트. 분할, 색인, 검색, 지표, 판정을 이어서 돌린다."""
 import re
 import zlib
 import asyncio
 import numpy as np
 
 from app.service.eval.chunking_benchmark import ChunkingRun, ChunkingBenchmark, pick_best
+from app.service.eval.embedding_crosscheck import ModelResult, judge, truncated_chunks
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.chunk_splitter import ChunkMethod, ChunkSplitter
 from app.service.ingest.sentence_embedder import SentenceEmbedder
@@ -118,3 +119,32 @@ def test_rerunning_the_pipeline_gives_the_same_judgements() -> None:
 
     assert [r.per_question for r in first] == [r.per_question for r in second]
     assert [(r.chunks, r.context_tokens_mean) for r in first] == [(r.chunks, r.context_tokens_mean) for r in second]
+
+
+class ShortMemoryEmbeddingClient(MemoryEmbeddingClient):
+    @property
+    def model_name(self) -> str:
+        return "memory-short"
+
+
+def test_embedding_crosscheck_counts_truncation_and_judges_tied_models_by_coverage() -> None:
+    repository = MemoryChunkRepository()
+    incumbent, challenger = MemoryEmbeddingClient(), ShortMemoryEmbeddingClient()
+    splitter = ChunkSplitter("structure", 40, 0, incumbent.token_count, incumbent.token_offsets)
+    chunks = [c for d in DOCUMENTS for c in splitter.split(d)]
+    items = {"en": gold("en"), "ko": gold("ko")}
+
+    async def measure() -> tuple[ModelResult, ModelResult]:
+        results = []
+        for client, limit in ((incumbent, 40), (challenger, 10)):
+            runs = await ChunkingBenchmark(repository, client).run(splitter.name, chunks, items, 0.0)
+            results.append(ModelResult(model=client.model_name, max_input_tokens=limit,
+                                       truncated_chunks=truncated_chunks(client, chunks, limit), runs=runs))
+        return results[0], results[1]
+
+    first, second = asyncio.run(measure())
+    verdict = judge(first, second)
+
+    assert (first.truncated_chunks, second.truncated_chunks > 0) == (0, True)
+    assert (verdict.chosen, verdict.reason) == ("memory-short", "tied_challenger_cheaper")
+    assert repository.collections == {}

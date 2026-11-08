@@ -170,7 +170,7 @@
 | `app/common/text_tokenizer.py` | common | BM25 단어 토큰화(Query와 공유). 선정 설정 `word`. 비교용 kiwi, okt, kkma 모드는 `korean` 의존성 그룹이 있을 때만 import. 구현됨 |
 | `app/service/ingest/sparse_encoder.py` | service | `SparseEncoder`: BM25 sparse 벡터(문서 쪽 k1, b 가중, crc32 해시, 질의는 단어마다 1). Query와 공유. 구현됨 |
 | `app/service/ingest/sentence_embedder.py` | service | 시맨틱 분할용 문장 임베딩. 같은 문장은 한 번만 임베딩 |
-| `app/client/embedding_client.py` | client | 배치 임베딩, 잘림 없는 토큰 수와 토큰 위치(Query와 공유). 로컬 fastembed, 잠정 Qwen3-Embedding-0.6B |
+| `app/client/embedding_client.py` | client | 배치 임베딩, 잘림 없는 토큰 수와 토큰 위치(Query와 공유). 로컬 fastembed, Qwen3-Embedding-0.6B(확정) |
 | `app/repository/qdrant_chunk_repository.py` | repository | `ensure_collection`, `upsert`, 검색(dense, sparse, RRF 결합). 선정된 DB |
 | `app/schema/chunk_schema.py` | schema | Document, Chunk 모델. chunk_id는 (doc_id, text)의 sha256 |
 | `app/schema/vector_schema.py` | schema | sparse 벡터, 인덱스 계약 |
@@ -185,7 +185,7 @@
 | 단위 | `tests/unit/test_ingest_sentence_embedder.py` |
 | 통합 | `tests/integ/test_ingest.py`(미구현) |
 
-**제약과 미구현**: `ingest_service`, `ingest_cli`, 인덱스 계약 기록은 미구현. 길이 단위(Qwen3 토큰)와 BM25 토큰화(`word`)는 토크나이저 선정에서 확정. 분할은 Chunking 선정에서 `structure-512-77`로 확정. 모델은 Embedding 교차 확인 후 확정.
+**제약과 미구현**: `ingest_service`, `ingest_cli`, 인덱스 계약 기록은 미구현. 길이 단위(Qwen3 토큰)와 BM25 토큰화(`word`)는 토크나이저 선정에서 확정. 분할은 Chunking 선정에서 `structure-512-77`로 확정. 모델은 Embedding 교차 확인에서 Qwen3-Embedding-0.6B로 확정.
 
 ### judge_agreement: Judge 신뢰성 측정
 
@@ -288,7 +288,8 @@
 | `tokenizer` | 길이 단위별 임베딩 토큰 대비 비율 분포, 문자 수 상한의 목표 초과 비율과 채움률, BM25 토크나이저 7종(규칙 4종, Kiwi, Okt, Kkma)별 sparse 단독 Hit@5, MRR, 처리 시간, 어휘와 해시 충돌. 구현됨(`make tok-bench`, `batch-korean` 이미지) |
 | `chunking` | 분할 방식 5종(크기 512, 겹침 15%, 슬라이딩은 50%)을 먼저 비교하고 한 방식(`--method`, 기본 `structure`)만 크기(256, 512, 1024)와 겹침(0%, 15%, 슬라이딩은 25%, 50%)을 바꿔 Hit@5, MRR, 근거 보존율, 근거 보존@5와 @10, 청크 수, 질의당 근거 토큰 수, 분할 시간 측정. 구현됨(`make chunk-bench`) |
 | `database` | 후보 DB별 기능 검사 6종, 적재 시간, 질의 지연 p50과 p95, 메모리 사용량, numpy 전수 비교 대비 ANN 재현율. 구현됨(`make db-bench`) |
-| `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 근거 재현율, 문서 단위 Recall@5(영어, 한국어 질의), bootstrap 신뢰구간, 색인 시간, 질의 임베딩 지연. 구현됨(`make embed-bench`). 교차 확인은 미구현 |
+| `embedding` | 임베딩 후보별 근거 단위 Hit@5, Hit@10, MRR, 근거 재현율, 문서 단위 Recall@5(영어, 한국어 질의), bootstrap 신뢰구간, 색인 시간, 질의 임베딩 지연. 구현됨(`make embed-bench`). 교차 확인은 `embedding_crosscheck` |
+| `embedding_crosscheck` | 확정 Chunking 청크로 Qwen3와 e5를 다시 색인해 Hit@5, MRR, 근거 보존@5와 @10, e5 잘림 청크 수 측정과 사전 규칙 판정. 구현됨(`make embed-check`) |
 | `refusal_threshold` | dev set 답 있음/답 없음 문항의 dense 최고 점수 분포와 임계값별 오거절, 미거절 비율 |
 | `llm` | 생성 후보별 Faithfulness, 인용 형식 준수율, 거절률, 문항당 비용과 지연 |
 
@@ -311,6 +312,8 @@
 | `app/service/eval/tokenizer_benchmark.py` | service | 단위별 길이 비율, 문자 상한 검사, BM25 sparse 단독 검색 측정 |
 | `app/cli/chunking_selection_cli.py` | cli | 분할 후보 정의, 시맨틱 분할용 문장 임베딩 캐시, 두 단계 실행(방식, 크기와 겹침), 결과와 판정 저장 |
 | `app/service/eval/chunking_benchmark.py` | service | 설정별 색인과 정확 검색, 근거 보존율, 근거 보존@k(`evidence_covered`), 질의당 근거 토큰 수, 사전 규칙 판정(`pick_best`) |
+| `app/cli/embedding_crosscheck_cli.py` | cli | 확정 Chunking(`structure-512-77`)으로 Embedding 상위 두 모델(Qwen3, e5) 재측정, 결과와 판정 저장 |
+| `app/service/eval/embedding_crosscheck.py` | service | 모델 최대 입력을 넘는 청크 수(`truncated_chunks`), 교차 확인 사전 규칙 판정(`judge`: Hit@5 짝지은 차이, 근거 보존@5, 비용) |
 | `app/service/eval/database_benchmark.py` | service | 기능 검사, 적재, 지연, ANN 재현율 측정 |
 | `app/service/eval/vector_projector.py` | service | 무작위 투영으로 차원 변경, numpy 전수 비교 |
 | `app/service/eval/term_hasher.py` | service | 기능 검사용 임시 sparse 인코더 |
@@ -327,10 +330,10 @@
 | 단위 | `tests/unit/test_selection_run_vector_projector.py` |
 | 단위 | `tests/unit/test_selection_run_retrieval_metric.py` |
 | 단위 | `tests/unit/test_selection_run_tokenizer_benchmark.py` |
-| 단위 | `tests/unit/test_selection_run_chunking_benchmark.py` |
-| 통합 | `tests/integ/test_selection_run.py`(Chunking 선정 파이프라인: 분할, 색인, 검색, 지표, 판정. 벡터 DB와 임베딩 모델은 메모리 대체 객체) |
+| 단위 | `tests/unit/test_selection_run_chunking_benchmark.py`, `tests/unit/test_selection_run_embedding_crosscheck.py` |
+| 통합 | `tests/integ/test_selection_run.py`(Chunking 선정과 Embedding 교차 확인 파이프라인: 분할, 색인, 검색, 지표, 잘림 수, 판정. 벡터 DB와 임베딩 모델은 메모리 대체 객체) |
 
-**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저, Chunking 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
+**제약과 미구현**: 데이터셋, 데이터베이스, Embedding, 토크나이저, Chunking, Embedding 교차 확인 외 실험은 미구현. DB 저장소 3종은 실제 DB가 필요해 단위 테스트 대신 `make db-bench`의 기능 검사로 검증한다. 기각된 후보 구현은 실험 재현을 위해 남긴다.
 
 ---
 
