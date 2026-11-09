@@ -18,8 +18,8 @@ from app.service.query.query_service import QueryService
 from app.service.eval.judge_service import JudgeService
 from app.service.live.live_recorder import LiveRecorder
 from app.service.eval.eval_service import TokenPrice
-from app.service.live.live_builder import LiveEval
 from app.service.live.live_signal import LiveSignal
+from app.service.live.live_builder import LiveEval
 from app.service.query.llm_gate import LlmGate
 from app.api.query_runtime import QueryRuntime
 from app.client.llm_cache import LlmCache

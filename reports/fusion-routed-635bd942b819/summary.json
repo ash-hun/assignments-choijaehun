@@ -1,0 +1,312 @@
+{
+  "failed_items": [
+    "264cbe39-bf6e-56a3-bec0-d923c1c56498"
+  ],
+  "judge": {
+    "calls": "354",
+    "cost_krw": "2474.9",
+    "model": "gemini-3.8-flash",
+    "samples": "3",
+    "version": "citation v3-96ee909bf92c, rubric v2-75cc0f62234d"
+  },
+  "languages": [
+    {
+      "answerable_false_refusal": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "mean": 0.0
+      },
+      "cost_krw_per_item": 0.8935,
+      "cost_krw_total": 35.742,
+      "items": 40,
+      "judge": {
+        "accuracy": {
+          "ci_high": 0.9688,
+          "ci_low": 0.7188,
+          "mean": 0.8438
+        },
+        "agreement": {
+          "accuracy": 1.0,
+          "citation_precision": 0.9032,
+          "identifier_accuracy": 0.9688,
+          "interface_separation": 1.0,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.8125,
+          "version_status": 1.0
+        },
+        "citation_precision": {
+          "ci_high": 0.9785,
+          "ci_low": 0.8656,
+          "mean": 0.927
+        },
+        "failed": 0,
+        "judged": 32,
+        "key_point_rate": {
+          "ci_high": 0.9797,
+          "ci_low": 0.8281,
+          "mean": 0.9094
+        },
+        "quality_items": {
+          "identifier_accuracy": 1.0,
+          "interface_separation": 1.0,
+          "no_dropped_citation": 1.0,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.6562,
+          "version_status": 0.75
+        },
+        "quality_score": null
+      },
+      "language": "en",
+      "latency_ms": {
+        "count": 32,
+        "median": 3942.5,
+        "p95": 8611.0
+      },
+      "near_threshold_rate": 0.05,
+      "no_dropped_citation_rate": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean": 1.0
+      },
+      "refusals_by_stage": {
+        "generation": 6,
+        "retrieval": 2
+      },
+      "refused_latency_ms": {
+        "count": 8,
+        "median": 1441.0,
+        "p95": 1975.0
+      },
+      "retrieval": {
+        "f1_at_10": {
+          "ci_high": 0.3011,
+          "ci_low": 0.2187,
+          "mean": 0.2602
+        },
+        "f1_at_5": {
+          "ci_high": 0.4697,
+          "ci_low": 0.3513,
+          "mean": 0.4097
+        },
+        "ndcg_at_10": {
+          "ci_high": 0.9054,
+          "ci_low": 0.746,
+          "mean": 0.8302
+        },
+        "precision_at_10": {
+          "ci_high": 0.1844,
+          "ci_low": 0.1281,
+          "mean": 0.1562
+        },
+        "precision_at_5": {
+          "ci_high": 0.3312,
+          "ci_low": 0.2313,
+          "mean": 0.2812
+        },
+        "recall_at_10": {
+          "ci_high": 1.0,
+          "ci_low": 0.8672,
+          "mean": 0.9453
+        },
+        "recall_at_5": {
+          "ci_high": 0.9688,
+          "ci_low": 0.8016,
+          "mean": 0.8953
+        },
+        "reciprocal_rank": {
+          "ci_high": 0.9375,
+          "ci_low": 0.75,
+          "mean": 0.849
+        }
+      },
+      "retrieval_by_type": {
+        "factual": {
+          "ndcg_at_10": 0.9167,
+          "recall_at_5": 0.9167
+        },
+        "multi_doc": {
+          "ndcg_at_10": 0.7461,
+          "recall_at_5": 0.825
+        },
+        "summary": {
+          "ndcg_at_10": 0.8688,
+          "recall_at_5": 0.9
+        },
+        "trap": {
+          "ndcg_at_10": 0.7232,
+          "recall_at_5": 1.0
+        }
+      },
+      "retrieval_ms": {
+        "count": 40,
+        "median": 188.0,
+        "p95": 382.0
+      },
+      "top_score_median": 0.795,
+      "tpot_ms": {
+        "count": 32,
+        "median": 1.4,
+        "p95": 2.4
+      },
+      "ttft_ms": {
+        "count": 32,
+        "median": 2744.0,
+        "p95": 8156.0
+      },
+      "unanswerable_refusal": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean": 1.0
+      }
+    },
+    {
+      "answerable_false_refusal": {
+        "ci_high": 0.2581,
+        "ci_low": 0.0323,
+        "mean": 0.129
+      },
+      "cost_krw_per_item": 1.0275,
+      "cost_krw_total": 40.0737,
+      "items": 39,
+      "judge": {
+        "accuracy": {
+          "ci_high": 0.7778,
+          "ci_low": 0.4074,
+          "mean": 0.5926
+        },
+        "agreement": {
+          "accuracy": 1.0,
+          "citation_precision": 0.9615,
+          "identifier_accuracy": 0.9259,
+          "interface_separation": 0.963,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.7778,
+          "version_status": 1.0
+        },
+        "citation_precision": {
+          "ci_high": 1.0,
+          "ci_low": 0.9856,
+          "mean": 0.9952
+        },
+        "failed": 0,
+        "judged": 27,
+        "key_point_rate": {
+          "ci_high": 0.8772,
+          "ci_low": 0.6099,
+          "mean": 0.7488
+        },
+        "quality_items": {
+          "identifier_accuracy": 0.9565,
+          "interface_separation": 1.0,
+          "no_dropped_citation": 1.0,
+          "prior_knowledge": 1.0,
+          "unsupported_claim": 0.8148,
+          "version_status": 1.0
+        },
+        "quality_score": null
+      },
+      "language": "ko",
+      "latency_ms": {
+        "count": 27,
+        "median": 5504.0,
+        "p95": 8065.0
+      },
+      "near_threshold_rate": 0.1282,
+      "no_dropped_citation_rate": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean": 1.0
+      },
+      "refusals_by_stage": {
+        "generation": 9,
+        "retrieval": 3
+      },
+      "refused_latency_ms": {
+        "count": 12,
+        "median": 1697.5,
+        "p95": 4335.0
+      },
+      "retrieval": {
+        "f1_at_10": {
+          "ci_high": 0.2687,
+          "ci_low": 0.1861,
+          "mean": 0.2258
+        },
+        "f1_at_5": {
+          "ci_high": 0.3931,
+          "ci_low": 0.2614,
+          "mean": 0.3281
+        },
+        "ndcg_at_10": {
+          "ci_high": 0.7963,
+          "ci_low": 0.5598,
+          "mean": 0.6836
+        },
+        "precision_at_10": {
+          "ci_high": 0.1645,
+          "ci_low": 0.1097,
+          "mean": 0.1355
+        },
+        "precision_at_5": {
+          "ci_high": 0.2774,
+          "ci_low": 0.1742,
+          "mean": 0.2258
+        },
+        "recall_at_10": {
+          "ci_high": 0.9274,
+          "ci_low": 0.707,
+          "mean": 0.828
+        },
+        "recall_at_5": {
+          "ci_high": 0.8339,
+          "ci_low": 0.5597,
+          "mean": 0.7032
+        },
+        "reciprocal_rank": {
+          "ci_high": 0.846,
+          "ci_low": 0.573,
+          "mean": 0.7145
+        }
+      },
+      "retrieval_by_type": {
+        "factual": {
+          "ndcg_at_10": 0.7727,
+          "recall_at_5": 0.8182
+        },
+        "multi_doc": {
+          "ndcg_at_10": 0.6037,
+          "recall_at_5": 0.65
+        },
+        "summary": {
+          "ndcg_at_10": 0.7649,
+          "recall_at_5": 0.7167
+        },
+        "trap": {
+          "ndcg_at_10": 0.5162,
+          "recall_at_5": 0.5
+        }
+      },
+      "retrieval_ms": {
+        "count": 39,
+        "median": 200.0,
+        "p95": 365.0
+      },
+      "top_score_median": 0.7655,
+      "tpot_ms": {
+        "count": 27,
+        "median": 1.7,
+        "p95": 2.3
+      },
+      "ttft_ms": {
+        "count": 27,
+        "median": 3123.0,
+        "p95": 7794.0
+      },
+      "unanswerable_refusal": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean": 1.0
+      }
+    }
+  ]
+}

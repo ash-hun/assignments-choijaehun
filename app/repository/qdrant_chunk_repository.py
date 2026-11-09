@@ -61,6 +61,17 @@ class QdrantChunkRepository:
             result = await self._client.query_points(name, query=vector.tolist(), using=DENSE, limit=k, with_payload=CHUNK_FIELDS)
         return [(Chunk.model_validate(p.payload or {}), float(p.score)) for p in result.points]
 
+    async def search_sparse_chunks(self, name: str, sparse: SparseTerms, k: int) -> list[tuple[Chunk, float]]:
+        """BM25(sparse 내적, IDF 가중) 상위 k개 청크와 점수. 질의에 단어가 없으면 빈 목록."""
+        if not sparse.indices:
+            return []
+        async with _store_errors():
+            result = await self._client.query_points(
+                name, query=qm.SparseVector(indices=sparse.indices, values=sparse.values), using=SPARSE, limit=k,
+                with_payload=CHUNK_FIELDS,
+            )
+        return [(Chunk.model_validate(p.payload or {}), float(p.score)) for p in result.points]
+
     async def all_chunks(self, name: str) -> list[Chunk]:
         """컬렉션의 청크 전부를 chunk_id 순으로. 평가에서 근거 구절마다 인덱스 전체의 관련 청크 수를 셀 때 쓴다."""
         chunks: list[Chunk] = []

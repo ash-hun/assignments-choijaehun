@@ -1,0 +1,7 @@
+# Part C 검색 융합 비교(project_planning/experiments/12_hybrid_fusion.md). 기준선(baseline.toml)과 검색 방식만 다르다.
+name = "fusion-cc"
+gold_files = ["data/gold/test_set.jsonl", "data/gold/test_set_ko.jsonl"]
+top_k = 5
+retrieval_depth = 10
+concurrency = 4
+retrieval_mode = "cc"

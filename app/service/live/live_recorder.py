@@ -34,7 +34,7 @@ class LiveRecorder:
             refusal_stage=("retrieval" if usage.output_tokens == 0 else "generation") if refused else None,
             answer=response.answer, cited_chunk_ids=[c.chunk_id for c in response.citations],
             dropped_citations=meta.dropped_citations, retrieved_chunk_ids=[], retrieval_scores=meta.retrieval_scores,
-            top_score=meta.retrieval_scores[0] if meta.retrieval_scores else None, rank=None,
+            top_score=meta.top_dense_score, rank=None,
             retrieval_ms=meta.retrieval_ms, first_token_ms=meta.first_token_ms, latency_ms=meta.latency_ms,
             input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
             cost_krw=round(usage.input_tokens * self._price.input_krw_per_mtok / 1e6

@@ -9,11 +9,14 @@ from contextlib import asynccontextmanager, contextmanager
 
 from tests.integ.memory_backend import MemoryChunkRepository, MemoryEmbeddingClient
 from app.client.llm_client import LlmDelta, ChatMessage, LlmClient, LlmCompletion
+from app.service.query.chunk_retriever import FusionSettings, ChunkRetriever
 from app.common.upstream_error import LlmFailureError, LlmTimeoutError
 from app.service.query.prompt_builder import INSUFFICIENT_CONTEXT
 from app.service.query.evidence_checker import EvidenceChecker
-from app.service.query.chunk_retriever import ChunkRetriever
+from app.service.ingest.sparse_encoder import SparseEncoder
 from app.service.query.query_service import QueryService
+from app.common.text_tokenizer import TextTokenizer
+from app.schema.query_schema import RetrievalMode
 from app.service.query.llm_gate import LlmGate
 from app.api.query_runtime import QueryRuntime
 from app.schema.chunk_schema import Chunk
@@ -53,7 +56,7 @@ class ScriptedLlm(LlmClient):
 
 
 @contextmanager
-def serve(api_key: str | None = None) -> Iterator[tuple[TestClient, MemoryChunkRepository, ScriptedLlm]]:
+def serve(api_key: str | None = None, mode: RetrievalMode = "dense") -> Iterator[tuple[TestClient, MemoryChunkRepository, ScriptedLlm]]:
     settings = Settings(_env_file=None, api_key=SecretStr(api_key) if api_key else None)
     contract = settings.index_contract()
     collection = contract.collection_name(settings.corpus_name)
@@ -63,13 +66,16 @@ def serve(api_key: str | None = None) -> Iterator[tuple[TestClient, MemoryChunkR
 
     async def index() -> None:
         await repository.ensure_collection(collection, 256, contract)
-        await repository.upsert(collection, chunks, embedding.embed_documents([c.text for c in chunks]), [])
+        await repository.upsert(collection, chunks, embedding.embed_documents([c.text for c in chunks]),
+                                encoder.encode_documents([c.text for c in chunks]))
 
+    encoder = SparseEncoder(TextTokenizer("word"))
     asyncio.run(index())
 
     @asynccontextmanager
     async def builder(s: Settings) -> AsyncIterator[QueryRuntime]:
-        service = QueryService(ChunkRetriever(repository, embedding, collection), EvidenceChecker(0.3), llm, LlmGate(2, 0.1),
+        retriever = ChunkRetriever(repository, embedding, collection, encoder, FusionSettings(mode=mode, pool=4))
+        service = QueryService(retriever, EvidenceChecker(0.3), llm, LlmGate(2, 0.1),
                                embedding.model_name, 2, 0.0, None, 100)
         yield QueryRuntime(settings=s, service=service, repository=repository, collection=collection, contract=contract)
 
@@ -172,3 +178,31 @@ def test_stream_failure_before_the_first_event_is_a_plain_http_error() -> None:
         response = client.post("/v1/query/stream", json={"question": "cache directory UV_CACHE_DIR"})
 
     assert (response.status_code, response.json()) == (503, {"detail": "vector store unavailable"})
+
+
+def test_every_retrieval_mode_answers_from_the_same_source_and_refuses_by_the_same_dense_score() -> None:
+    results = {}
+    modes: tuple[RetrievalMode, ...] = ("dense", "bm25", "rrf", "cc", "routed")
+    for mode in modes:
+        with serve(mode=mode) as (client, _, _):
+            answered = client.post("/v1/query", json={"question": "Where is the cache directory UV_CACHE_DIR?"}).json()
+            refused = client.post("/v1/query", json={"question": "kubernetes autoscaler replicas"}).json()
+        results[mode] = (answered, refused)
+
+    dense_top = results["dense"][0]["meta"]["top_dense_score"]
+    for mode, (answered, refused) in results.items():
+        assert answered["citations"][0]["doc_id"] == "cache.md", mode
+        assert answered["meta"]["top_dense_score"] == dense_top, mode
+        assert (refused["status"], refused["meta"]["usage"]["input_tokens"]) == ("insufficient_context", 0), mode
+    assert results["bm25"][0]["meta"]["retrieval_scores"] != results["dense"][0]["meta"]["retrieval_scores"]
+    assert results["routed"][0]["meta"]["retrieval_scores"] == results["cc"][0]["meta"]["retrieval_scores"]
+
+
+def test_routed_mode_uses_dense_for_korean_questions_and_cc_for_english() -> None:
+    question = {"question": "UV_CACHE_DIR 캐시 directory 위치는?"}
+    scores = {}
+    for mode in ("dense", "routed"):
+        with serve(mode=mode) as (client, _, _):
+            scores[mode] = client.post("/v1/query", json=question).json()["meta"]["retrieval_scores"]
+
+    assert scores["routed"] == scores["dense"]

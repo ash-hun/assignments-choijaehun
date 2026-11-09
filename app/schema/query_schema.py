@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 from app.schema.chunk_schema import Chunk
 
 QueryStatus = Literal["answered", "insufficient_context"]
+# 검색 방식(project_planning/experiments/12_hybrid_fusion.md). routed는 질의에 한글이 있으면 dense, 없으면 cc를 쓴다.
+RetrievalMode = Literal["dense", "bm25", "rrf", "cc", "routed"]
 
 
 class ParsedAnswer(BaseModel):
@@ -16,10 +18,20 @@ class ParsedAnswer(BaseModel):
 
 
 class RetrievedChunk(BaseModel):
-    """검색된 청크 하나와 dense 코사인 유사도."""
+    """검색된 청크 하나와 검색 방식의 순위 점수. dense면 코사인 유사도, bm25면 BM25 내적, rrf와 cc면 융합 점수다."""
 
     chunk: Chunk
     score: float
+
+
+class Retrieval(BaseModel):
+    """검색 방식의 순위대로 고른 청크와, 거절 판정에 쓰는 dense 최고 점수.
+
+    거절은 검색 방식과 관계없이 dense 점수로 한다. 융합 점수는 순위로 만든 값이라 임계값을 걸 수 없다.
+    """
+
+    hits: list[RetrievedChunk]
+    top_dense_score: float | None
 
 
 class QueryRequest(BaseModel):
@@ -53,7 +65,8 @@ class QueryMeta(BaseModel):
 
     model: str
     embedding_model: str
-    retrieval_scores: list[float]
+    retrieval_scores: list[float] = Field(description="근거로 쓴 청크의 검색 방식 점수. dense면 코사인 유사도")
+    top_dense_score: float | None = Field(default=None, description="거절 판정에 쓴 dense 최고 점수. 검색 결과가 없으면 null")
     dropped_citations: int
     latency_ms: int
     retrieval_ms: int | None = Field(default=None, description="질의 임베딩과 벡터 검색에 걸린 시간. TTFT와 latency_ms에 포함된다")

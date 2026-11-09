@@ -1,6 +1,6 @@
 """query 기능의 LLM 동시 호출 상한(자리 대기, 대기 한도 초과 거절, 자리 반환) 단위 테스트."""
-import asyncio
 import pytest
+import asyncio
 
 from app.common.upstream_error import LlmBusyError
 from app.service.query.llm_gate import LlmGate

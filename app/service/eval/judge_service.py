@@ -54,7 +54,7 @@ class JudgeService:
         for record in records:
             if record.status != "answered":
                 continue
-            context = [h.chunk for h in await self._retriever.retrieve(record.question, top_k)]
+            context = [h.chunk for h in (await self._retriever.retrieve(record.question, top_k)).hits]
             item = items.get(record.item_id or "")
             for sample in range(samples):
                 for kind in ("citation", "rubric"):

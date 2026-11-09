@@ -1,0 +1,640 @@
+{
+  "comparisons": [
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1,
+      "ci_low": 0.0,
+      "improved": 1,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.0333,
+      "metric": "recall_at_5",
+      "pairs": 30,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1573,
+      "ci_low": 0.019,
+      "improved": 10,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.0857,
+      "metric": "ndcg_at_10",
+      "pairs": 30,
+      "verdict": "supported",
+      "worsened": 2
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.1,
+      "ci_low": 0.0,
+      "improved": 1,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.0333,
+      "metric": "recall_at_5",
+      "pairs": 30,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.1573,
+      "ci_low": 0.019,
+      "improved": 10,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.0857,
+      "metric": "ndcg_at_10",
+      "pairs": 30,
+      "verdict": "supported",
+      "worsened": 2
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": -0.1778,
+      "improved": 0,
+      "language": "ko",
+      "level": 0.95,
+      "mean": -0.0778,
+      "metric": "recall_at_5",
+      "pairs": 30,
+      "verdict": "inconclusive",
+      "worsened": 3
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1143,
+      "ci_low": -0.0438,
+      "improved": 9,
+      "language": "ko",
+      "level": 0.95,
+      "mean": 0.0344,
+      "metric": "ndcg_at_10",
+      "pairs": 30,
+      "verdict": "inconclusive",
+      "worsened": 9
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "language": "ko",
+      "level": 0.95,
+      "mean": 0.0,
+      "metric": "recall_at_5",
+      "pairs": 30,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "language": "ko",
+      "level": 0.95,
+      "mean": 0.0,
+      "metric": "ndcg_at_10",
+      "pairs": 30,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.0333,
+      "ci_low": -0.0833,
+      "improved": 1,
+      "language": "all",
+      "level": 0.95,
+      "mean": -0.0222,
+      "metric": "recall_at_5",
+      "pairs": 60,
+      "verdict": "inconclusive",
+      "worsened": 3
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1147,
+      "ci_low": 0.0092,
+      "improved": 19,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.06,
+      "metric": "ndcg_at_10",
+      "pairs": 60,
+      "verdict": "supported",
+      "worsened": 11
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.05,
+      "ci_low": 0.0,
+      "improved": 1,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.0167,
+      "metric": "recall_at_5",
+      "pairs": 60,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0811,
+      "ci_low": 0.0098,
+      "improved": 10,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.0428,
+      "metric": "ndcg_at_10",
+      "pairs": 60,
+      "verdict": "supported",
+      "worsened": 2
+    }
+  ],
+  "files": [
+    "data/gold/dev_set.jsonl",
+    "data/gold/dev_set_ko.jsonl"
+  ],
+  "groups": [
+    {
+      "condition": "dense",
+      "group": "all",
+      "mean": 0.8806,
+      "metric": "recall_at_5",
+      "n": 60
+    },
+    {
+      "condition": "dense",
+      "group": "en",
+      "mean": 0.8889,
+      "metric": "recall_at_5",
+      "n": 30
+    },
+    {
+      "condition": "dense",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "en/multi_doc",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 8
+    },
+    {
+      "condition": "dense",
+      "group": "en/summary",
+      "mean": 0.8,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "en/trap",
+      "mean": 0.8,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "ko",
+      "mean": 0.8722,
+      "metric": "recall_at_5",
+      "n": 30
+    },
+    {
+      "condition": "dense",
+      "group": "ko/factual",
+      "mean": 0.9167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "ko/multi_doc",
+      "mean": 0.7708,
+      "metric": "recall_at_5",
+      "n": 8
+    },
+    {
+      "condition": "dense",
+      "group": "ko/summary",
+      "mean": 0.8,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "ko/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "all",
+      "mean": 0.754,
+      "metric": "ndcg_at_10",
+      "n": 60
+    },
+    {
+      "condition": "dense",
+      "group": "en",
+      "mean": 0.8093,
+      "metric": "ndcg_at_10",
+      "n": 30
+    },
+    {
+      "condition": "dense",
+      "group": "en/factual",
+      "mean": 0.9072,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "en/multi_doc",
+      "mean": 0.7847,
+      "metric": "ndcg_at_10",
+      "n": 8
+    },
+    {
+      "condition": "dense",
+      "group": "en/summary",
+      "mean": 0.6966,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "en/trap",
+      "mean": 0.7262,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "ko",
+      "mean": 0.6986,
+      "metric": "ndcg_at_10",
+      "n": 30
+    },
+    {
+      "condition": "dense",
+      "group": "ko/factual",
+      "mean": 0.7046,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "ko/multi_doc",
+      "mean": 0.6966,
+      "metric": "ndcg_at_10",
+      "n": 8
+    },
+    {
+      "condition": "dense",
+      "group": "ko/summary",
+      "mean": 0.6966,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "dense",
+      "group": "ko/trap",
+      "mean": 0.6897,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "all",
+      "mean": 0.8583,
+      "metric": "recall_at_5",
+      "n": 60
+    },
+    {
+      "condition": "cc",
+      "group": "en",
+      "mean": 0.9222,
+      "metric": "recall_at_5",
+      "n": 30
+    },
+    {
+      "condition": "cc",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "en/multi_doc",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 8
+    },
+    {
+      "condition": "cc",
+      "group": "en/summary",
+      "mean": 0.8,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "ko",
+      "mean": 0.7944,
+      "metric": "recall_at_5",
+      "n": 30
+    },
+    {
+      "condition": "cc",
+      "group": "ko/factual",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "ko/multi_doc",
+      "mean": 0.7292,
+      "metric": "recall_at_5",
+      "n": 8
+    },
+    {
+      "condition": "cc",
+      "group": "ko/summary",
+      "mean": 0.6,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "ko/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "all",
+      "mean": 0.814,
+      "metric": "ndcg_at_10",
+      "n": 60
+    },
+    {
+      "condition": "cc",
+      "group": "en",
+      "mean": 0.895,
+      "metric": "ndcg_at_10",
+      "n": 30
+    },
+    {
+      "condition": "cc",
+      "group": "en/factual",
+      "mean": 0.9692,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "en/multi_doc",
+      "mean": 0.8604,
+      "metric": "ndcg_at_10",
+      "n": 8
+    },
+    {
+      "condition": "cc",
+      "group": "en/summary",
+      "mean": 0.7671,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "en/trap",
+      "mean": 0.9,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "ko",
+      "mean": 0.733,
+      "metric": "ndcg_at_10",
+      "n": 30
+    },
+    {
+      "condition": "cc",
+      "group": "ko/factual",
+      "mean": 0.7485,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "ko/multi_doc",
+      "mean": 0.7745,
+      "metric": "ndcg_at_10",
+      "n": 8
+    },
+    {
+      "condition": "cc",
+      "group": "ko/summary",
+      "mean": 0.5102,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "cc",
+      "group": "ko/trap",
+      "mean": 0.8524,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.8972,
+      "metric": "recall_at_5",
+      "n": 60
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.9222,
+      "metric": "recall_at_5",
+      "n": 30
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.8,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.8722,
+      "metric": "recall_at_5",
+      "n": 30
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.9167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.7708,
+      "metric": "recall_at_5",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.8,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.7968,
+      "metric": "ndcg_at_10",
+      "n": 60
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.895,
+      "metric": "ndcg_at_10",
+      "n": 30
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 0.9692,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.8604,
+      "metric": "ndcg_at_10",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.7671,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 0.9,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.6986,
+      "metric": "ndcg_at_10",
+      "n": 30
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.7046,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.6966,
+      "metric": "ndcg_at_10",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.6966,
+      "metric": "ndcg_at_10",
+      "n": 5
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.6897,
+      "metric": "ndcg_at_10",
+      "n": 5
+    }
+  ]
+}

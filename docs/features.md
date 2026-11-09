@@ -16,12 +16,13 @@
 |---|---|---|---|---|
 | `corpus_fetch` | Ingest | manifest에 고정된 원문 다운로드와 해시 검증 | `make corpus` | 구현됨 |
 | `eval_run` | Eval | test set 전체 채점(검색, 거절, 운영, Judge 지표)과 Report 생성, 지표 타당성 검증 | `make eval CONFIG=...`, `make validity` | 구현됨 |
+| `fusion_eval` | Eval | 검색 방식(dense, BM25 단독, RRF, CC) 비교 실험과 짝지은 판정, 채택한 언어별 선택(routed) 확인(Part C) | `make fusion` | 구현됨 |
 | `gold_draft` | Eval | 문서에서 Gold Set 초안 생성, 번역 묶음 생성, Gold 파일 검증 | `make gold-draft`, `make gold-translate`, `make gold-check` | 구현됨(dev, test) |
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make label-sheet`, `make agreement` | 구현됨 |
 | `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 구현됨 |
-| `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(dense 검색) |
+| `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(검색 방식 `RETRIEVAL_MODE`, 기본 routed: 영어 질의 CC, 한국어 질의 dense) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
 
@@ -103,7 +104,7 @@
 | `app/client/llm_cache.py` | client | Judge 응답 캐시(`.cache/judge_responses.jsonl`) |
 | `app/schema/eval_schema.py` | schema | `EvalConfig`(변형, Judge 표본 수), `EvalManifest`(run_id), `RankScore`, `EvalRecord` |
 | `app/schema/judge_schema.py` | schema | `RubricJudgment`, `JudgeResult`, `RecordJudgment`, `HumanLabel` |
-| `configs/baseline.toml`, `configs/validity_*.toml` | 설정 | 기준선과 타당성 검증 변형 |
+| `configs/baseline.toml`, `configs/validity_*.toml`, `configs/fusion_*.toml` | 설정 | 기준선, 타당성 검증 변형, 검색 방식 비교 조건(`retrieval_mode`) |
 
 **테스트**
 
@@ -114,9 +115,41 @@
 | 단위 | `tests/unit/test_eval_run_judge_metric.py` |
 | 단위 | `tests/unit/test_eval_run_validity_checker.py` |
 | 단위 | `tests/unit/test_eval_run_llm_cache.py` |
+| 단위 | `tests/unit/test_eval_run_pipeline_identity.py` |
 | 통합 | `tests/integ/test_eval_run.py`(기록, 재실행 시 LLM 미호출, 실패 문항 재시도, Report 재작성, Judge 표본별 1회 호출과 재사용) |
 
 **제약과 미구현**: 실시간 기록(`source=live`)은 `live_eval`에서 같은 저장소를 쓴다. 저장소 연결이 끊긴 경우의 재시도는 없다(재실행으로 복구).
+
+### fusion_eval: 검색 방식 비교(Part C)
+
+**설명**: 검색 방식만 다른 네 조건(dense 기준선, BM25 단독, RRF, CC)을 같은 test set으로 평가하고, 같은 문항끼리 짝지은 차이를 Bonferroni 보정 구간(98.75%)으로 판정한다. 설계와 판정 규칙은 `project_planning/experiments/12_hybrid_fusion.md`에 실행 전에 고정했다.
+
+**입력과 결과**
+
+| 입력 | 결과 |
+|---|---|
+| `make fusion` | `configs/fusion_bm25.toml`, `fusion_rrf.toml`, `fusion_cc.toml`을 `make eval`로 평가(기준선은 기존 기록 재사용)하고 `research/artifacts/hybrid_fusion/results.json`에 비교 쌍별 지표 차이, 언어와 유형별 평균, 검색 단계 거절 일치 여부, 운영 수치를 쓴다. 이어서 dev set 검색 지표로 dense, cc, routed를 비교해 `dev_check.json`을 쓰고(LLM 호출 없음), `configs/fusion_routed.toml`로 채택 구성을 test set에서 평가해 Dense와 언어별로 짝지은 결과를 `routed_check.json`에 쓴다 |
+| 다시 실행 | 같은 run_id라 LLM과 Judge를 부르지 않고 같은 결과 파일을 다시 쓴다 |
+| 기록이 없는 조건 | 그 조건의 `make eval` 명령을 알리고 멈춘다 |
+
+**처리 흐름**: `eval_run_cli`(설정의 `retrieval_mode`를 환경 설정에 덮어씀, config_id와 run_id에 반영)로 조건별 평가, `fusion_compare_cli`가 `judge_check_cli.load_run`으로 기록과 판정을 읽고 `fusion_comparator`로 짝지은 차이, 그룹 평균, 거절 일치를 계산.
+
+**구현 파일**
+
+| 파일 | 층 | 역할 |
+|---|---|---|
+| `app/cli/fusion_compare_cli.py` | cli | `compare`(조건과 비교 쌍, 보정 수준, 결과 파일), `dev-check`(dev set 검색 지표로 언어별 선택 확인), `routed-check`(채택 구성의 test set 실측과 Dense 비교) |
+| `app/service/eval/fusion_comparator.py` | service | 문항 값, 짝지은 bootstrap 구간과 판정, 그룹 평균, 검색 단계 거절 문항 |
+| `app/service/eval/pipeline_identity.py` | service | 검색 방식을 config_id에 넣음. dense는 넣지 않아 기준선 config_id 유지 |
+
+**테스트**
+
+| 종류 | 파일 |
+|---|---|
+| 단위 | `tests/unit/test_fusion_eval_fusion_comparator.py` |
+| 통합 | `tests/integ/test_fusion_eval.py`(dense, RRF, CC로 같은 문항 평가, 짝지은 비교, 같은 거절 판정) |
+
+**제약과 미구현**: RRF의 k(60)와 CC의 α(0.5)는 조정하지 않은 기본값이다. 유형별 문항이 4~10개라 유형별 차이는 방향만 읽는다.
 
 ### gold_draft: Gold Set 초안 생성
 
@@ -299,7 +332,7 @@
 | 벡터 DB 연결 실패 | 503 |
 | 색인과 다른 임베딩 모델, 토크나이저, Chunk 설정으로 기동 | 기동 실패 |
 
-**처리 흐름**: `query_router`에서 `query_service.answer`로, `chunk_retriever`(`embedding_client`를 스레드에서 호출, `search_dense_chunks`), `evidence_checker`(점수 임계값), `prompt_builder`, `llm_gate`(동시 호출 상한), `llm_client`, `evidence_checker`(근거 부족 토큰), `citation_parser` 순.
+**처리 흐름**: `query_router`에서 `query_service.answer`로, `chunk_retriever`(`embedding_client`를 스레드에서 호출, 검색 방식에 따라 `search_dense_chunks`와 `search_sparse_chunks`, `score_fusion`), `evidence_checker`(dense 최고 점수 임계값), `prompt_builder`, `llm_gate`(동시 호출 상한), `llm_client`, `evidence_checker`(근거 부족 토큰), `citation_parser` 순.
 
 **구현 파일**
 
@@ -312,16 +345,18 @@
 | `app/api/error_mapper.py` | api | 예외를 HTTP 상태로 변환 |
 | `app/api/query_runtime.py` | api | 요청 사이에 공유하는 객체 묶음(`QueryRuntime`)과 라우터 의존성 |
 | `app/service/query/query_service.py` | service | 파이프라인 조립 |
-| `app/service/query/chunk_retriever.py` | service | dense 검색 |
+| `app/service/query/chunk_retriever.py` | service | 검색 방식(dense, bm25, rrf, cc, routed) 분기. routed는 질의에 한글이 있으면 dense, 없으면 cc. 거절 판정용 dense 최고 점수를 함께 냄 |
+| `app/service/query/score_fusion.py` | service | min-max 정규화, Convex Combination, RRF. 동점은 chunk_id 순 |
 | `app/service/query/llm_gate.py` | service | LLM 동시 호출 상한과 대기 한도 |
 | `app/service/query/evidence_checker.py` | service | 점수 임계값과 근거 부족 토큰 판정 |
 | `app/service/query/prompt_builder.py` | service | 번호 매긴 근거와 지시문 조립 |
 | `app/service/query/citation_parser.py` | service | `[n]` 추출, 존재하지 않는 번호 제거 |
-| `app/repository/qdrant_chunk_repository.py` | repository | `search_dense_chunks`. 저장소 오류를 `VectorStoreError`로 변환 |
+| `app/repository/qdrant_chunk_repository.py` | repository | `search_dense_chunks`, `search_sparse_chunks`(BM25 점수와 청크). 저장소 오류를 `VectorStoreError`로 변환 |
+| `app/service/ingest/sparse_encoder.py` | service | 질의 BM25 인코딩(Ingest와 같은 토크나이저) |
 | `app/client/llm_client.py` | client | OpenAI 호환 채팅 호출. seed, temperature는 None이면 보내지 않음. 타임아웃과 실패를 `LlmTimeoutError`, `LlmFailureError`로 변환 |
 | `app/common/upstream_error.py` | common | 외부 의존 실패 예외(`UpstreamError` 하위 4종) |
 | `app/client/embedding_client.py` | client | 질의 벡터화 |
-| `app/schema/query_schema.py` | schema | `QueryRequest`, `QueryResponse`, `Citation`, `QueryMeta`, `RetrievedChunk`, `ParsedAnswer` |
+| `app/schema/query_schema.py` | schema | `QueryRequest`, `QueryResponse`, `Citation`, `QueryMeta`, `RetrievedChunk`, `Retrieval`, `RetrievalMode`, `ParsedAnswer` |
 
 **테스트**
 
@@ -332,9 +367,11 @@
 | 단위 | `tests/unit/test_query_prompt_builder.py` |
 | 단위 | `tests/unit/test_query_query_service.py` |
 | 단위 | `tests/unit/test_query_llm_gate.py` |
-| 통합 | `tests/integ/test_query.py`(앱 전체에 메모리 저장소, 임베딩, 대체 LLM. 응답, 두 단계 거절, 401, 422, 요청 ID, 502, 503, 504, `/ready`) |
+| 단위 | `tests/unit/test_query_score_fusion.py` |
+| 단위 | `tests/unit/test_query_chunk_retriever.py` |
+| 통합 | `tests/integ/test_query.py`(앱 전체에 메모리 저장소, 임베딩, 대체 LLM. 응답, 두 단계 거절, 401, 422, 요청 ID, 502, 503, 504, `/ready`, 네 검색 방식의 같은 dense 거절 판정) |
 
-**제약과 미구현**: 검색은 dense만 구현했다. hybrid(dense와 BM25를 RRF로 결합)는 Part C에서 설정으로 켠다. 색인에는 sparse 벡터가 이미 들어 있어 다시 색인할 필요가 없다. 임베딩은 로컬 모델이라 호출 타임아웃을 두지 않는다.
+**제약과 미구현**: 검색 방식은 `RETRIEVAL_MODE`(dense, bm25, rrf, cc, routed)로 바꾼다. 기본은 routed다(Part C 결과, `project_planning/experiments/12_hybrid_fusion.md`). 언어 판별은 한글 음절과 자모가 하나라도 있는지로만 한다. 거절 판정은 어느 방식이든 dense 최고 점수로 한다. 융합 방식은 dense와 BM25 후보를 각각 `FUSION_POOL`(40)개 가져와 코드에서 합친다. 색인에는 sparse 벡터가 이미 들어 있어 다시 색인할 필요가 없다. 임베딩은 로컬 모델이라 호출 타임아웃을 두지 않는다.
 
 ### query_stream: 스트리밍 질의응답
 

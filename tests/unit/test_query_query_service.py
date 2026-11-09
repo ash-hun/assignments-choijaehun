@@ -3,8 +3,8 @@ import asyncio
 from typing import Any
 from collections.abc import AsyncIterator
 
+from app.schema.query_schema import Retrieval, StreamToken, QueryResponse, RetrievedChunk
 from app.client.llm_client import LlmDelta, ChatMessage, LlmClient, LlmCompletion
-from app.schema.query_schema import StreamToken, QueryResponse, RetrievedChunk
 from app.service.query.prompt_builder import INSUFFICIENT_CONTEXT
 from app.service.query.evidence_checker import EvidenceChecker
 from app.service.query.chunk_retriever import ChunkRetriever
@@ -22,8 +22,8 @@ class FixedRetriever(ChunkRetriever):
     def __init__(self, hits: list[RetrievedChunk]) -> None:
         self.hits = hits
 
-    async def retrieve(self, question: str, k: int) -> list[RetrievedChunk]:
-        return self.hits[:k]
+    async def retrieve(self, question: str, k: int) -> Retrieval:
+        return Retrieval(hits=self.hits[:k], top_dense_score=self.hits[0].score if self.hits else None)
 
 
 class FixedLlm(LlmClient):

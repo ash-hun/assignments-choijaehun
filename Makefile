@@ -1,4 +1,4 @@
-.PHONY: build corpus ingest serve stop eval validity label-sheet agreement profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
+.PHONY: build corpus ingest serve stop eval validity fusion label-sheet agreement profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -44,6 +44,16 @@ validity:
 	$(BATCH) app.cli.judge_check_cli validity
 
 # 사람 라벨 시트(data/gold/human_labels_sheet.md)와 채울 라벨 파일. 라벨 파일이 있으면 덮어쓰지 않는다.
+# Part C 검색 융합 비교: BM25 단독, RRF, CC를 평가하고 기준선(dense)과 짝지어 판정한 뒤, 채택한 언어별 선택(routed)을 dev set 검색 지표와 test set으로 확인한다.
+fusion:
+	$(MAKE) eval CONFIG=configs/fusion_bm25.toml || true
+	$(MAKE) eval CONFIG=configs/fusion_rrf.toml || true
+	$(MAKE) eval CONFIG=configs/fusion_cc.toml || true
+	$(BATCH) app.cli.fusion_compare_cli compare
+	$(BATCH) app.cli.fusion_compare_cli dev-check
+	$(MAKE) eval CONFIG=configs/fusion_routed.toml || true
+	$(BATCH) app.cli.fusion_compare_cli routed-check
+
 label-sheet:
 	docker compose up -d --wait qdrant evaldb
 	$(BATCH) app.cli.judge_check_cli label-sheet
