@@ -167,7 +167,8 @@
 | `records`, `answered`, `judged` | int | 기록 수, 답한 수, Judge 판정이 있는 수 |
 | `judge_spent_krw`, `judge_limit_krw`, `judge_exhausted` | float, float, bool | 실시간 채점 누적 비용, 상한, 상한 도달 여부. 도달하면 채점만 멈춘다 |
 | `baseline_run` | string \| null | 기준선으로 쓴 Gold Set 실행(같은 `config_id`, 변형 없음) |
-| `metrics[].key`, `label`, `unit` | string | 지표 키, 표시 이름, 단위(`rate`, `ms`, `krw`, `score`) |
+| `metrics[].key`, `label`, `unit` | string | 지표 키, 영문 지표명, 단위(`rate`, `ms`, `krw`, `score`) |
+| `metrics[].description` | string | 지표의 뜻(한국어 한 줄). 화면은 카드 제목 바로 아래에 보여준다 |
 | `metrics[].group` | string | 화면 묶음. `retrieval`(검색), `generation`(생성), `ops`(운영) |
 | `metrics[].reference` | bool | 검증 조건을 통과하지 못한 참고값 |
 | `metrics[].baseline` | float \| null | 같은 지표의 Gold Set 전체 평균 |
@@ -175,7 +176,7 @@
 | `metrics[].points[]` | object | `n`(표본 수), `cum`(누적 평균), `low`, `high`(95% 구간. 비율은 Wilson, 나머지는 정규 근사이고 0~1 점수는 [0, 1]로 자른다), `window`(최근 50개 평균). 200개를 넘으면 고르게 솎고 마지막 지점은 남긴다 |
 | `recent[]` | object | 최근 100건, 최신이 먼저. `request_id`, `recorded_at`(저장 시각, UTC), `status`, `refusal_stage`, `top_score`, `latency_ms`, `first_token_ms`, `cost_krw`, `judge`(`judged`, `failed`, `pending` 채점 대기, `skipped` 거절이나 표본 밖이나 예산 소진), `unsupported_claim`, `citation_precision`. 질문과 답 원문은 넣지 않는다 |
 
-지표(`group`): 검색 단계 거절률(`retrieval`, 전체 질의 중), 검색 최고 점수가 임계값 ±0.05 안인 비율(`retrieval`), 생성 단계 거절률(`generation`, 검색 단계를 통과한 질의 중 LLM이 `INSUFFICIENT_CONTEXT`로 거절한 비율), 근거 없는 주장 없음(`generation`, 참고값), Citation Precision(`generation`, 참고값), Latency(`ops`, 답한 질의), TTFT(`ops`, 답한 질의), 질의당 비용(`ops`).
+지표(`group`, 지표명): `refusal_retrieval` Retrieval Refusal Rate(`retrieval`, 전체 질의 중 검색 단계 거절 비율), `near_threshold` Near-Threshold Rate(`retrieval`, 검색 최고 점수가 임계값 ±0.05 안인 비율), `refusal_generation` Generation Refusal Rate(`generation`, 검색 단계를 통과한 질의 중 LLM이 `INSUFFICIENT_CONTEXT`로 거절한 비율), `unsupported_claim` No Unsupported Claim(`generation`, 참고값), `citation_precision` Citation Precision(`generation`, 참고값), `latency_ms` Latency(`ops`, 답한 질의), `ttft_ms` TTFT(`ops`, 답한 스트리밍 질의), `cost_krw` Cost per Query(`ops`).
 
 #### 재호출하면
 

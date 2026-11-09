@@ -41,6 +41,7 @@ class MetricSeries(BaseModel):
 
     key: str
     label: str
+    description: str
     group: Group
     unit: Unit
     reference: bool
@@ -108,20 +109,24 @@ def _generation_refusal(r: EvalRecord, j: RecordJudgment | None) -> float | None
     return None if r.refusal_stage == "retrieval" else float(r.refusal_stage == "generation")
 
 
-def metric_definitions(threshold: float) -> list[tuple[str, str, Group, Unit, bool, Extractor]]:
-    """(키, 표시 이름, 묶음, 단위, 참고값 여부, 값 추출 함수). 참고값 구분은 research/gold_metric_selection.md의 구성 확정을 따른다."""
+def metric_definitions(threshold: float) -> list[tuple[str, str, str, Group, Unit, bool, Extractor]]:
+    """(키, 지표명, 뜻, 묶음, 단위, 참고값 여부, 값 추출 함수). 참고값 구분은 research/gold_metric_selection.md의 구성 확정을 따른다."""
     return [
-        ("refusal_retrieval", "검색 단계 거절률", "retrieval", "rate", False,
-         lambda r, j: float(r.refusal_stage == "retrieval")),
-        ("near_threshold", "검색 최고 점수가 임계값 ±0.05 안", "retrieval", "rate", False, _near(threshold)),
-        ("refusal_generation", "생성 단계 거절률(검색 통과 질의)", "generation", "rate", False, _generation_refusal),
-        ("unsupported_claim", "근거 없는 주장 없음(참고값)", "generation", "rate", True, _judged("unsupported_claim")),
-        ("citation_precision", "Citation Precision(참고값)", "generation", "score", True, _precision),
-        ("latency_ms", "Latency(답한 질의)", "ops", "ms", False,
-         lambda r, j: float(r.latency_ms) if r.status == "answered" else None),
-        ("ttft_ms", "TTFT(답한 질의)", "ops", "ms", False,
+        ("refusal_retrieval", "Retrieval Refusal Rate", "검색 최고 점수가 거절 임계값보다 낮아 LLM 없이 거절한 질의 비율(전체 질의 중)",
+         "retrieval", "rate", False, lambda r, j: float(r.refusal_stage == "retrieval")),
+        ("near_threshold", "Near-Threshold Rate", "검색 최고 점수가 거절 임계값 ±0.05 안에 든 질의 비율",
+         "retrieval", "rate", False, _near(threshold)),
+        ("refusal_generation", "Generation Refusal Rate", "검색을 통과한 질의 중 LLM이 근거 부족(INSUFFICIENT_CONTEXT)으로 거절한 비율",
+         "generation", "rate", False, _generation_refusal),
+        ("unsupported_claim", "No Unsupported Claim", "답에 검색 근거로 뒷받침되지 않는 주장이 없는 비율",
+         "generation", "rate", True, _judged("unsupported_claim")),
+        ("citation_precision", "Citation Precision", "답에 단 인용 중 문장을 실제로 뒷받침하는 인용의 비율",
+         "generation", "score", True, _precision),
+        ("latency_ms", "Latency", "답한 질의의 요청부터 응답 끝까지 걸린 시간",
+         "ops", "ms", False, lambda r, j: float(r.latency_ms) if r.status == "answered" else None),
+        ("ttft_ms", "TTFT", "답한 질의의 요청부터 첫 토큰까지 걸린 시간", "ops", "ms", False,
          lambda r, j: float(r.first_token_ms) if r.status == "answered" and r.first_token_ms is not None else None),
-        ("cost_krw", "질의당 비용", "ops", "krw", False, lambda r, j: r.cost_krw),
+        ("cost_krw", "Cost per Query", "질의당 답변 LLM 비용", "ops", "krw", False, lambda r, j: r.cost_krw),
     ]
 
 
@@ -133,12 +138,13 @@ def build_snapshot(
     """live는 오래된 것부터다. 같은 입력이면 같은 집계가 나온다."""
     records = [item.record for item in live]
     metrics = []
-    for key, label, group, unit, reference, extract in metric_definitions(threshold):
+    for key, label, description, group, unit, reference, extract in metric_definitions(threshold):
         values = [v for r in records if (v := extract(r, judged.get(r.record_id))) is not None]
         base = [v for r in baseline_records if (v := extract(r, baseline_judged.get(r.record_id))) is not None]
         baseline = round(statistics.fmean(base), 4) if base else None
         points = series(values, unit)
-        metrics.append(MetricSeries(key=key, label=label, group=group, unit=unit, reference=reference, baseline=baseline,
+        metrics.append(MetricSeries(key=key, label=label, description=description, group=group, unit=unit, reference=reference,
+                                    baseline=baseline,
                                     verdict=verdict(points[-1] if points else None, baseline), points=points))
     recent = [_recent(item, judged.get(item.record.record_id), judge_exhausted, sample_rate) for item in reversed(live[-RECENT:])]
     return LiveSnapshot(
