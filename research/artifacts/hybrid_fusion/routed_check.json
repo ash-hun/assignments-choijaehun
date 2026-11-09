@@ -1,0 +1,681 @@
+{
+  "comparisons": [
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.2344,
+      "ci_low": 0.0125,
+      "improved": 6,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.1219,
+      "metric": "recall_at_5",
+      "pairs": 32,
+      "verdict": "supported",
+      "worsened": 1
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.1401,
+      "ci_low": 0.0266,
+      "improved": 13,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.0789,
+      "metric": "ndcg_at_10",
+      "pairs": 32,
+      "verdict": "supported",
+      "worsened": 4
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.2258,
+      "ci_low": -0.0323,
+      "improved": 4,
+      "language": "en",
+      "level": 0.95,
+      "mean": 0.0968,
+      "metric": "accuracy",
+      "pairs": 31,
+      "verdict": "inconclusive",
+      "worsened": 1
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": -0.0938,
+      "improved": 0,
+      "language": "en",
+      "level": 0.95,
+      "mean": -0.0312,
+      "metric": "answerable_refused",
+      "pairs": 32,
+      "verdict": "inconclusive",
+      "worsened": 1
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "language": "ko",
+      "level": 0.95,
+      "mean": 0.0,
+      "metric": "recall_at_5",
+      "pairs": 31,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "language": "ko",
+      "level": 0.95,
+      "mean": 0.0,
+      "metric": "ndcg_at_10",
+      "pairs": 31,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": -0.1111,
+      "improved": 0,
+      "language": "ko",
+      "level": 0.95,
+      "mean": -0.037,
+      "metric": "accuracy",
+      "pairs": 27,
+      "verdict": "inconclusive",
+      "worsened": 1
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0968,
+      "ci_low": 0.0,
+      "improved": 1,
+      "language": "ko",
+      "level": 0.95,
+      "mean": 0.0323,
+      "metric": "answerable_refused",
+      "pairs": 31,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.127,
+      "ci_low": 0.0048,
+      "improved": 6,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.0619,
+      "metric": "recall_at_5",
+      "pairs": 63,
+      "verdict": "supported",
+      "worsened": 1
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0729,
+      "ci_low": 0.0119,
+      "improved": 13,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.0401,
+      "metric": "ndcg_at_10",
+      "pairs": 63,
+      "verdict": "supported",
+      "worsened": 4
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.1207,
+      "ci_low": -0.0345,
+      "improved": 4,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.0345,
+      "metric": "accuracy",
+      "pairs": 58,
+      "verdict": "inconclusive",
+      "worsened": 2
+    },
+    {
+      "a": "routed",
+      "b": "dense",
+      "ci_high": 0.0476,
+      "ci_low": -0.0476,
+      "improved": 1,
+      "language": "all",
+      "level": 0.95,
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 1
+    }
+  ],
+  "groups": [
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.8008,
+      "metric": "recall_at_5",
+      "n": 63
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.8953,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.825,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.9,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.7032,
+      "metric": "recall_at_5",
+      "n": 31
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.8182,
+      "metric": "recall_at_5",
+      "n": 11
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.65,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.7167,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.5,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.7581,
+      "metric": "ndcg_at_10",
+      "n": 63
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.8302,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.7461,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.8688,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 0.7232,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.6836,
+      "metric": "ndcg_at_10",
+      "n": 31
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.7727,
+      "metric": "ndcg_at_10",
+      "n": 11
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.6037,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.7649,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.5162,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.7828,
+      "metric": "mrr_at_10",
+      "n": 63
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.849,
+      "metric": "mrr_at_10",
+      "n": 32
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "mrr_at_10",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.8333,
+      "metric": "mrr_at_10",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.8889,
+      "metric": "mrr_at_10",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 0.625,
+      "metric": "mrr_at_10",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.7145,
+      "metric": "mrr_at_10",
+      "n": 31
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.7576,
+      "metric": "mrr_at_10",
+      "n": 11
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.77,
+      "metric": "mrr_at_10",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.7685,
+      "metric": "mrr_at_10",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.376,
+      "metric": "mrr_at_10",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.254,
+      "metric": "precision_at_5",
+      "n": 63
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.2812,
+      "metric": "precision_at_5",
+      "n": 32
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 0.1833,
+      "metric": "precision_at_5",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.36,
+      "metric": "precision_at_5",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.3667,
+      "metric": "precision_at_5",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 0.25,
+      "metric": "precision_at_5",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.2258,
+      "metric": "precision_at_5",
+      "n": 31
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.1636,
+      "metric": "precision_at_5",
+      "n": 11
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.28,
+      "metric": "precision_at_5",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.3,
+      "metric": "precision_at_5",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.15,
+      "metric": "precision_at_5",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.7288,
+      "metric": "accuracy",
+      "n": 59
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.8438,
+      "metric": "accuracy",
+      "n": 32
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.7,
+      "metric": "accuracy",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.6667,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.5926,
+      "metric": "accuracy",
+      "n": 27
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.2222,
+      "metric": "accuracy",
+      "n": 9
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.5,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.75,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 0.0635,
+      "metric": "answerable_refused",
+      "n": 63
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "routed",
+      "group": "en/factual",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "routed",
+      "group": "en/multi_doc",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "en/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "en/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 0.129,
+      "metric": "answerable_refused",
+      "n": 31
+    },
+    {
+      "condition": "routed",
+      "group": "ko/factual",
+      "mean": 0.2727,
+      "metric": "answerable_refused",
+      "n": 11
+    },
+    {
+      "condition": "routed",
+      "group": "ko/multi_doc",
+      "mean": 0.1,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "routed",
+      "group": "ko/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "routed",
+      "group": "ko/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "routed",
+      "group": "all",
+      "mean": 1.0,
+      "metric": "unanswerable_refused",
+      "n": 16
+    },
+    {
+      "condition": "routed",
+      "group": "en",
+      "mean": 1.0,
+      "metric": "unanswerable_refused",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "en/unanswerable",
+      "mean": 1.0,
+      "metric": "unanswerable_refused",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "ko",
+      "mean": 1.0,
+      "metric": "unanswerable_refused",
+      "n": 8
+    },
+    {
+      "condition": "routed",
+      "group": "ko/unanswerable",
+      "mean": 1.0,
+      "metric": "unanswerable_refused",
+      "n": 8
+    }
+  ],
+  "operations": {
+    "answered": 59,
+    "cost_krw_mean": 0.9597,
+    "latency_ms_p50": 4377.0,
+    "latency_ms_p95": 8611.0,
+    "records": 79,
+    "retrieval_ms_p50": 196.0,
+    "retrieval_ms_p95": 365.0,
+    "truncated": 11
+  }
+}

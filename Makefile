@@ -52,6 +52,7 @@ fusion:
 	$(BATCH) app.cli.fusion_compare_cli compare
 	$(BATCH) app.cli.fusion_compare_cli dev-check
 	$(MAKE) eval CONFIG=configs/fusion_routed.toml || true
+	$(BATCH) app.cli.fusion_compare_cli routed-check
 
 label-sheet:
 	docker compose up -d --wait qdrant evaldb

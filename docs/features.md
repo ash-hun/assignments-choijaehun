@@ -128,7 +128,7 @@
 
 | 입력 | 결과 |
 |---|---|
-| `make fusion` | `configs/fusion_bm25.toml`, `fusion_rrf.toml`, `fusion_cc.toml`을 `make eval`로 평가(기준선은 기존 기록 재사용)하고 `research/artifacts/hybrid_fusion/results.json`에 비교 쌍별 지표 차이, 언어와 유형별 평균, 검색 단계 거절 일치 여부, 운영 수치를 쓴다. 이어서 dev set 검색 지표로 dense, cc, routed를 비교해 `dev_check.json`을 쓰고(LLM 호출 없음), `configs/fusion_routed.toml`로 채택 구성을 test set에서 평가한다 |
+| `make fusion` | `configs/fusion_bm25.toml`, `fusion_rrf.toml`, `fusion_cc.toml`을 `make eval`로 평가(기준선은 기존 기록 재사용)하고 `research/artifacts/hybrid_fusion/results.json`에 비교 쌍별 지표 차이, 언어와 유형별 평균, 검색 단계 거절 일치 여부, 운영 수치를 쓴다. 이어서 dev set 검색 지표로 dense, cc, routed를 비교해 `dev_check.json`을 쓰고(LLM 호출 없음), `configs/fusion_routed.toml`로 채택 구성을 test set에서 평가해 Dense와 언어별로 짝지은 결과를 `routed_check.json`에 쓴다 |
 | 다시 실행 | 같은 run_id라 LLM과 Judge를 부르지 않고 같은 결과 파일을 다시 쓴다 |
 | 기록이 없는 조건 | 그 조건의 `make eval` 명령을 알리고 멈춘다 |
 
@@ -138,7 +138,7 @@
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/fusion_compare_cli.py` | cli | `compare`(조건과 비교 쌍, 보정 수준, 결과 파일), `dev-check`(dev set 검색 지표로 언어별 선택 확인) |
+| `app/cli/fusion_compare_cli.py` | cli | `compare`(조건과 비교 쌍, 보정 수준, 결과 파일), `dev-check`(dev set 검색 지표로 언어별 선택 확인), `routed-check`(채택 구성의 test set 실측과 Dense 비교) |
 | `app/service/eval/fusion_comparator.py` | service | 문항 값, 짝지은 bootstrap 구간과 판정, 그룹 평균, 검색 단계 거절 문항 |
 | `app/service/eval/pipeline_identity.py` | service | 검색 방식을 config_id에 넣음. dense는 넣지 않아 기준선 config_id 유지 |
 

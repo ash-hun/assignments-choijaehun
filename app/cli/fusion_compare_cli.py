@@ -1,4 +1,4 @@
-"""Part C 검색 방식 비교 명령. compare: 네 조건의 test set 기록을 짝지어 판정, dev-check: dev set 검색 지표로 언어별 선택을 확인."""
+"""Part C 검색 방식 비교 명령. compare: 네 조건 판정, dev-check: dev set 검색 지표로 언어별 선택 확인, routed-check: 채택 구성의 test set 실측."""
 import sys
 import json
 import asyncio
@@ -28,6 +28,8 @@ OUT = "artifacts/hybrid_fusion/results.json"
 DEV_FILES = ["data/gold/dev_set.jsonl", "data/gold/dev_set_ko.jsonl"]
 DEV_MODES: list[RetrievalMode] = ["dense", "cc", "routed"]
 DEV_OUT = "artifacts/hybrid_fusion/dev_check.json"
+ROUTED_CONFIG = "configs/fusion_routed.toml"
+ROUTED_OUT = "artifacts/hybrid_fusion/routed_check.json"
 
 logger = get_logger(__name__)
 
@@ -76,6 +78,24 @@ async def dev_check(settings: Settings) -> dict[str, object]:
     return {"files": DEV_FILES, "comparisons": diffs, "groups": means}
 
 
+async def routed_check(settings: Settings) -> dict[str, object]:
+    """채택한 routed 실행을 Dense 기준선과 언어별로 짝지어 비교한다. 사전 비교 쌍 밖의 확인이라 95% 구간이고 보정하지 않는다."""
+    values: dict[str, list[ItemValues]] = {}
+    records: dict[str, list[EvalRecord]] = {}
+    for name, path in (("dense", CONDITIONS["dense"]), ("routed", ROUTED_CONFIG)):
+        rows, grouped, gold = await load_run(settings, path, None)
+        judged = judgments_of(rows, grouped, gold)
+        records[name] = rows
+        values[name] = [item_values(r, judged.get(r.record_id)) for r in rows]
+    diffs = []
+    for language in ("en", "ko", "all"):
+        subset = {n: [v for v in rows if language == "all" or v.key[1] == language] for n, rows in values.items()}
+        for metric in ("recall_at_5", "ndcg_at_10", "accuracy", "answerable_refused"):
+            diffs.append({"language": language, **paired_diff("routed", subset["routed"], "dense", subset["dense"], metric, 0.95).model_dump()})
+    groups = [g.model_dump() for metric in METRICS for g in group_means("routed", values["routed"], metric)]
+    return {"comparisons": diffs, "groups": groups, "operations": operations(records["routed"], settings.answer_max_tokens)}
+
+
 def operations(records: list[EvalRecord], max_tokens: int) -> dict[str, float | int | None]:
     """검색 지연, 답한 질의의 전체 지연, 질의당 비용, 답한 수, 출력 상한에 닿은 답 수."""
     answered = [r for r in records if r.status == "answered"]
@@ -100,9 +120,13 @@ def _quantile(values: list[float], q: float) -> float | None:
 def main(argv: list[str] | None = None) -> int:
     """compare는 기록이 없는 조건이 있으면 그 조건의 make eval 명령을 알려 주고 멈춘다. 두 명령 모두 LLM을 새로 부르지 않는다."""
     parser = argparse.ArgumentParser(prog="fusion-compare")
-    parser.add_argument("command", nargs="?", choices=["compare", "dev-check"], default="compare")
+    parser.add_argument("command", nargs="?", choices=["compare", "dev-check", "routed-check"], default="compare")
     args = parser.parse_args(argv)
     settings = get_settings()
+    if args.command == "routed-check":
+        _write(settings.research_dir / ROUTED_OUT, asyncio.run(routed_check(settings)))
+        logger.info("fusion_routed_checked", path=str(settings.research_dir / ROUTED_OUT))
+        return 0
     if args.command == "dev-check":
         _write(settings.research_dir / DEV_OUT, asyncio.run(dev_check(settings)))
         logger.info("fusion_dev_checked", path=str(settings.research_dir / DEV_OUT))
