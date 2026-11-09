@@ -2,6 +2,7 @@
 import json
 import hashlib
 from typing import Literal
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.schema.query_schema import QueryStatus
@@ -95,3 +96,10 @@ class EvalRecord(BaseModel):
     input_tokens: int
     output_tokens: int
     cost_krw: float
+
+
+class LiveRecord(BaseModel):
+    """실시간 기록과 저장 시각. 시각은 기록 본문(body)에 넣지 않아 같은 기록을 다시 써도 본문이 같다."""
+
+    record: EvalRecord
+    recorded_at: datetime

@@ -63,6 +63,11 @@ class LiveJudgeWorker:
         return round(self._spent_krw, 1)
 
     @property
+    def sample_rate(self) -> float:
+        """채점할 기록의 비율."""
+        return self._sample_rate
+
+    @property
     def exhausted(self) -> bool:
         """예산 상한에 닿았는지."""
         return self._spent_krw >= self._budget.limit_krw

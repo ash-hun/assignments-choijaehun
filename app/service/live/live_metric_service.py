@@ -26,12 +26,12 @@ class LiveMetricService:
 
     async def snapshot(self) -> LiveSnapshot:
         """최근 limit개 기록의 집계."""
-        records = await self._repository.live_records(self._config_id, self._limit)
-        judged = await self._judged(records)
+        live = await self._repository.live_records(self._config_id, self._limit)
+        judged = await self._judged([item.record for item in live])
         run_id, base_records, base_judged = await self._load_baseline()
         return build_snapshot(
-            self._config_id, records, judged, self._threshold, run_id, base_records, base_judged,
-            self._worker.spent_krw, self._budget_krw, self._worker.exhausted,
+            self._config_id, live, judged, self._threshold, run_id, base_records, base_judged,
+            self._worker.spent_krw, self._budget_krw, self._worker.exhausted, self._worker.sample_rate,
         )
 
     async def _load_baseline(self) -> tuple[str | None, list[EvalRecord], dict[str, RecordJudgment]]:
