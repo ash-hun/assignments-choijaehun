@@ -1,8 +1,8 @@
 """judge_agreement 기능의 사람 라벨 대비 일치 계산(agreement_calculator) 단위 테스트."""
 from typing import Any
 
-from app.service.eval.agreement_calculator import compare, cohen_kappa
 from app.schema.judge_schema import HumanLabel, JudgeResult, RubricJudgment
+from app.service.eval.agreement_calculator import compare, cohen_kappa
 
 RUBRIC: dict[str, Any] = {"key_points": [True, False], "rejections": [False], "unsupported_claim": "pass",
                           "identifier_accuracy": "fail", "interface_separation": "na", "version_status": "na",

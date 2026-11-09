@@ -55,8 +55,14 @@ def load_items(config: EvalConfig) -> tuple[list[GoldItem], dict[str, str]]:
     return items, hashes
 
 
+def configured(settings: Settings, config: EvalConfig) -> Settings:
+    """config 파일이 정한 검색 방식을 환경 설정에 덮어쓴다. 나머지 파이프라인 구성은 환경 설정 그대로다."""
+    return settings.model_copy(update={"retrieval_mode": config.retrieval_mode})
+
+
 def build_manifest(settings: Settings, config: EvalConfig, gold_hashes: dict[str, str]) -> EvalManifest:
     """재현에 필요한 값을 모은다. config_id는 파이프라인 구성만의 해시라 Gold Set 평가와 실시간 질의가 같은 값을 쓴다."""
+    settings = configured(settings, config)
     contract = settings.index_contract()
     corpus_manifest = settings.data_dir / "corpus" / "manifests" / f"{settings.corpus_name}.json"
     return EvalManifest(
@@ -101,7 +107,11 @@ def variant_parts(
 
 
 async def run(settings: Settings, config: EvalConfig, judge_limit: int | None) -> RunResult:
-    """저장소 스키마를 맞추고, 실행을 기록하고, 기록이 없는 문항만 돌고, 판정이 없는 답만 Judge에 보낸다."""
+    """저장소 스키마를 맞추고, 실행을 기록하고, 기록이 없는 문항만 돌고, 판정이 없는 답만 Judge에 보낸다.
+
+    검색 방식은 config 파일의 값으로 바꿔 쓴다. config_id와 질의 파이프라인이 같은 설정에서 나오게 한다.
+    """
+    settings = configured(settings, config)
     if settings.eval_db_password is None:
         raise SystemExit("EVAL_DB_PASSWORD must be set")
     judge_url = settings.judge_llm_base_url or settings.llm_candidate_urls.get(settings.judge_llm_model)

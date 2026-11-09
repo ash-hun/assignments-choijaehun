@@ -5,6 +5,7 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.schema.vector_schema import IndexContract
+from app.schema.query_schema import RetrievalMode
 from app.common.text_tokenizer import SplitMode
 
 # Qwen3-Embedding 모델 카드의 질의 지시문 형식. 선정 실험과 Query 경로가 같은 문구를 쓴다.
@@ -38,6 +39,11 @@ class Settings(BaseSettings):
     chunk_overlap: int = 77
     refusal_threshold: float = 0.6375
     default_top_k: int = 5
+    # 검색 방식(project_planning/experiments/12_hybrid_fusion.md). 융합 후보 수와 RRF k, CC alpha는 조정하지 않은 기본값이다.
+    retrieval_mode: RetrievalMode = "dense"
+    fusion_pool: int = 40
+    rrf_k: int = 60
+    cc_alpha: float = 0.5
     # 생성 모델(research/llm_selection.md). seed를 거부하는 모델이라 보내지 않는다.
     answer_llm_model: str = "claude-haiku-5-5"
     answer_llm_base_url: str | None = None

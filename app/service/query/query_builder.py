@@ -5,11 +5,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from qdrant_client import AsyncQdrantClient
 
+from app.service.query.chunk_retriever import FusionSettings, ChunkRetriever
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.query.evidence_checker import EvidenceChecker
-from app.service.query.chunk_retriever import ChunkRetriever
+from app.service.ingest.sparse_encoder import SparseEncoder
 from app.service.query.query_service import QueryService
 from app.client.embedding_client import EmbeddingClient
+from app.common.text_tokenizer import TextTokenizer
 from app.schema.vector_schema import IndexContract
 from app.service.query.llm_gate import LlmGate
 from app.client.llm_client import LlmClient
@@ -45,7 +47,9 @@ async def open_query_service(settings: Settings) -> AsyncIterator[QueryParts]:
     embedding = EmbeddingClient(settings.embedding_model, settings.model_cache_dir, settings.embedding_query_prefix)
     sdk = AsyncOpenAI(api_key=settings.elice_serverless_api_key.get_secret_value(), base_url=settings.answer_llm_base_url,
                       timeout=settings.llm_timeout_seconds, max_retries=settings.llm_max_retries)
-    retriever = ChunkRetriever(repository, embedding, collection)
+    fusion = FusionSettings(mode=settings.retrieval_mode, pool=settings.fusion_pool, rrf_k=settings.rrf_k, cc_alpha=settings.cc_alpha)
+    # 질의 쪽 BM25는 Ingest와 같은 토크나이저여야 한다. 토크나이저는 인덱스 계약에 들어 있어 위에서 이미 맞춰 봤다.
+    retriever = ChunkRetriever(repository, embedding, collection, SparseEncoder(TextTokenizer(settings.bm25_tokenizer)), fusion)
     llm = LlmClient(sdk, settings.answer_llm_model)
     gate = LlmGate(settings.llm_concurrency, settings.llm_queue_timeout_seconds)
     service = QueryService(

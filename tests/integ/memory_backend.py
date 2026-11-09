@@ -8,9 +8,9 @@ from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.schema.eval_schema import EvalRecord, LiveRecord, EvalManifest
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.schema.vector_schema import SparseTerms, IndexContract
-from app.schema.judge_schema import JudgeResult
 from app.client.embedding_client import EmbeddingClient
 from app.common.upstream_error import VectorStoreError
+from app.schema.judge_schema import JudgeResult
 from app.schema.chunk_schema import Chunk
 
 WORD = re.compile(r"\w+")
@@ -49,12 +49,14 @@ class MemoryEmbeddingClient(EmbeddingClient):
 class MemoryChunkRepository(QdrantChunkRepository):
     def __init__(self) -> None:
         self.collections: dict[str, dict[str, np.ndarray]] = {}
+        self.sparse: dict[str, dict[str, SparseTerms]] = {}
         self.chunks: dict[str, dict[str, Chunk]] = {}
         self.contracts: dict[str, IndexContract] = {}
         self.down = False
 
     async def ensure_collection(self, name: str, dim: int, contract: IndexContract) -> None:
         self.collections.setdefault(name, {})
+        self.sparse.setdefault(name, {})
         self.chunks.setdefault(name, {})
         self.contracts.setdefault(name, contract)
 
@@ -69,6 +71,7 @@ class MemoryChunkRepository(QdrantChunkRepository):
 
     async def upsert(self, name: str, chunks: list[Chunk], dense: np.ndarray, sparse: list[SparseTerms]) -> None:
         self.collections[name].update({c.chunk_id: dense[i] for i, c in enumerate(chunks)})
+        self.sparse[name].update({c.chunk_id: sparse[i] for i, c in enumerate(chunks) if i < len(sparse)})
         self.chunks[name].update({c.chunk_id: c for c in chunks})
 
     async def delete_except(self, name: str, keep: set[str]) -> int:
@@ -76,6 +79,7 @@ class MemoryChunkRepository(QdrantChunkRepository):
         for cid in stale:
             del self.collections[name][cid]
             del self.chunks[name][cid]
+            self.sparse[name].pop(cid, None)
         return len(stale)
 
     async def search_dense(self, name: str, vector: np.ndarray, k: int, exact: bool = False, doc_id: str | None = None) -> list[str]:
@@ -94,6 +98,14 @@ class MemoryChunkRepository(QdrantChunkRepository):
     async def search_dense_chunks(self, name: str, vector: np.ndarray, k: int) -> list[tuple[Chunk, float]]:
         self._check()
         return [(self.chunks[name][cid], score) for cid, score in await self.search_dense_scored(name, vector, k)]
+
+    async def search_sparse_chunks(self, name: str, sparse: SparseTerms, k: int) -> list[tuple[Chunk, float]]:
+        self._check()
+        query = dict(zip(sparse.indices, sparse.values))
+        scored = [(cid, sum(query.get(i, 0.0) * v for i, v in zip(terms.indices, terms.values)))
+                  for cid, terms in self.sparse[name].items()]
+        hits = sorted(((cid, s) for cid, s in scored if s > 0), key=lambda item: (-item[1], item[0]))[:k]
+        return [(self.chunks[name][cid], score) for cid, score in hits]
 
     def _check(self) -> None:
         if self.down:

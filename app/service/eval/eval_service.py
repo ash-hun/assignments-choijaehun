@@ -76,7 +76,7 @@ class EvalService:
         rank = None
         retrieved: list[str] = []
         if item.answerable:
-            ranked = [hit.chunk for hit in await self._retriever.retrieve(item.question, config.retrieval_depth)]
+            ranked = [hit.chunk for hit in (await self._retriever.retrieve(item.question, config.retrieval_depth)).hits]
             retrieved = [c.chunk_id for c in ranked]
             rank = rank_score(item, ranked, relevant_chunk_ids(item, index_chunks))
         response = await self._answer(item.question, config.top_k)
@@ -90,7 +90,7 @@ class EvalService:
             answer=self._answer_transform(response.answer) if self._answer_transform and not refused else response.answer,
             cited_chunk_ids=[c.chunk_id for c in response.citations],
             dropped_citations=meta.dropped_citations, retrieved_chunk_ids=retrieved, retrieval_scores=meta.retrieval_scores,
-            top_score=meta.retrieval_scores[0] if meta.retrieval_scores else None, rank=rank,
+            top_score=meta.top_dense_score, rank=rank,
             retrieval_ms=meta.retrieval_ms, first_token_ms=meta.first_token_ms, latency_ms=meta.latency_ms,
             input_tokens=usage.input_tokens, output_tokens=usage.output_tokens,
             cost_krw=round(usage.input_tokens * self._price.input_krw_per_mtok / 1e6

@@ -3,6 +3,7 @@ from typing import Any
 
 from app.schema.eval_schema import RankScore, EvalConfig, EvalRecord, EvalManifest
 from app.service.eval.eval_summarizer import tpot_ms, summarize_records
+from app.schema.query_schema import RetrievalMode
 
 RANK = RankScore(recall_at_5=1.0, recall_at_10=1.0, precision_at_5=0.2, precision_at_10=0.1, f1_at_5=0.3333,
                  f1_at_10=0.1818, reciprocal_rank=1.0, ndcg_at_10=1.0)
@@ -42,9 +43,10 @@ def test_tpot_is_undefined_for_refusals_and_single_token_answers() -> None:
 
 
 def test_run_id_ignores_git_commit_but_follows_config() -> None:
-    def manifest(name: str, commit: str) -> EvalManifest:
+    def manifest(name: str, commit: str, mode: RetrievalMode | None = None) -> EvalManifest:
+        config = EvalConfig(name=name, gold_files=["g.jsonl"], retrieval_mode=mode or "dense")
         return EvalManifest(
-            config=EvalConfig(name=name, gold_files=["g.jsonl"]), config_id="c", gold_hashes={"g.jsonl": "h"},
+            config=config, config_id="c", gold_hashes={"g.jsonl": "h"},
             corpus_manifest_hash="m", index_contract={"embedding_model": "e"}, collection="col", answer_model="a",
             answer_temperature=0.0, answer_seed=None, answer_max_tokens=10, refusal_threshold=0.6, prompt_hash="p",
             bootstrap_seed=1, git_commit=commit,
@@ -53,3 +55,5 @@ def test_run_id_ignores_git_commit_but_follows_config() -> None:
     assert manifest("base", "abc").run_id() == manifest("base", "def").run_id()
     assert manifest("base", "abc").run_id() != manifest("hybrid", "abc").run_id()
     assert manifest("base", "abc").run_id().startswith("base-")
+    assert manifest("base", "abc", "dense").run_id() == manifest("base", "abc").run_id()
+    assert manifest("base", "abc", "rrf").run_id() != manifest("base", "abc").run_id()

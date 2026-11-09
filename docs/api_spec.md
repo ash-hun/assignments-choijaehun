@@ -128,7 +128,8 @@
 | `citations[].snippet` | string | 근거 청크 앞 300자 |
 | `meta.model` | string | 생성 모델 |
 | `meta.embedding_model` | string | Embedding 모델 |
-| `meta.retrieval_scores` | float[] | 검색 청크의 dense 코사인 유사도(내림차순) |
+| `meta.retrieval_scores` | float[] | 근거로 쓴 청크의 검색 방식 점수(내림차순). dense면 코사인 유사도, bm25면 BM25 내적, rrf와 cc면 융합 점수 |
+| `meta.top_dense_score` | float \| null | 거절 판정에 쓴 dense 최고 점수. 검색 방식과 관계없이 dense로 판정한다. 검색 결과가 없으면 null |
 | `meta.dropped_citations` | int | 존재하지 않는 번호라 버린 인용 수 |
 | `meta.latency_ms` | int | 서버 처리 시간 |
 | `meta.retrieval_ms` | int \| null | 질의 임베딩과 벡터 검색에 걸린 시간. `latency_ms`와 `first_token_ms`에 포함된다 |

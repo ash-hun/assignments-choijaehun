@@ -7,14 +7,14 @@ import argparse
 from pathlib import Path
 from psycopg import AsyncConnection
 
-from app.service.eval.validity_checker import VariantCheck, item_values, check_variant
 from app.schema.judge_schema import JUDGE_KINDS, HumanLabel, JudgeResult, RecordJudgment
+from app.service.eval.validity_checker import VariantCheck, item_values, check_variant
 from app.cli.eval_run_cli import load_items, load_config, build_manifest
 from app.service.eval.agreement_calculator import AgreementRow, compare
 from app.repository.eval_record_repository import EvalRecordRepository
-from app.service.eval.judge_prompt import prompt_version
 from app.service.eval.judge_metric import aggregate, citation_pairs
 from app.service.query.query_builder import open_query_service
+from app.service.eval.judge_prompt import prompt_version
 from app.common.settings import Settings, get_settings
 from app.schema.eval_schema import EvalRecord
 from app.schema.gold_schema import GoldItem
@@ -104,7 +104,7 @@ async def label_sheet(settings: Settings) -> tuple[Path, Path]:
     async with open_query_service(settings) as parts:
         for n, r in enumerate(chosen, start=1):
             item = items[r.item_id or ""]
-            context = [h.chunk for h in await parts.retriever.retrieve(r.question, load_config(Path("configs/baseline.toml")).top_k)]
+            context = [h.chunk for h in (await parts.retriever.retrieve(r.question, load_config(Path("configs/baseline.toml")).top_k)).hits]
             lines += [f"## {n}. `{r.record_id.split(':')[1]}` ({r.type}, {r.language})", "", f"**질문**: {r.question}", "",
                       "**답**:", "", "```text", r.answer, "```", "", "**인용 판정 대상**(문장, 가리키는 근거 번호):", ""]
             lines += [f"{i}. [{ref}] {sentence}" for i, (sentence, ref) in enumerate(citation_pairs(r.answer))]

@@ -2,7 +2,7 @@
 import time
 from collections.abc import AsyncGenerator
 
-from app.schema.query_schema import Citation, QueryMeta, TokenUsage, StreamToken, QueryResponse, RetrievedChunk
+from app.schema.query_schema import Citation, QueryMeta, Retrieval, TokenUsage, StreamToken, QueryResponse, RetrievedChunk
 from app.service.query.prompt_builder import INSUFFICIENT_CONTEXT, build_messages
 from app.service.query.evidence_checker import EvidenceChecker
 from app.service.query.citation_parser import parse_citations
@@ -38,16 +38,16 @@ class QueryService:
     async def answer(self, question: str, top_k: int | None = None) -> QueryResponse:
         """dense 최고 점수가 임계값 미만이면 LLM을 부르지 않고 거절한다."""
         started = time.perf_counter()
-        hits, scores = await self._retrieve(question, top_k)
+        found = await self._retrieve(question, top_k)
         retrieval_ms = _elapsed_ms(started)
-        if not self._checker.has_evidence(hits[0].score if hits else None):
-            return self._refusal(scores, started, TokenUsage(), None, retrieval_ms)
+        if not self._checker.has_evidence(found.top_dense_score):
+            return self._refusal(found, started, TokenUsage(), None, retrieval_ms)
         async with self._gate.slot():
             completion = await self._llm.complete(
-                build_messages(question, [h.chunk for h in hits]), seed=self._seed,
+                build_messages(question, [h.chunk for h in found.hits]), seed=self._seed,
                 max_completion_tokens=self._max_tokens, temperature=self._temperature,
             )
-        return self._finish(completion, hits, scores, started, None, retrieval_ms)
+        return self._finish(completion, found, started, None, retrieval_ms)
 
     async def answer_stream(self, question: str, top_k: int | None = None) -> AsyncGenerator[StreamToken | QueryResponse, None]:
         """answer와 같은 판정을 하고, 생성 텍스트를 StreamToken으로 흘린 뒤 마지막에 QueryResponse를 한 번 낸다.
@@ -55,16 +55,16 @@ class QueryService:
         근거 부족 토큰이 클라이언트에 새지 않도록, 앞부분이 그 토큰의 접두어인 동안은 흘리지 않고 모아 둔다.
         """
         started = time.perf_counter()
-        hits, scores = await self._retrieve(question, top_k)
+        found = await self._retrieve(question, top_k)
         retrieval_ms = _elapsed_ms(started)
-        if not self._checker.has_evidence(hits[0].score if hits else None):
-            yield self._refusal(scores, started, TokenUsage(), None, retrieval_ms)
+        if not self._checker.has_evidence(found.top_dense_score):
+            yield self._refusal(found, started, TokenUsage(), None, retrieval_ms)
             return
         held = ""
         first_token_ms: int | None = None
         completion: LlmCompletion | None = None
         async with self._gate.slot():
-            stream = self._llm.stream(build_messages(question, [h.chunk for h in hits]), seed=self._seed,
+            stream = self._llm.stream(build_messages(question, [h.chunk for h in found.hits]), seed=self._seed,
                                       max_completion_tokens=self._max_tokens, temperature=self._temperature)
             async for item in stream:
                 if isinstance(item, LlmCompletion):
@@ -80,45 +80,44 @@ class QueryService:
                 held = ""
         if completion is None:
             raise LlmFailureError("llm stream ended without a completion")
-        yield self._finish(completion, hits, scores, started, first_token_ms, retrieval_ms)
+        yield self._finish(completion, found, started, first_token_ms, retrieval_ms)
 
-    async def _retrieve(self, question: str, top_k: int | None) -> tuple[list[RetrievedChunk], list[float]]:
-        hits = await self._retriever.retrieve(question, top_k or self._default_top_k)
-        scores = [round(h.score, 4) for h in hits]
-        if not self._checker.has_evidence(hits[0].score if hits else None):
-            logger.info("query_refused", stage="retrieval", top_score=scores[0] if scores else None)
-        return hits, scores
+    async def _retrieve(self, question: str, top_k: int | None) -> Retrieval:
+        found = await self._retriever.retrieve(question, top_k or self._default_top_k)
+        if not self._checker.has_evidence(found.top_dense_score):
+            logger.info("query_refused", stage="retrieval", top_score=_round(found.top_dense_score))
+        return found
 
     def _finish(
-        self, completion: LlmCompletion, hits: list[RetrievedChunk], scores: list[float], started: float, first_token_ms: int | None,
-        retrieval_ms: int,
+        self, completion: LlmCompletion, found: Retrieval, started: float, first_token_ms: int | None, retrieval_ms: int,
     ) -> QueryResponse:
         usage = TokenUsage(input_tokens=completion.input_tokens, output_tokens=completion.output_tokens)
         if self._checker.is_insufficient(completion.text):
-            logger.info("query_refused", stage="generation", top_score=scores[0])
-            return self._refusal(scores, started, usage, first_token_ms, retrieval_ms)
-        return self._answered(completion, hits, scores, started, usage, first_token_ms, retrieval_ms)
+            logger.info("query_refused", stage="generation", top_score=_round(found.top_dense_score))
+            return self._refusal(found, started, usage, first_token_ms, retrieval_ms)
+        return self._answered(completion, found, started, usage, first_token_ms, retrieval_ms)
 
     def _answered(
-        self, completion: LlmCompletion, hits: list[RetrievedChunk], scores: list[float], started: float, usage: TokenUsage,
-        first_token_ms: int | None, retrieval_ms: int,
+        self, completion: LlmCompletion, found: Retrieval, started: float, usage: TokenUsage, first_token_ms: int | None,
+        retrieval_ms: int,
     ) -> QueryResponse:
-        parsed = parse_citations(completion.text, len(hits))
-        citations = [_citation(n, hits[n - 1]) for n in parsed.citations]
+        parsed = parse_citations(completion.text, len(found.hits))
+        citations = [_citation(n, found.hits[n - 1]) for n in parsed.citations]
         logger.info("query_answered", citations=len(citations), dropped=parsed.dropped, **usage.model_dump())
         return QueryResponse(status="answered", answer=parsed.text, citations=citations,
-                             meta=self._meta(scores, parsed.dropped, started, usage, first_token_ms, retrieval_ms))
+                             meta=self._meta(found, parsed.dropped, started, usage, first_token_ms, retrieval_ms))
 
     def _refusal(
-        self, scores: list[float], started: float, usage: TokenUsage, first_token_ms: int | None, retrieval_ms: int,
+        self, found: Retrieval, started: float, usage: TokenUsage, first_token_ms: int | None, retrieval_ms: int,
     ) -> QueryResponse:
         return QueryResponse(status="insufficient_context", answer=REFUSAL_ANSWER, citations=[],
-                             meta=self._meta(scores, 0, started, usage, first_token_ms, retrieval_ms))
+                             meta=self._meta(found, 0, started, usage, first_token_ms, retrieval_ms))
 
     def _meta(
-        self, scores: list[float], dropped: int, started: float, usage: TokenUsage, first_token_ms: int | None, retrieval_ms: int,
+        self, found: Retrieval, dropped: int, started: float, usage: TokenUsage, first_token_ms: int | None, retrieval_ms: int,
     ) -> QueryMeta:
-        return QueryMeta(model=self._llm.model, embedding_model=self._embedding_model, retrieval_scores=scores,
+        return QueryMeta(model=self._llm.model, embedding_model=self._embedding_model,
+                         retrieval_scores=[round(h.score, 4) for h in found.hits], top_dense_score=_round(found.top_dense_score),
                          dropped_citations=dropped, latency_ms=_elapsed_ms(started), retrieval_ms=retrieval_ms, usage=usage,
                          first_token_ms=first_token_ms)
 
@@ -127,6 +126,10 @@ def _citation(ref: int, hit: RetrievedChunk) -> Citation:
     chunk = hit.chunk
     return Citation(ref=ref, doc_id=chunk.doc_id, title=chunk.title, url=chunk.url, chunk_id=chunk.chunk_id,
                     snippet=chunk.text[:SNIPPET_CHARS])
+
+
+def _round(score: float | None) -> float | None:
+    return None if score is None else round(score, 4)
 
 
 def _elapsed_ms(started: float) -> int:

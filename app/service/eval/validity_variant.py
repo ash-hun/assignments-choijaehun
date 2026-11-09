@@ -3,8 +3,8 @@ import re
 import random
 
 from app.service.query.evidence_checker import EvidenceChecker
+from app.schema.query_schema import Retrieval, RetrievedChunk
 from app.service.query.chunk_retriever import ChunkRetriever
-from app.schema.query_schema import RetrievedChunk
 from app.schema.chunk_schema import Chunk
 
 CITATION = re.compile(r"\[(\d+)\]")
@@ -17,10 +17,11 @@ class RandomChunkRetriever(ChunkRetriever):
         self._pool = sorted(chunks, key=lambda c: c.chunk_id)
         self._seed = seed
 
-    async def retrieve(self, question: str, k: int) -> list[RetrievedChunk]:
+    async def retrieve(self, question: str, k: int) -> Retrieval:
         """점수는 1.0이라 검색 단계 거절을 통과한다."""
         rng = random.Random(f"{self._seed}:{question}")
-        return [RetrievedChunk(chunk=c, score=1.0) for c in rng.sample(self._pool, min(k, len(self._pool)))]
+        hits = [RetrievedChunk(chunk=c, score=1.0) for c in rng.sample(self._pool, min(k, len(self._pool)))]
+        return Retrieval(hits=hits, top_dense_score=1.0 if hits else None)
 
 
 class NeverRefuseChecker(EvidenceChecker):

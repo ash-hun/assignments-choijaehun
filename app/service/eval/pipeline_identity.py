@@ -13,9 +13,21 @@ def answer_prompt_hash() -> str:
 
 
 def pipeline_config_id(settings: Settings, top_k: int) -> str:
-    """인덱스 계약, 답변 모델, 답변 프롬프트, 거절 임계값, 근거 수의 해시 앞 12자리."""
-    pipeline = {
+    """인덱스 계약, 답변 모델, 답변 프롬프트, 거절 임계값, 근거 수, 검색 방식의 해시 앞 12자리.
+
+    dense는 검색 방식을 해시에 넣지 않는다. 검색 방식을 설정으로 만들기 전의 기준선과 같은 config_id를 유지한다.
+    """
+    pipeline: dict[str, object] = {
         "index_contract": settings.index_contract().model_dump(), "answer_model": settings.answer_llm_model,
         "prompt_hash": answer_prompt_hash(), "refusal_threshold": settings.refusal_threshold, "top_k": top_k,
     }
+    if settings.retrieval_mode != "dense":
+        retrieval: dict[str, object] = {"mode": settings.retrieval_mode}
+        if settings.retrieval_mode in ("rrf", "cc"):
+            retrieval["pool"] = settings.fusion_pool
+        if settings.retrieval_mode == "rrf":
+            retrieval["rrf_k"] = settings.rrf_k
+        if settings.retrieval_mode == "cc":
+            retrieval["cc_alpha"] = settings.cc_alpha
+        pipeline["retrieval"] = retrieval
     return hashlib.sha256(json.dumps(pipeline, sort_keys=True).encode()).hexdigest()[:12]
