@@ -261,12 +261,12 @@
 | 파일 | 층 | 역할 |
 |---|---|---|
 | `app/api/metrics_router.py` | api | `/v1/metrics`, `/v1/metrics/stream`, `/dashboard` |
-| `app/api/static/metrics_dashboard.html` | api | 대시보드 화면(외부 스크립트 없음, SVG 차트) |
+| `app/api/static/metrics_dashboard.html` | api | 대시보드 화면(외부 스크립트 없음, SVG 차트, 검색, 생성, 운영 탭, 호버 값, 탭 옆 최근 질의 표와 10건 페이지, 자동 재연결) |
 | `app/api/query_router.py` | api | 응답 뒤 기록(BackgroundTask) |
 | `app/service/live/live_builder.py` | service | 저장소, Judge, 작업자, 기록기, 집계 조립. 없으면 끈 채로 기동 |
 | `app/service/live/live_recorder.py` | service | 기록 저장, 대기열 추가, 변경 알림. 실패해도 응답에 영향 없음 |
 | `app/service/live/live_judge_worker.py` | service | 크기가 정해진 대기열, 샘플링(기록 id 해시), 예산 상한, 재시작 시 미채점 기록 재처리 |
-| `app/service/live/live_aggregator.py` | service | 누적 평균, Wilson 구간, 정규 근사 구간, 이동 창, 지점 솎기 |
+| `app/service/live/live_aggregator.py` | service | 누적 평균, Wilson 구간, 정규 근사 구간(0~1 점수는 [0, 1]로 자름), 이동 창, 지점 솎기, 기준선 판정, 최근 질의 요약, 지표 묶음(검색, 생성, 운영) |
 | `app/service/live/live_metric_service.py` | service | 저장소에서 기록, 판정, 기준선을 읽어 집계 |
 | `app/service/live/live_signal.py` | service | 변경 버전과 대기 |
 | `app/service/eval/pipeline_identity.py` | service | `config_id`(Gold Set 평가와 공유) |

@@ -3,65 +3,138 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>실시간 평가 대시보드</title>
+<title>Elice HR Assignments</title>
 <style>
   :root {
     --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --line: #e2e2dd;
     --cum: #2f5d9e; --band: rgba(47, 93, 158, 0.16); --window: #c46a1f; --base: #3d8b5a; --warn: #b3261e;
+    --ok-bg: rgba(61, 139, 90, 0.12); --off-bg: rgba(196, 106, 31, 0.14);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #151514; --panel: #1f1f1d; --text: #ececea; --muted: #a1a19b; --line: #34342f;
       --cum: #7fa7e0; --band: rgba(127, 167, 224, 0.20); --window: #e59a55; --base: #6cc08b; --warn: #f2948c;
+      --ok-bg: rgba(108, 192, 139, 0.16); --off-bg: rgba(229, 154, 85, 0.18);
     }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 40px; }
+  main { max-width: 1760px; margin: 0 auto; padding: 20px 16px 40px; }
+  .tabs { display: flex; gap: 4px; margin: 20px 0 6px; border-bottom: 1px solid var(--line); }
+  .tabs button { padding: 6px 14px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none;
+                 color: var(--muted); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--cum); }
+  .tabs button:focus-visible { outline: 2px solid var(--cum); outline-offset: -2px; border-radius: 4px; }
+  .tab-note { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 3fr); gap: 0 16px; align-items: start; }
+  .layout aside { position: sticky; top: 8px; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: minmax(0, 1fr); } .layout aside { position: static; } }
+  .layout.fill { height: var(--fill-h); align-items: stretch; }
+  .layout.fill > .metrics-col, .layout.fill > aside { display: flex; flex-direction: column; min-height: 0; position: static; }
+  .layout.fill #sections { flex: 1; min-height: 0; }
+  .layout.fill .grid { height: 100%; }
+  .layout.fill svg.chart { margin-block: auto; }
+  .layout.fill .table-wrap { flex: 1; }
+  .layout.fill table { height: 100%; }
+  .layout.fill thead tr { height: 32px; }
+  .pager { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 8px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .pager button { padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); cursor: pointer; font-size: 12px; }
+  .pager button:disabled { opacity: 0.4; cursor: default; }
   h1 { font-size: 20px; margin: 0 0 4px; }
+  h2.section { font-size: 15px; margin: 24px 0 8px; }
+  h2.section small { color: var(--muted); font-weight: 400; margin-left: 6px; }
   .sub { color: var(--muted); margin: 0 0 16px; }
   .bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 16px; }
-  .bar input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); min-width: 220px; }
-  .bar button { padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); cursor: pointer; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 16px; }
-  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
-  .stat .k { color: var(--muted); font-size: 12px; }
-  .stat .v { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
-  .card h2 { font-size: 14px; margin: 0 0 2px; }
+  .bar .status { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar .status:empty { display: none; }
+  .meta { color: var(--muted); font-size: 12px; margin: -12px 0 12px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .summary { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .summary b { color: var(--text); font-weight: 600; margin-left: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .card { position: relative; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+  .card h3 { font-size: 14px; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
   .card .now { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; margin-bottom: 6px; }
-  .tag { display: inline-block; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 6px; }
-  svg { width: 100%; height: 160px; display: block; }
-  .legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; margin: 8px 0 16px; }
+  .tag { font-size: 11px; font-weight: 400; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+  .badge { font-size: 11px; font-weight: 500; border-radius: 4px; padding: 1px 6px; }
+  .badge.within { background: var(--ok-bg); color: var(--base); }
+  .badge.above, .badge.below { background: var(--off-bg); color: var(--window); }
+  .badge.few { color: var(--muted); border: 1px dashed var(--line); }
+  svg.chart { display: block; max-width: 100%; margin-top: auto; touch-action: pan-y; }
+  svg.chart:focus { outline: 2px solid var(--cum); outline-offset: 2px; border-radius: 4px; }
+  .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+         padding: 6px 8px; font-size: 12px; font-variant-numeric: tabular-nums; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+  .tip div:first-child { font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
   .sw { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; }
   .warn { color: var(--warn); }
-  .empty { color: var(--muted); padding: 24px 0; text-align: center; }
+  .empty { color: var(--muted); padding: 24px 0; text-align: center; margin: 0; }
+  .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  td.num, th.num { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  td.id { max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
+  .refused { color: var(--window); }
 </style>
 </head>
 <body>
 <main>
-  <h1>실시간 평가 대시보드</h1>
+  <h1>Elice HR Assignments</h1>
   <p class="sub">실제 질의마다 쌓이는 지표의 누적 평균과 95% 구간, 최근 50건 이동 평균, 같은 구성의 Gold Set 기준선. "참고값"은 검증 조건을 통과하지 못한 지표다.</p>
+  <p class="meta" id="meta"></p>
   <div class="bar">
-    <label>API 키 <input id="key" type="password" autocomplete="off" placeholder="서버에 API_KEY가 없으면 비워 둔다"></label>
-    <button id="connect" type="button">연결</button>
-    <span id="status" class="sub" role="status"></span>
+    <span class="summary" id="summary"></span>
+    <span id="status" class="status" role="status"></span>
+    <span id="updated" class="status"></span>
   </div>
-  <div class="stats" id="stats"></div>
   <div class="legend">
     <span><span class="sw" style="background: var(--cum)"></span>누적 평균</span>
     <span><span class="sw" style="background: var(--band); height: 10px"></span>95% 구간</span>
     <span><span class="sw" style="background: var(--window)"></span>최근 50건</span>
-    <span><span class="sw" style="background: var(--base)"></span>Gold Set 기준선</span>
+    <span><span class="sw" style="border-top: 2px dashed var(--base); height: 0"></span>Gold Set 기준선</span>
   </div>
-  <div class="grid" id="grid"><p class="empty">연결하면 지표가 표시된다.</p></div>
+  <div class="layout">
+    <div class="metrics-col">
+      <div class="tabs" role="tablist" aria-label="지표 묶음">
+        <button type="button" role="tab" id="tab-retrieval" data-group="retrieval" aria-controls="sections">검색</button>
+        <button type="button" role="tab" id="tab-generation" data-group="generation" aria-controls="sections">생성</button>
+        <button type="button" role="tab" id="tab-ops" data-group="ops" aria-controls="sections">운영</button>
+      </div>
+      <p class="tab-note" id="tab-note"></p>
+      <div id="sections" role="tabpanel"><p class="empty">연결하면 지표가 표시된다.</p></div>
+    </div>
+    <aside aria-labelledby="recent-title">
+  <h2 class="section" id="recent-title">최근 질의<small>최신 100건까지, 페이지당 10건. 질문과 답 원문은 표시하지 않는다</small></h2>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>시각</th><th>요청 ID</th><th>상태</th><th class="num">최고 점수</th><th class="num">Latency</th>
+      <th class="num">TTFT</th><th class="num">비용</th><th title="근거 없는 주장 없음 판정, Citation Precision">Judge(근거, CP)</th>
+    </tr></thead>
+    <tbody id="recent"><tr><td colspan="8" class="empty">아직 질의가 없다</td></tr></tbody>
+  </table></div>
+  <nav class="pager" aria-label="최근 질의 페이지">
+    <button id="prev" type="button" aria-label="이전 페이지">이전</button>
+    <span id="page" aria-live="polite"></span>
+    <button id="next" type="button" aria-label="다음 페이지">다음</button>
+  </nav>
+    </aside>
+  </div>
 </main>
 <script>
 "use strict";
 const SVG = "http://www.w3.org/2000/svg";
-const W = 340, H = 160, PAD = { l: 44, r: 8, t: 8, b: 20 };
-let controller = null;
+const BASE_H = 220, MAX_H = 380, ASPECT = 0.62, MIN_FILL = 420, PAD = { l: 52, r: 10, t: 8, b: 22 };
+const SECTIONS = [
+  ["retrieval", "검색", "검색 최고 점수로 바로 계산"],
+  ["generation", "생성", "참고값은 Judge 1회 판정. 검증 조건 미달이라 판단 근거로 쓰지 않는다"],
+  ["ops", "운영", "답한 질의 기준 지연과 질의당 비용"],
+];
+const VERDICT = { within: "기준선 수준", above: "기준선보다 높음", below: "기준선보다 낮음", few: "표본 10건 미만" };
+const STATUS = { answered: "답함", retrieval: "거절(검색)", generation: "거절(생성)" };
+const RETRY_MAX_MS = 30000, PAGE_SIZE = 10;
+let controller = null, retryTimer = null, retryMs = 1000, last = null, resizeTimer = null, page = 0, group = "retrieval";
 
 function el(tag, attrs, text) {
   const node = tag.startsWith("svg:") ? document.createElementNS(SVG, tag.slice(4)) : document.createElement(tag);
@@ -78,77 +151,265 @@ function fmt(value, unit) {
   return String(value);
 }
 
-function chart(metric) {
-  const svg = el("svg:svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": metric.label });
+function signed(value, unit) {
+  return (value > 0 ? "+" : value < 0 ? "-" : "±") + fmt(Math.abs(value), unit);
+}
+
+function clock(date, withDate) {
+  const two = n => String(n).padStart(2, "0");
+  const time = `${two(date.getHours())}:${two(date.getMinutes())}:${two(date.getSeconds())}`;
+  return withDate ? `${two(date.getMonth() + 1)}-${two(date.getDate())} ${time}` : time;
+}
+
+function chartHeight(card, width) {
+  if (!card.closest(".layout.fill")) return BASE_H;
+  // 카드는 창 높이까지 늘어나 있다. 차트를 남은 높이만큼 늘리면 세로로 길쭉해져 읽기 어려워서,
+  // 폭에 비례한 높이(MAX_H 이하)만 쓰고 남는 높이는 위아래 여백으로 둔다.
+  const used = Math.max(...[...card.children].map(c => c.offsetTop + c.offsetHeight));
+  const space = card.clientHeight - used - 18;
+  return Math.max(160, Math.min(space, MAX_H, Math.max(BASE_H, Math.round(width * ASPECT))));
+}
+
+function fitLayout() {
+  const layout = document.querySelector(".layout");
+  layout.classList.remove("fill");
+  const bottom = parseFloat(getComputedStyle(document.querySelector("main")).paddingBottom) || 0;
+  const avail = Math.floor(window.innerHeight - (layout.getBoundingClientRect().top + window.scrollY) - bottom);
+  // 넓은 화면에서만 창 높이를 채운다. 창이 낮으면 고정 크기로 두고 페이지를 스크롤한다.
+  if (window.matchMedia("(min-width: 1101px)").matches && avail >= MIN_FILL) {
+    layout.style.setProperty("--fill-h", `${avail}px`);
+    layout.classList.add("fill");
+  }
+}
+
+function chart(metric, card) {
+  const W = Math.max(160, card.clientWidth - 24);
+  const H = chartHeight(card, W);
+  const svg = el("svg:svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", tabindex: 0,
+    "aria-label": `${metric.label} 차트. 화살표 키로 지점별 값을 본다` });
   const pts = metric.points;
   const values = pts.flatMap(p => [p.low, p.high, p.window]).concat(metric.baseline === null ? [] : [metric.baseline]);
   let lo = Math.min(...values), hi = Math.max(...values);
   if (metric.unit === "rate" || metric.unit === "score") { lo = Math.min(0, lo); hi = Math.max(1, hi); }
-  if (hi === lo) { hi = lo + 1; }
+  else { const pad = (hi - lo) * 0.08 || 1; lo = Math.max(0, lo - pad); hi += pad; }
   const maxN = pts[pts.length - 1].n;
-  const x = n => PAD.l + (maxN <= 1 ? 0 : (n - 1) / (maxN - 1)) * (W - PAD.l - PAD.r);
+  const x = n => PAD.l + (maxN <= 1 ? (W - PAD.l - PAD.r) / 2 : (n - 1) / (maxN - 1) * (W - PAD.l - PAD.r));
   const y = v => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
   for (const v of [lo, (lo + hi) / 2, hi]) {
     svg.append(el("svg:line", { x1: PAD.l, x2: W - PAD.r, y1: y(v), y2: y(v), stroke: "var(--line)" }));
     svg.append(el("svg:text", { x: PAD.l - 4, y: y(v) + 4, "text-anchor": "end", "font-size": 10, fill: "var(--muted)" }, fmt(v, metric.unit)));
   }
-  svg.append(el("svg:text", { x: W - PAD.r, y: H - 4, "text-anchor": "end", "font-size": 10, fill: "var(--muted)" }, `n=${maxN}`));
-  const band = pts.map(p => `${x(p.n)},${y(p.high)}`).concat(pts.slice().reverse().map(p => `${x(p.n)},${y(p.low)}`));
-  svg.append(el("svg:polygon", { points: band.join(" "), fill: "var(--band)" }));
+  const ticks = [...new Set([1, Math.round((1 + maxN) / 2), maxN])];
+  for (const n of ticks) {
+    svg.append(el("svg:text", { x: x(n), y: H - 6, "text-anchor": n === 1 && maxN > 1 ? "start" : n === maxN && maxN > 1 ? "end" : "middle",
+      "font-size": 10, fill: "var(--muted)" }, `${n}건`));
+  }
+  if (pts.length > 1) {
+    const band = pts.map(p => `${x(p.n)},${y(p.high)}`).concat(pts.slice().reverse().map(p => `${x(p.n)},${y(p.low)}`));
+    svg.append(el("svg:polygon", { points: band.join(" "), fill: "var(--band)" }));
+  }
   if (metric.baseline !== null) {
     svg.append(el("svg:line", { x1: PAD.l, x2: W - PAD.r, y1: y(metric.baseline), y2: y(metric.baseline),
       stroke: "var(--base)", "stroke-dasharray": "4 3", "stroke-width": 1.5 }));
   }
   const line = (key, color) => el("svg:polyline", { points: pts.map(p => `${x(p.n)},${y(p[key])}`).join(" "),
-    fill: "none", stroke: color, "stroke-width": 2 });
+    fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" });
   svg.append(line("window", "var(--window)"), line("cum", "var(--cum)"));
+  if (pts.length === 1) svg.append(el("svg:circle", { cx: x(pts[0].n), cy: y(pts[0].cum), r: 3.5, fill: "var(--cum)" }));
+  const guide = el("svg:line", { y1: PAD.t, y2: H - PAD.b, stroke: "var(--muted)", "stroke-dasharray": "2 2", visibility: "hidden" });
+  const dot = el("svg:circle", { r: 3.5, fill: "var(--cum)", stroke: "var(--panel)", "stroke-width": 1.5, visibility: "hidden" });
+  svg.append(guide, dot);
+  const tip = el("div", { class: "tip", hidden: "" });
+  card.append(tip);
+  let current = -1;
+
+  function show(i) {
+    current = Math.max(0, Math.min(pts.length - 1, i));
+    const p = pts[current];
+    for (const node of [guide, dot]) node.setAttribute("visibility", "visible");
+    guide.setAttribute("x1", x(p.n)); guide.setAttribute("x2", x(p.n));
+    dot.setAttribute("cx", x(p.n)); dot.setAttribute("cy", y(p.cum));
+    const rows = [`n = ${p.n}`, `누적 ${fmt(p.cum, metric.unit)}`, `구간 [${fmt(p.low, metric.unit)}, ${fmt(p.high, metric.unit)}]`,
+      `최근 50건 ${fmt(p.window, metric.unit)}`];
+    tip.replaceChildren(...rows.map(t => el("div", {}, t)));
+    tip.hidden = false;
+    const box = svg.getBoundingClientRect(), host = card.getBoundingClientRect();
+    const px = box.left - host.left + x(p.n) / W * box.width;
+    const left = px + 12 + tip.offsetWidth > host.width ? px - 12 - tip.offsetWidth : px + 12;
+    tip.style.left = `${Math.max(4, left)}px`;
+    tip.style.top = `${box.top - host.top + 8}px`;
+  }
+
+  function hide() {
+    current = -1;
+    tip.hidden = true;
+    for (const node of [guide, dot]) node.setAttribute("visibility", "hidden");
+  }
+
+  svg.addEventListener("pointermove", event => {
+    const box = svg.getBoundingClientRect();
+    const vx = (event.clientX - box.left) / box.width * W;
+    let best = 0;
+    for (let i = 1; i < pts.length; i++) if (Math.abs(x(pts[i].n) - vx) < Math.abs(x(pts[best].n) - vx)) best = i;
+    show(best);
+  });
+  svg.addEventListener("pointerleave", hide);
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("focus", () => show(pts.length - 1));
+  svg.addEventListener("keydown", event => {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      show((current < 0 ? pts.length - 1 : current) + (event.key === "ArrowLeft" ? -1 : 1));
+    } else if (event.key === "Escape") hide();
+  });
   return svg;
 }
 
-function render(snapshot) {
-  const stats = document.getElementById("stats");
-  stats.replaceChildren();
-  const budget = `₩${snapshot.judge_spent_krw.toFixed(0)} / ₩${snapshot.judge_limit_krw.toFixed(0)}`;
-  const items = [["질의", snapshot.records], ["답한 질의", snapshot.answered], ["Judge 판정", snapshot.judged],
-    ["Judge 비용 / 상한", budget], ["구성(config_id)", snapshot.config_id], ["기준선 실행", snapshot.baseline_run || "없음"]];
-  for (const [k, v] of items) {
-    const box = el("div", { class: "stat" });
-    box.append(el("div", { class: "k" }, k), el("div", { class: "v" }, String(v)));
-    stats.append(box);
+function metricCard(metric) {
+  const card = el("section", { class: "card" });
+  const title = el("h3", {}, metric.label);
+  if (metric.reference) title.append(el("span", { class: "tag" }, "참고값"));
+  if (metric.verdict) {
+    const badge = el("span", { class: `badge ${metric.verdict}` }, VERDICT[metric.verdict]);
+    badge.title = "기준선이 누적 95% 구간 안이면 기준선 수준, 밖이면 높음이나 낮음. 표본 10건 미만이면 판정하지 않는다";
+    title.append(badge);
   }
-  if (snapshot.judge_exhausted) stats.append(el("div", { class: "stat warn" }, "Judge 예산 소진: 채점을 멈췄다. 기록은 계속 쌓인다."));
-  const grid = document.getElementById("grid");
-  grid.replaceChildren();
-  for (const metric of snapshot.metrics) {
-    const card = el("section", { class: "card" });
-    const title = el("h2", {}, metric.label);
-    if (metric.reference) title.append(el("span", { class: "tag" }, "참고값"));
-    card.append(title);
-    const last = metric.points[metric.points.length - 1];
-    if (!last) {
-      card.append(el("p", { class: "empty" }, "아직 값이 없다"));
-    } else {
-      card.append(el("div", { class: "now" },
-        `누적 ${fmt(last.cum, metric.unit)} [${fmt(last.low, metric.unit)}, ${fmt(last.high, metric.unit)}] · 최근 ${fmt(last.window, metric.unit)} · 기준선 ${fmt(metric.baseline, metric.unit)}`));
-      card.append(chart(metric));
+  card.append(title);
+  const last = metric.points[metric.points.length - 1];
+  if (!last) {
+    card.append(el("p", { class: "empty" }, "아직 값이 없다"));
+    return card;
+  }
+  const delta = metric.baseline === null ? "" : ` (기준선 대비 ${signed(last.cum - metric.baseline, metric.unit)})`;
+  card.append(el("div", { class: "now" },
+    `누적 ${fmt(last.cum, metric.unit)} [${fmt(last.low, metric.unit)}, ${fmt(last.high, metric.unit)}], ` +
+    `최근 ${fmt(last.window, metric.unit)}, 기준선 ${fmt(metric.baseline, metric.unit)}${delta}`));
+  card.dataset.chart = "1";
+  return card;
+}
+
+function judgeCell(q) {
+  if (q.judge === "pending") return "대기";
+  if (q.judge === "failed") return "판정 오류";
+  if (q.judge === "skipped") return "-";
+  const claim = q.unsupported_claim === null ? "-" : q.unsupported_claim ? "통과" : "실패";
+  return `${claim}, ${q.citation_precision === null ? "-" : q.citation_precision.toFixed(2)}`;
+}
+
+function renderRecent(recent) {
+  const body = document.getElementById("recent");
+  const pages = Math.max(1, Math.ceil(recent.length / PAGE_SIZE));
+  page = Math.min(page, pages - 1);
+  document.getElementById("page").textContent = `${page + 1} / ${pages} (총 ${recent.length}건)`;
+  document.getElementById("prev").disabled = page === 0;
+  document.getElementById("next").disabled = page >= pages - 1;
+  if (!recent.length) {
+    body.replaceChildren(el("tr", {}));
+    body.firstChild.append(el("td", { colspan: 8, class: "empty" }, "아직 질의가 없다"));
+    return;
+  }
+  body.replaceChildren(...recent.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(q => {
+    const row = el("tr", {});
+    const status = q.status === "answered" ? STATUS.answered : STATUS[q.refusal_stage] || "거절";
+    const cells = [
+      [clock(new Date(q.recorded_at), false), "time"],
+      [q.request_id, "id"],
+      [status, q.status === "answered" ? "" : "refused"],
+      [q.top_score === null ? "-" : q.top_score.toFixed(3), "num"],
+      [fmt(q.latency_ms, "ms"), "num"],
+      [fmt(q.first_token_ms, "ms"), "num"],
+      [fmt(q.cost_krw, "krw"), "num"],
+      [judgeCell(q), ""],
+    ];
+    for (const [text, cls] of cells) {
+      const cell = el("td", cls ? { class: cls } : {}, text);
+      if (cls === "id") cell.title = text;
+      if (cls === "time") cell.title = clock(new Date(q.recorded_at), true);
+      row.append(cell);
     }
-    grid.append(card);
+    return row;
+  }));
+}
+
+function render(snapshot) {
+  document.getElementById("meta").textContent =
+    `구성 ${snapshot.config_id}, 기준선 실행 ${snapshot.baseline_run || "없음"}`;
+  const won = v => "₩" + Math.round(v).toLocaleString("ko-KR");
+  const items = [["질의", snapshot.records], ["답함", snapshot.answered], ["판정", snapshot.judged],
+    ["Judge 비용", `${won(snapshot.judge_spent_krw)} / ${won(snapshot.judge_limit_krw)}`]];
+  const summary = document.getElementById("summary");
+  summary.replaceChildren(...items.map(([k, v]) => {
+    const item = el("span", {}, k);
+    item.append(el("b", {}, String(v)));
+    return item;
+  }));
+  if (snapshot.judge_exhausted) summary.append(el("span", { class: "warn" }, "Judge 예산 소진: 채점을 멈췄다. 기록은 계속 쌓인다."));
+  renderMetrics(snapshot);
+  renderRecent(snapshot.recent || []);
+}
+
+function syncTabs() {
+  for (const button of document.querySelectorAll(".tabs button")) {
+    const selected = button.dataset.group === group;
+    button.setAttribute("aria-selected", String(selected));
+    button.tabIndex = selected ? 0 : -1;
   }
+  document.getElementById("tab-note").textContent = SECTIONS.find(([key]) => key === group)[2];
+}
+
+function renderMetrics(snapshot) {
+  syncTabs();
+  fitLayout();
+  const root = document.getElementById("sections");
+  root.setAttribute("aria-labelledby", `tab-${group}`);
+  const metrics = snapshot.metrics.filter(m => m.group === group);
+  if (!metrics.length) {
+    root.replaceChildren(el("p", { class: "empty" }, "이 묶음에 지표가 없다"));
+    return;
+  }
+  const grid = el("div", { class: "grid" });
+  grid.style.setProperty("--cols", String(metrics.length));
+  const cards = metrics.map(metricCard);
+  grid.append(...cards);
+  root.replaceChildren(grid);
+  // 배지 줄바꿈으로 머리말 높이가 카드마다 다르면 차트 위치가 어긋난다. 가장 긴 머리말에 맞춰 아래 여백을 더한다.
+  const bottoms = cards.map(c => Math.max(...[...c.children].map(child => child.offsetTop + child.offsetHeight)));
+  const tallest = Math.max(...bottoms);
+  cards.forEach((c, i) => {
+    const lastChild = c.lastElementChild;
+    lastChild.style.marginBottom = `${parseFloat(getComputedStyle(lastChild).marginBottom) + tallest - bottoms[i]}px`;
+  });
+  // 차트는 카드가 화면에 붙은 뒤 실제 폭에 맞춰 그린다. viewBox 비율을 고정하면 넓은 카드에서 가운데만 차지한다.
+  metrics.forEach((metric, i) => { if (cards[i].dataset.chart) cards[i].append(chart(metric, cards[i])); });
+}
+
+function selectGroup(next) {
+  group = next;
+  try { localStorage.setItem("dashboard_group", group); } catch (e) { /* 저장 못 해도 탭은 바뀐다 */ }
+  if (last) renderMetrics(last); else syncTabs();
+}
+
+function scheduleRetry(status, reason) {
+  clearTimeout(retryTimer);
+  status.textContent = `${reason}, ${Math.round(retryMs / 1000)}초 뒤 다시 연결`;
+  retryTimer = setTimeout(connect, retryMs);
+  retryMs = Math.min(retryMs * 2, RETRY_MAX_MS);
 }
 
 async function connect() {
+  clearTimeout(retryTimer);
   if (controller) controller.abort();
-  controller = new AbortController();
-  const key = document.getElementById("key").value;
-  try { sessionStorage.setItem("metrics_key", key); } catch (e) { /* 저장소를 못 써도 연결은 된다 */ }
+  const mine = controller = new AbortController();
   const status = document.getElementById("status");
-  status.textContent = "연결 중";
-  const headers = key ? { "X-API-Key": key } : {};
+  status.textContent = "";
   try {
     // EventSource는 헤더를 실을 수 없어 fetch 스트림으로 SSE를 읽는다.
-    const response = await fetch("/v1/metrics/stream", { headers, signal: controller.signal });
-    if (!response.ok) { status.textContent = `연결 실패(${response.status})`; return; }
-    status.textContent = "연결됨";
+    const response = await fetch("/v1/metrics/stream", { signal: mine.signal });
+    // 화면에는 키 입력이 없다. 서버에 API_KEY가 설정돼 있으면 401이고, 다시 시도해도 같아 재연결하지 않는다.
+    if (response.status === 401) { status.textContent = "연결 실패(401): 서버에 API_KEY가 설정돼 있어 대시보드에서 볼 수 없다"; return; }
+    if (!response.ok) { scheduleRetry(status, `연결 실패(${response.status})`); return; }
+    status.textContent = "";
+    retryMs = 1000;
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -161,17 +422,40 @@ async function connect() {
         const frame = buffer.slice(0, cut);
         buffer = buffer.slice(cut + 2);
         const data = frame.split("\n").filter(l => l.startsWith("data: ")).map(l => l.slice(6)).join("\n");
-        if (frame.startsWith("event: snapshot") && data) render(JSON.parse(data));
+        if (frame.startsWith("event: snapshot") && data) {
+          last = JSON.parse(data);
+          render(last);
+          document.getElementById("updated").textContent = `마지막 갱신 ${clock(new Date(), false)}`;
+        }
       }
     }
-    status.textContent = "연결 끊김";
+    if (mine === controller) scheduleRetry(status, "연결 끊김");
   } catch (error) {
-    if (error.name !== "AbortError") status.textContent = "연결 끊김";
+    if (error.name !== "AbortError" && mine === controller) scheduleRetry(status, "연결 끊김");
   }
 }
 
-document.getElementById("connect").addEventListener("click", connect);
-try { document.getElementById("key").value = sessionStorage.getItem("metrics_key") || ""; } catch (e) { /* 무시 */ }
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (last) render(last); }, 150);
+});
+try {
+  const saved = localStorage.getItem("dashboard_group");
+  if (SECTIONS.some(([key]) => key === saved)) group = saved;
+} catch (e) { /* 저장소를 못 쓰면 검색 탭으로 연다 */ }
+const tabs = [...document.querySelectorAll(".tabs button")];
+for (const button of tabs) {
+  button.addEventListener("click", () => selectGroup(button.dataset.group));
+  button.addEventListener("keydown", event => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    const next = tabs[(tabs.indexOf(button) + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    selectGroup(next.dataset.group);
+    next.focus();
+  });
+}
+syncTabs();
+document.getElementById("prev").addEventListener("click", () => { page -= 1; if (last) renderRecent(last.recent || []); });
+document.getElementById("next").addEventListener("click", () => { page += 1; if (last) renderRecent(last.recent || []); });
 connect();
 </script>
 </body>

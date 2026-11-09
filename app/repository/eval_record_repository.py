@@ -2,7 +2,7 @@
 from psycopg import AsyncConnection
 from psycopg.types.json import Jsonb
 
-from app.schema.eval_schema import EvalRecord, EvalManifest
+from app.schema.eval_schema import EvalRecord, LiveRecord, EvalManifest
 from app.schema.judge_schema import JudgeResult
 
 # 스키마는 코드가 맞춘다. 몇 번 실행해도 같은 테이블과 인덱스가 된다.
@@ -100,14 +100,14 @@ class EvalRecordRepository:
         )
         return [JudgeResult.model_validate(row[0]) for row in await cursor.fetchall()]
 
-    async def live_records(self, config_id: str, limit: int) -> list[EvalRecord]:
+    async def live_records(self, config_id: str, limit: int) -> list[LiveRecord]:
         """구성 하나의 실시간 기록 중 최근 limit개를 오래된 것부터."""
         cursor = await self._conn.execute(
-            "SELECT body FROM (SELECT body, created_at, record_id FROM eval_record WHERE source = 'live' AND config_id = %s "
-            "ORDER BY created_at DESC, record_id DESC LIMIT %s) recent ORDER BY created_at, record_id",
+            "SELECT body, created_at FROM (SELECT body, created_at, record_id FROM eval_record WHERE source = 'live' "
+            "AND config_id = %s ORDER BY created_at DESC, record_id DESC LIMIT %s) recent ORDER BY created_at, record_id",
             (config_id, limit),
         )
-        return [EvalRecord.model_validate(row[0]) for row in await cursor.fetchall()]
+        return [LiveRecord(record=EvalRecord.model_validate(body), recorded_at=at) for body, at in await cursor.fetchall()]
 
     async def unjudged_live(self, config_id: str, versions: list[str], limit: int) -> list[EvalRecord]:
         """답했지만 주어진 프롬프트 버전들의 판정이 모두 있지는 않은 실시간 기록. 재시작 뒤 이어서 채점할 대상이다."""

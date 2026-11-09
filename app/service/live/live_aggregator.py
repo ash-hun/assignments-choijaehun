@@ -2,15 +2,26 @@
 import math
 import statistics
 from typing import Literal
+from datetime import datetime
 from pydantic import BaseModel
 from collections.abc import Callable
 
+from app.schema.eval_schema import EvalRecord, LiveRecord
+from app.service.live.live_judge_worker import sampled
 from app.schema.judge_schema import RecordJudgment
-from app.schema.eval_schema import EvalRecord
+from app.schema.query_schema import QueryStatus
 
 Unit = Literal["rate", "ms", "krw", "score"]
+# few: 표본이 MIN_VERDICT_N보다 적어 구간을 믿기 이르다. within: 기준선이 누적 95% 구간 안. above, below: 구간 밖.
+Verdict = Literal["few", "within", "above", "below"]
+JudgeState = Literal["judged", "failed", "pending", "skipped"]
+# 화면의 묶음. 질의가 지나는 단계(검색, 생성)와 운영 비용으로 나눈다.
+Group = Literal["retrieval", "generation", "ops"]
 WINDOW = 50
 MAX_POINTS = 200
+# 화면이 페이지로 나눠 보여준다. snapshot 한 번에 약 35KB가 더 실린다.
+RECENT = 100
+MIN_VERDICT_N = 10
 Z95 = 1.96
 NEAR_THRESHOLD = 0.05
 
@@ -30,10 +41,31 @@ class MetricSeries(BaseModel):
 
     key: str
     label: str
+    group: Group
     unit: Unit
     reference: bool
     baseline: float | None
+    verdict: Verdict | None
     points: list[SeriesPoint]
+
+
+class RecentQuery(BaseModel):
+    """최근 질의 한 건의 요약. 질문과 답 원문은 넣지 않는다.
+
+    judge: judged(판정됨), failed(판정 실패), pending(채점 대기), skipped(거절, 표본 밖, 예산 소진으로 채점하지 않음).
+    """
+
+    request_id: str
+    recorded_at: datetime
+    status: QueryStatus
+    refusal_stage: Literal["retrieval", "generation"] | None
+    top_score: float | None
+    latency_ms: int
+    first_token_ms: int | None
+    cost_krw: float
+    judge: JudgeState
+    unsupported_claim: bool | None
+    citation_precision: float | None
 
 
 class LiveSnapshot(BaseModel):
@@ -48,6 +80,7 @@ class LiveSnapshot(BaseModel):
     judge_exhausted: bool
     baseline_run: str | None
     metrics: list[MetricSeries]
+    recent: list[RecentQuery]
 
 
 Extractor = Callable[[EvalRecord, RecordJudgment | None], float | None]
@@ -70,46 +103,86 @@ def _near(threshold: float) -> Extractor:
     return get
 
 
-def metric_definitions(threshold: float) -> list[tuple[str, str, Unit, bool, Extractor]]:
-    """(키, 표시 이름, 단위, 참고값 여부, 값 추출 함수). 참고값 구분은 research/gold_metric_selection.md의 구성 확정을 따른다."""
+def _generation_refusal(r: EvalRecord, j: RecordJudgment | None) -> float | None:
+    # 검색 단계에서 거절된 질의는 LLM에 가지 않았으니 분모에서 뺀다.
+    return None if r.refusal_stage == "retrieval" else float(r.refusal_stage == "generation")
+
+
+def metric_definitions(threshold: float) -> list[tuple[str, str, Group, Unit, bool, Extractor]]:
+    """(키, 표시 이름, 묶음, 단위, 참고값 여부, 값 추출 함수). 참고값 구분은 research/gold_metric_selection.md의 구성 확정을 따른다."""
     return [
-        ("refusal_rate", "거절률", "rate", False, lambda r, j: float(r.status == "insufficient_context")),
-        ("near_threshold", "검색 최고 점수가 임계값 ±0.05 안", "rate", False, _near(threshold)),
-        ("latency_ms", "Latency(답한 질의)", "ms", False, lambda r, j: float(r.latency_ms) if r.status == "answered" else None),
-        ("ttft_ms", "TTFT(답한 질의)", "ms", False,
+        ("refusal_retrieval", "검색 단계 거절률", "retrieval", "rate", False,
+         lambda r, j: float(r.refusal_stage == "retrieval")),
+        ("near_threshold", "검색 최고 점수가 임계값 ±0.05 안", "retrieval", "rate", False, _near(threshold)),
+        ("refusal_generation", "생성 단계 거절률(검색 통과 질의)", "generation", "rate", False, _generation_refusal),
+        ("unsupported_claim", "근거 없는 주장 없음(참고값)", "generation", "rate", True, _judged("unsupported_claim")),
+        ("citation_precision", "Citation Precision(참고값)", "generation", "score", True, _precision),
+        ("latency_ms", "Latency(답한 질의)", "ops", "ms", False,
+         lambda r, j: float(r.latency_ms) if r.status == "answered" else None),
+        ("ttft_ms", "TTFT(답한 질의)", "ops", "ms", False,
          lambda r, j: float(r.first_token_ms) if r.status == "answered" and r.first_token_ms is not None else None),
-        ("cost_krw", "질의당 비용", "krw", False, lambda r, j: r.cost_krw),
-        ("unsupported_claim", "근거 없는 주장 없음(참고값)", "rate", True, _judged("unsupported_claim")),
-        ("citation_precision", "Citation Precision(참고값)", "score", True, _precision),
+        ("cost_krw", "질의당 비용", "ops", "krw", False, lambda r, j: r.cost_krw),
     ]
 
 
 def build_snapshot(
-    config_id: str, records: list[EvalRecord], judged: dict[str, RecordJudgment], threshold: float,
+    config_id: str, live: list[LiveRecord], judged: dict[str, RecordJudgment], threshold: float,
     baseline_run: str | None, baseline_records: list[EvalRecord], baseline_judged: dict[str, RecordJudgment],
-    judge_spent_krw: float, judge_limit_krw: float, judge_exhausted: bool,
+    judge_spent_krw: float, judge_limit_krw: float, judge_exhausted: bool, sample_rate: float,
 ) -> LiveSnapshot:
-    """records는 오래된 것부터다. 같은 입력이면 같은 집계가 나온다."""
+    """live는 오래된 것부터다. 같은 입력이면 같은 집계가 나온다."""
+    records = [item.record for item in live]
     metrics = []
-    for key, label, unit, reference, extract in metric_definitions(threshold):
+    for key, label, group, unit, reference, extract in metric_definitions(threshold):
         values = [v for r in records if (v := extract(r, judged.get(r.record_id))) is not None]
         base = [v for r in baseline_records if (v := extract(r, baseline_judged.get(r.record_id))) is not None]
-        metrics.append(MetricSeries(
-            key=key, label=label, unit=unit, reference=reference,
-            baseline=round(statistics.fmean(base), 4) if base else None, points=series(values, unit == "rate"),
-        ))
+        baseline = round(statistics.fmean(base), 4) if base else None
+        points = series(values, unit)
+        metrics.append(MetricSeries(key=key, label=label, group=group, unit=unit, reference=reference, baseline=baseline,
+                                    verdict=verdict(points[-1] if points else None, baseline), points=points))
+    recent = [_recent(item, judged.get(item.record.record_id), judge_exhausted, sample_rate) for item in reversed(live[-RECENT:])]
     return LiveSnapshot(
         config_id=config_id, records=len(records), answered=sum(r.status == "answered" for r in records),
         judged=sum(1 for r in records if r.record_id in judged and not judged[r.record_id].failed),
         judge_spent_krw=judge_spent_krw, judge_limit_krw=judge_limit_krw, judge_exhausted=judge_exhausted,
-        baseline_run=baseline_run, metrics=metrics,
+        baseline_run=baseline_run, metrics=metrics, recent=recent,
     )
 
 
-def series(values: list[float], is_rate: bool) -> list[SeriesPoint]:
+def verdict(last: SeriesPoint | None, baseline: float | None) -> Verdict | None:
+    """기준선이 누적 95% 구간 안에 있으면 기준선 수준으로 본다. 표본이 적으면 판정을 미룬다."""
+    if last is None or baseline is None:
+        return None
+    if last.n < MIN_VERDICT_N:
+        return "few"
+    if baseline < last.low:
+        return "above"
+    if baseline > last.high:
+        return "below"
+    return "within"
+
+
+def _recent(item: LiveRecord, judgment: RecordJudgment | None, exhausted: bool, sample_rate: float) -> RecentQuery:
+    r = item.record
+    if judgment is not None:
+        state: JudgeState = "failed" if judgment.failed else "judged"
+    elif r.status == "answered" and sampled(r.record_id, sample_rate) and not exhausted:
+        state = "pending"
+    else:
+        state = "skipped"
+    ok = judgment if judgment is not None and not judgment.failed else None
+    return RecentQuery(
+        request_id=r.record_id.removeprefix("live:"), recorded_at=item.recorded_at, status=r.status,
+        refusal_stage=r.refusal_stage, top_score=r.top_score, latency_ms=r.latency_ms, first_token_ms=r.first_token_ms,
+        cost_krw=r.cost_krw, judge=state, unsupported_claim=ok.quality_items.get("unsupported_claim") if ok else None,
+        citation_precision=ok.citation_precision if ok else None,
+    )
+
+
+def series(values: list[float], unit: Unit) -> list[SeriesPoint]:
     """값마다 누적 지점을 만들되 MAX_POINTS개를 넘으면 고르게 솎는다(마지막 지점은 항상 남긴다).
 
-    비율은 Wilson 구간, 나머지는 정규 근사 구간이다. 표본이 하나면 구간은 그 값 하나다.
+    비율은 Wilson 구간, 나머지는 정규 근사 구간이다. 0~1 점수는 정규 근사 구간을 [0, 1]로 자른다. 표본이 하나면 구간은 그 값 하나다.
     """
     n_total = len(values)
     if n_total == 0:
@@ -124,7 +197,9 @@ def series(values: list[float], is_rate: bool) -> list[SeriesPoint]:
     points = []
     for n in keep:
         mean = prefix[n] / n
-        low, high = wilson(mean, n) if is_rate else normal(mean, (squares[n] - n * mean * mean), n)
+        low, high = wilson(mean, n) if unit == "rate" else normal(mean, (squares[n] - n * mean * mean), n)
+        if unit == "score":
+            low, high = max(0.0, low), min(1.0, high)
         start = max(0, n - WINDOW)
         points.append(SeriesPoint(n=n, cum=round(mean, 4), low=round(low, 4), high=round(high, 4),
                                   window=round((prefix[n] - prefix[start]) / (n - start), 4)))

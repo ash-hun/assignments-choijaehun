@@ -2,11 +2,12 @@
 import re
 import zlib
 import numpy as np
+from datetime import datetime, timedelta
 
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
+from app.schema.eval_schema import EvalRecord, LiveRecord, EvalManifest
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.schema.vector_schema import SparseTerms, IndexContract
-from app.schema.eval_schema import EvalRecord, EvalManifest
 from app.schema.judge_schema import JudgeResult
 from app.client.embedding_client import EmbeddingClient
 from app.common.upstream_error import VectorStoreError
@@ -103,6 +104,7 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
     def __init__(self) -> None:
         self.runs: dict[str, EvalManifest] = {}
         self.rows: dict[str, EvalRecord] = {}
+        self.created: dict[str, datetime] = {}
         self.judged: dict[tuple[str, str, int, str, str], JudgeResult] = {}
 
     async def ensure_schema(self) -> None:
@@ -116,6 +118,7 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
 
     async def upsert_record(self, record: EvalRecord) -> None:
         self.rows[record.record_id] = record
+        self.created.setdefault(record.record_id, datetime(2026, 1, 1) + timedelta(seconds=len(self.created)))
 
     async def upsert_judgment(self, result: JudgeResult) -> None:
         self.judged[(result.record_id, result.kind, result.sample, result.judge_model, result.prompt_version)] = result
@@ -128,9 +131,9 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
         wanted = set(record_ids)
         return [self.judged[k] for k in sorted(self.judged) if k[0] in wanted]
 
-    async def live_records(self, config_id: str, limit: int) -> list[EvalRecord]:
+    async def live_records(self, config_id: str, limit: int) -> list[LiveRecord]:
         rows = [r for r in self.rows.values() if r.source == "live" and r.config_id == config_id]
-        return rows[-limit:]
+        return [LiveRecord(record=r, recorded_at=self.created[r.record_id]) for r in rows[-limit:]]
 
     async def unjudged_live(self, config_id: str, versions: list[str], limit: int) -> list[EvalRecord]:
         done = {(k[0], k[4]) for k, v in self.judged.items() if v.ok}

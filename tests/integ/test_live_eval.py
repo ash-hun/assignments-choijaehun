@@ -136,9 +136,11 @@ def test_answers_from_both_endpoints_are_recorded_judged_and_aggregated(tmp_path
     assert snapshot["records"] == 2 and snapshot["answered"] == 2 and snapshot["judged"] == 2
     assert judge_llm.calls == 3
     metrics = {m["key"]: m for m in snapshot["metrics"]}
-    assert metrics["refusal_rate"]["points"][-1]["cum"] == 0.0
+    assert metrics["refusal_retrieval"]["points"][-1]["cum"] == 0.0 and metrics["refusal_generation"]["group"] == "generation"
     assert metrics["citation_precision"]["reference"] and metrics["citation_precision"]["points"][-1]["cum"] == 1.0
     assert snapshot["judge_spent_krw"] == round(4 * (1000 * 1000 / 1e6 + 100 * 5000 / 1e6), 1)
+    assert [q["request_id"] for q in snapshot["recent"]] == ["req-2", "req-1"]
+    assert all(q["judge"] == "judged" and "question" not in q for q in snapshot["recent"])
 
 
 def test_metrics_are_unavailable_when_live_eval_is_off_but_queries_still_work(tmp_path: Path) -> None:
@@ -149,4 +151,4 @@ def test_metrics_are_unavailable_when_live_eval_is_off_but_queries_still_work(tm
 
     assert answered.status_code == 200 and records.rows == {}
     assert metrics.status_code == 503
-    assert page.status_code == 200 and "실시간 평가 대시보드" in page.text
+    assert page.status_code == 200 and "Elice HR Assignments" in page.text
