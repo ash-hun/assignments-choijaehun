@@ -1,0 +1,7 @@
+# Part C 결과로 정한 서비스 기본 검색(project_planning/experiments/12_hybrid_fusion.md). 질의에 한글이 있으면 dense, 없으면 CC.
+name = "fusion-routed"
+gold_files = ["data/gold/test_set.jsonl", "data/gold/test_set_ko.jsonl"]
+top_k = 5
+retrieval_depth = 10
+concurrency = 4
+retrieval_mode = "routed"

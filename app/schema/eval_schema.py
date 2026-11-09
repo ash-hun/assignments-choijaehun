@@ -21,7 +21,8 @@ class EvalConfig(BaseModel):
     retrieval_depth: int = Field(default=10, ge=1, le=50)
     concurrency: int = Field(default=4, ge=1, le=16)
     variant: EvalVariant = "none"
-    # 검색 방식. 실행할 때 환경 설정의 retrieval_mode를 이 값으로 바꾼다. dense면 run_id에 넣지 않아 기준선을 유지한다.
+    # 검색 방식. 실행할 때 환경 설정의 retrieval_mode를 이 값으로 바꾼다(서비스 기본값과 무관하게 설정 파일이 정한다).
+    # dense면 run_id에 넣지 않아 기준선을 유지한다.
     retrieval_mode: RetrievalMode = "dense"
     # 답마다 Judge를 몇 번 부를지. 0이면 Judge를 부르지 않는다. Gold Set 평가는 3회 다수결이다.
     judge_samples: int = Field(default=3, ge=0, le=5)

@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from app.schema.chunk_schema import Chunk
 
 QueryStatus = Literal["answered", "insufficient_context"]
-# 검색 방식. dense가 서비스 기준선이고 나머지는 Part C 비교 조건이다(project_planning/experiments/12_hybrid_fusion.md).
-RetrievalMode = Literal["dense", "bm25", "rrf", "cc"]
+# 검색 방식(project_planning/experiments/12_hybrid_fusion.md). routed는 질의에 한글이 있으면 dense, 없으면 cc를 쓴다.
+RetrievalMode = Literal["dense", "bm25", "rrf", "cc", "routed"]
 
 
 class ParsedAnswer(BaseModel):

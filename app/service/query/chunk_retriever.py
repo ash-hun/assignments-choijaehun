@@ -1,4 +1,5 @@
 """질의 검색. 설정한 방식(dense, BM25, RRF, CC)으로 상위 k개 청크를 고르고, 거절 판정용 dense 최고 점수를 함께 낸다."""
+import re
 import asyncio
 from dataclasses import dataclass
 
@@ -8,6 +9,9 @@ from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.service.ingest.sparse_encoder import SparseEncoder
 from app.client.embedding_client import EmbeddingClient
 from app.schema.chunk_schema import Chunk
+
+# 한글 음절과 자모. 영어 문서에 한국어 질의의 BM25는 맞는 단어가 거의 없어 routed는 이 경우 dense만 쓴다.
+HANGUL = re.compile(r"[\uac00-\ud7a3\u3131-\u318e]")
 
 
 @dataclass(frozen=True)
@@ -40,29 +44,38 @@ class ChunkRetriever:
         """검색 방식."""
         return self._fusion.mode
 
+    def mode_for(self, question: str) -> RetrievalMode:
+        """이 질의에 실제로 쓸 검색 방식. routed만 질의에 따라 dense나 cc로 갈린다."""
+        if self._fusion.mode != "routed":
+            return self._fusion.mode
+        return "dense" if HANGUL.search(question) else "cc"
+
     async def retrieve(self, question: str, k: int) -> Retrieval:
         """검색 방식 점수 내림차순 상위 k개. 인덱스가 비어 있으면 빈 목록과 None."""
+        mode = self.mode_for(question)
         vectors = await asyncio.to_thread(self._embedding.embed_queries, [question])
-        if self._fusion.mode == "dense":
+        if mode == "dense":
             dense = await self._repository.search_dense_chunks(self._collection, vectors[0], k)
             return Retrieval(hits=[RetrievedChunk(chunk=c, score=s) for c, s in dense],
                              top_dense_score=dense[0][1] if dense else None)
         if self._encoder is None:
-            raise ValueError(f"retrieval mode {self._fusion.mode} needs a sparse encoder")
+            raise ValueError(f"retrieval mode {mode} needs a sparse encoder")
         # 거절 판정은 dense 점수로 한다. BM25 단독도 같은 판정을 쓰도록 dense를 함께 조회한다.
-        depth = k if self._fusion.mode == "bm25" else max(self._fusion.pool, k)
+        depth = k if mode == "bm25" else max(self._fusion.pool, k)
         dense, sparse = await asyncio.gather(
             self._repository.search_dense_chunks(self._collection, vectors[0], depth),
             self._repository.search_sparse_chunks(self._collection, self._encoder.encode_query(question), depth),
         )
         chunks: dict[str, Chunk] = {c.chunk_id: c for c, _ in dense + sparse}
-        ranked = self._rank([(c.chunk_id, s) for c, s in dense], [(c.chunk_id, s) for c, s in sparse])
+        ranked = self._rank(mode, [(c.chunk_id, s) for c, s in dense], [(c.chunk_id, s) for c, s in sparse])
         return Retrieval(hits=[RetrievedChunk(chunk=chunks[cid], score=s) for cid, s in ranked[:k]],
                          top_dense_score=dense[0][1] if dense else None)
 
-    def _rank(self, dense: list[tuple[str, float]], sparse: list[tuple[str, float]]) -> list[tuple[str, float]]:
-        if self._fusion.mode == "bm25":
+    def _rank(
+        self, mode: RetrievalMode, dense: list[tuple[str, float]], sparse: list[tuple[str, float]],
+    ) -> list[tuple[str, float]]:
+        if mode == "bm25":
             return sorted(sparse, key=lambda item: (-item[1], item[0]))
-        if self._fusion.mode == "rrf":
+        if mode == "rrf":
             return reciprocal_rank_fusion([cid for cid, _ in dense], [cid for cid, _ in sparse], self._fusion.rrf_k)
         return convex_combination(dense, sparse, self._fusion.cc_alpha)

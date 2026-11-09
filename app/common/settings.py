@@ -39,8 +39,9 @@ class Settings(BaseSettings):
     chunk_overlap: int = 77
     refusal_threshold: float = 0.6375
     default_top_k: int = 5
-    # 검색 방식(project_planning/experiments/12_hybrid_fusion.md). 융합 후보 수와 RRF k, CC alpha는 조정하지 않은 기본값이다.
-    retrieval_mode: RetrievalMode = "dense"
+    # 검색 방식(project_planning/experiments/12_hybrid_fusion.md). Part C 결과로 영어 질의는 CC, 한국어 질의는 dense(routed).
+    # 융합 후보 수와 RRF k, CC alpha는 조정하지 않은 기본값이다.
+    retrieval_mode: RetrievalMode = "routed"
     fusion_pool: int = 40
     rrf_k: int = 60
     cc_alpha: float = 0.5

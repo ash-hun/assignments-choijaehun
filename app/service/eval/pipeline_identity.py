@@ -23,11 +23,11 @@ def pipeline_config_id(settings: Settings, top_k: int) -> str:
     }
     if settings.retrieval_mode != "dense":
         retrieval: dict[str, object] = {"mode": settings.retrieval_mode}
-        if settings.retrieval_mode in ("rrf", "cc"):
+        if settings.retrieval_mode in ("rrf", "cc", "routed"):
             retrieval["pool"] = settings.fusion_pool
         if settings.retrieval_mode == "rrf":
             retrieval["rrf_k"] = settings.rrf_k
-        if settings.retrieval_mode == "cc":
+        if settings.retrieval_mode in ("cc", "routed"):
             retrieval["cc_alpha"] = settings.cc_alpha
         pipeline["retrieval"] = retrieval
     return hashlib.sha256(json.dumps(pipeline, sort_keys=True).encode()).hexdigest()[:12]

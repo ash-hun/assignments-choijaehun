@@ -16,13 +16,13 @@
 |---|---|---|---|---|
 | `corpus_fetch` | Ingest | manifest에 고정된 원문 다운로드와 해시 검증 | `make corpus` | 구현됨 |
 | `eval_run` | Eval | test set 전체 채점(검색, 거절, 운영, Judge 지표)과 Report 생성, 지표 타당성 검증 | `make eval CONFIG=...`, `make validity` | 구현됨 |
-| `fusion_eval` | Eval | 검색 방식(dense, BM25 단독, RRF, CC) 비교 실험과 짝지은 판정(Part C) | `make fusion` | 구현됨 |
+| `fusion_eval` | Eval | 검색 방식(dense, BM25 단독, RRF, CC) 비교 실험과 짝지은 판정, 채택한 언어별 선택(routed) 확인(Part C) | `make fusion` | 구현됨 |
 | `gold_draft` | Eval | 문서에서 Gold Set 초안 생성, 번역 묶음 생성, Gold 파일 검증 | `make gold-draft`, `make gold-translate`, `make gold-check` | 구현됨(dev, test) |
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make label-sheet`, `make agreement` | 구현됨 |
 | `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 구현됨 |
-| `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(검색 방식 `RETRIEVAL_MODE`, 기본 dense) |
+| `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(검색 방식 `RETRIEVAL_MODE`, 기본 routed: 영어 질의 CC, 한국어 질의 dense) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
 
@@ -128,7 +128,7 @@
 
 | 입력 | 결과 |
 |---|---|
-| `make fusion` | `configs/fusion_bm25.toml`, `fusion_rrf.toml`, `fusion_cc.toml`을 `make eval`로 평가(기준선은 기존 기록 재사용)하고 `research/artifacts/hybrid_fusion/results.json`에 비교 쌍별 지표 차이, 언어와 유형별 평균, 검색 단계 거절 일치 여부, 운영 수치를 쓴다 |
+| `make fusion` | `configs/fusion_bm25.toml`, `fusion_rrf.toml`, `fusion_cc.toml`을 `make eval`로 평가(기준선은 기존 기록 재사용)하고 `research/artifacts/hybrid_fusion/results.json`에 비교 쌍별 지표 차이, 언어와 유형별 평균, 검색 단계 거절 일치 여부, 운영 수치를 쓴다. 이어서 dev set 검색 지표로 dense, cc, routed를 비교해 `dev_check.json`을 쓰고(LLM 호출 없음), `configs/fusion_routed.toml`로 채택 구성을 test set에서 평가한다 |
 | 다시 실행 | 같은 run_id라 LLM과 Judge를 부르지 않고 같은 결과 파일을 다시 쓴다 |
 | 기록이 없는 조건 | 그 조건의 `make eval` 명령을 알리고 멈춘다 |
 
@@ -138,7 +138,7 @@
 
 | 파일 | 층 | 역할 |
 |---|---|---|
-| `app/cli/fusion_compare_cli.py` | cli | 조건과 비교 쌍, 보정 수준, 결과 파일 |
+| `app/cli/fusion_compare_cli.py` | cli | `compare`(조건과 비교 쌍, 보정 수준, 결과 파일), `dev-check`(dev set 검색 지표로 언어별 선택 확인) |
 | `app/service/eval/fusion_comparator.py` | service | 문항 값, 짝지은 bootstrap 구간과 판정, 그룹 평균, 검색 단계 거절 문항 |
 | `app/service/eval/pipeline_identity.py` | service | 검색 방식을 config_id에 넣음. dense는 넣지 않아 기준선 config_id 유지 |
 
@@ -345,7 +345,7 @@
 | `app/api/error_mapper.py` | api | 예외를 HTTP 상태로 변환 |
 | `app/api/query_runtime.py` | api | 요청 사이에 공유하는 객체 묶음(`QueryRuntime`)과 라우터 의존성 |
 | `app/service/query/query_service.py` | service | 파이프라인 조립 |
-| `app/service/query/chunk_retriever.py` | service | 검색 방식(dense, bm25, rrf, cc) 분기. 거절 판정용 dense 최고 점수를 함께 냄 |
+| `app/service/query/chunk_retriever.py` | service | 검색 방식(dense, bm25, rrf, cc, routed) 분기. routed는 질의에 한글이 있으면 dense, 없으면 cc. 거절 판정용 dense 최고 점수를 함께 냄 |
 | `app/service/query/score_fusion.py` | service | min-max 정규화, Convex Combination, RRF. 동점은 chunk_id 순 |
 | `app/service/query/llm_gate.py` | service | LLM 동시 호출 상한과 대기 한도 |
 | `app/service/query/evidence_checker.py` | service | 점수 임계값과 근거 부족 토큰 판정 |
@@ -368,9 +368,10 @@
 | 단위 | `tests/unit/test_query_query_service.py` |
 | 단위 | `tests/unit/test_query_llm_gate.py` |
 | 단위 | `tests/unit/test_query_score_fusion.py` |
+| 단위 | `tests/unit/test_query_chunk_retriever.py` |
 | 통합 | `tests/integ/test_query.py`(앱 전체에 메모리 저장소, 임베딩, 대체 LLM. 응답, 두 단계 거절, 401, 422, 요청 ID, 502, 503, 504, `/ready`, 네 검색 방식의 같은 dense 거절 판정) |
 
-**제약과 미구현**: 검색 방식은 `RETRIEVAL_MODE`(dense, bm25, rrf, cc)로 바꾼다. 기본은 dense다. 거절 판정은 어느 방식이든 dense 최고 점수로 한다. 융합 방식은 dense와 BM25 후보를 각각 `FUSION_POOL`(40)개 가져와 코드에서 합친다. 색인에는 sparse 벡터가 이미 들어 있어 다시 색인할 필요가 없다. 임베딩은 로컬 모델이라 호출 타임아웃을 두지 않는다.
+**제약과 미구현**: 검색 방식은 `RETRIEVAL_MODE`(dense, bm25, rrf, cc, routed)로 바꾼다. 기본은 routed다(Part C 결과, `project_planning/experiments/12_hybrid_fusion.md`). 언어 판별은 한글 음절과 자모가 하나라도 있는지로만 한다. 거절 판정은 어느 방식이든 dense 최고 점수로 한다. 융합 방식은 dense와 BM25 후보를 각각 `FUSION_POOL`(40)개 가져와 코드에서 합친다. 색인에는 sparse 벡터가 이미 들어 있어 다시 색인할 필요가 없다. 임베딩은 로컬 모델이라 호출 타임아웃을 두지 않는다.
 
 ### query_stream: 스트리밍 질의응답
 

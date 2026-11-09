@@ -9,7 +9,7 @@ from psycopg import AsyncConnection
 
 from app.schema.judge_schema import JUDGE_KINDS, HumanLabel, JudgeResult, RecordJudgment
 from app.service.eval.validity_checker import VariantCheck, item_values, check_variant
-from app.cli.eval_run_cli import load_items, load_config, build_manifest
+from app.cli.eval_run_cli import configured, load_items, load_config, build_manifest
 from app.service.eval.agreement_calculator import AgreementRow, compare
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.service.eval.judge_metric import aggregate, citation_pairs
@@ -101,10 +101,12 @@ async def label_sheet(settings: Settings) -> tuple[Path, Path]:
     lines = ["# 사람 라벨 시트", "",
              "Judge와 같은 루브릭(research/gold_metric_selection.md의 \"항목 상세\")으로 판정해 "
              f"`data/{LABELS_PATH}`의 빈칸(null)을 채운다. 인용과 요점은 true/false, 품질 항목은 \"pass\", \"fail\", \"na\"다.", ""]
-    async with open_query_service(settings) as parts:
+    # 라벨 대상은 기준선(dense) 기록이라, 서비스 기본 검색 방식이 바뀌어도 기준선과 같은 근거를 보여 준다.
+    baseline = load_config(Path("configs/baseline.toml"))
+    async with open_query_service(configured(settings, baseline)) as parts:
         for n, r in enumerate(chosen, start=1):
             item = items[r.item_id or ""]
-            context = [h.chunk for h in (await parts.retriever.retrieve(r.question, load_config(Path("configs/baseline.toml")).top_k)).hits]
+            context = [h.chunk for h in (await parts.retriever.retrieve(r.question, baseline.top_k)).hits]
             lines += [f"## {n}. `{r.record_id.split(':')[1]}` ({r.type}, {r.language})", "", f"**질문**: {r.question}", "",
                       "**답**:", "", "```text", r.answer, "```", "", "**인용 판정 대상**(문장, 가리키는 근거 번호):", ""]
             lines += [f"{i}. [{ref}] {sentence}" for i, (sentence, ref) in enumerate(citation_pairs(r.answer))]

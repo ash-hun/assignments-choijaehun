@@ -44,12 +44,14 @@ validity:
 	$(BATCH) app.cli.judge_check_cli validity
 
 # 사람 라벨 시트(data/gold/human_labels_sheet.md)와 채울 라벨 파일. 라벨 파일이 있으면 덮어쓰지 않는다.
-# Part C 검색 융합 비교: BM25 단독, RRF, CC를 평가하고 기준선(dense)과 짝지어 판정한다(research/artifacts/hybrid_fusion).
+# Part C 검색 융합 비교: BM25 단독, RRF, CC를 평가하고 기준선(dense)과 짝지어 판정한 뒤, 채택한 언어별 선택(routed)을 dev set 검색 지표와 test set으로 확인한다.
 fusion:
 	$(MAKE) eval CONFIG=configs/fusion_bm25.toml || true
 	$(MAKE) eval CONFIG=configs/fusion_rrf.toml || true
 	$(MAKE) eval CONFIG=configs/fusion_cc.toml || true
-	$(BATCH) app.cli.fusion_compare_cli
+	$(BATCH) app.cli.fusion_compare_cli compare
+	$(BATCH) app.cli.fusion_compare_cli dev-check
+	$(MAKE) eval CONFIG=configs/fusion_routed.toml || true
 
 label-sheet:
 	docker compose up -d --wait qdrant evaldb

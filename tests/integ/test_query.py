@@ -182,7 +182,8 @@ def test_stream_failure_before_the_first_event_is_a_plain_http_error() -> None:
 
 def test_every_retrieval_mode_answers_from_the_same_source_and_refuses_by_the_same_dense_score() -> None:
     results = {}
-    for mode in ("dense", "bm25", "rrf", "cc"):
+    modes: tuple[RetrievalMode, ...] = ("dense", "bm25", "rrf", "cc", "routed")
+    for mode in modes:
         with serve(mode=mode) as (client, _, _):
             answered = client.post("/v1/query", json={"question": "Where is the cache directory UV_CACHE_DIR?"}).json()
             refused = client.post("/v1/query", json={"question": "kubernetes autoscaler replicas"}).json()
@@ -194,3 +195,14 @@ def test_every_retrieval_mode_answers_from_the_same_source_and_refuses_by_the_sa
         assert answered["meta"]["top_dense_score"] == dense_top, mode
         assert (refused["status"], refused["meta"]["usage"]["input_tokens"]) == ("insufficient_context", 0), mode
     assert results["bm25"][0]["meta"]["retrieval_scores"] != results["dense"][0]["meta"]["retrieval_scores"]
+    assert results["routed"][0]["meta"]["retrieval_scores"] == results["cc"][0]["meta"]["retrieval_scores"]
+
+
+def test_routed_mode_uses_dense_for_korean_questions_and_cc_for_english() -> None:
+    question = {"question": "UV_CACHE_DIR 캐시 directory 위치는?"}
+    scores = {}
+    for mode in ("dense", "routed"):
+        with serve(mode=mode) as (client, _, _):
+            scores[mode] = client.post("/v1/query", json=question).json()["meta"]["retrieval_scores"]
+
+    assert scores["routed"] == scores["dense"]
