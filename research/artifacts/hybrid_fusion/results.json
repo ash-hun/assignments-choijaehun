@@ -1,0 +1,1651 @@
+{
+  "comparisons": [
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.0966,
+      "ci_low": -0.2672,
+      "improved": 12,
+      "level": 0.9875,
+      "mean": -0.0749,
+      "metric": "recall_at_5",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 16
+    },
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.0108,
+      "ci_low": -0.2762,
+      "improved": 19,
+      "level": 0.9875,
+      "mean": -0.1259,
+      "metric": "ndcg_at_10",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 27
+    },
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.0242,
+      "ci_low": -0.2816,
+      "improved": 12,
+      "level": 0.9875,
+      "mean": -0.1306,
+      "metric": "mrr_at_10",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 21
+    },
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.0286,
+      "ci_low": -0.0952,
+      "improved": 11,
+      "level": 0.9875,
+      "mean": -0.0317,
+      "metric": "precision_at_5",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 16
+    },
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.2292,
+      "ci_low": -0.1667,
+      "improved": 8,
+      "level": 0.9875,
+      "mean": 0.0417,
+      "metric": "accuracy",
+      "pairs": 48,
+      "verdict": "inconclusive",
+      "worsened": 6
+    },
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.2857,
+      "ci_low": 0.0159,
+      "improved": 11,
+      "level": 0.9875,
+      "mean": 0.1429,
+      "metric": "answerable_refused",
+      "pairs": 63,
+      "verdict": "supported",
+      "worsened": 2
+    },
+    {
+      "a": "bm25",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "level": 0.9875,
+      "mean": 0.0,
+      "metric": "unanswerable_refused",
+      "pairs": 16,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.1444,
+      "ci_low": -0.1143,
+      "improved": 7,
+      "level": 0.9875,
+      "mean": 0.0175,
+      "metric": "recall_at_5",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 6
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.063,
+      "ci_low": -0.1239,
+      "improved": 22,
+      "level": 0.9875,
+      "mean": -0.0259,
+      "metric": "ndcg_at_10",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 16
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.0583,
+      "ci_low": -0.1554,
+      "improved": 15,
+      "level": 0.9875,
+      "mean": -0.0441,
+      "metric": "mrr_at_10",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 14
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.0286,
+      "ci_low": -0.0413,
+      "improved": 7,
+      "level": 0.9875,
+      "mean": -0.0032,
+      "metric": "precision_at_5",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 6
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.1455,
+      "ci_low": -0.1273,
+      "improved": 5,
+      "level": 0.9875,
+      "mean": 0.0182,
+      "metric": "accuracy",
+      "pairs": 55,
+      "verdict": "inconclusive",
+      "worsened": 4
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.127,
+      "ci_low": -0.0635,
+      "improved": 4,
+      "level": 0.9875,
+      "mean": 0.0317,
+      "metric": "answerable_refused",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 2
+    },
+    {
+      "a": "rrf",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "level": 0.9875,
+      "mean": 0.0,
+      "metric": "unanswerable_refused",
+      "pairs": 16,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1762,
+      "ci_low": -0.0667,
+      "improved": 10,
+      "level": 0.9875,
+      "mean": 0.054,
+      "metric": "recall_at_5",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 6
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1072,
+      "ci_low": -0.0315,
+      "improved": 24,
+      "level": 0.9875,
+      "mean": 0.0383,
+      "metric": "ndcg_at_10",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 12
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1092,
+      "ci_low": -0.0568,
+      "improved": 14,
+      "level": 0.9875,
+      "mean": 0.026,
+      "metric": "mrr_at_10",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 8
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.0413,
+      "ci_low": -0.0286,
+      "improved": 10,
+      "level": 0.9875,
+      "mean": 0.0095,
+      "metric": "precision_at_5",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 6
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.2143,
+      "ci_low": -0.0357,
+      "improved": 7,
+      "level": 0.9875,
+      "mean": 0.0893,
+      "metric": "accuracy",
+      "pairs": 56,
+      "verdict": "inconclusive",
+      "worsened": 2
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.1111,
+      "ci_low": -0.0635,
+      "improved": 3,
+      "level": 0.9875,
+      "mean": 0.0159,
+      "metric": "answerable_refused",
+      "pairs": 63,
+      "verdict": "inconclusive",
+      "worsened": 2
+    },
+    {
+      "a": "cc",
+      "b": "dense",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "level": 0.9875,
+      "mean": 0.0,
+      "metric": "unanswerable_refused",
+      "pairs": 16,
+      "verdict": "inconclusive",
+      "worsened": 0
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.0953,
+      "ci_low": -0.0141,
+      "improved": 5,
+      "level": 0.9875,
+      "mean": 0.0359,
+      "metric": "recall_at_5",
+      "pairs": 64,
+      "verdict": "inconclusive",
+      "worsened": 1
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.1162,
+      "ci_low": 0.0189,
+      "improved": 23,
+      "level": 0.9875,
+      "mean": 0.0632,
+      "metric": "ndcg_at_10",
+      "pairs": 64,
+      "verdict": "supported",
+      "worsened": 5
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.1339,
+      "ci_low": 0.0183,
+      "improved": 14,
+      "level": 0.9875,
+      "mean": 0.069,
+      "metric": "mrr_at_10",
+      "pairs": 64,
+      "verdict": "supported",
+      "worsened": 4
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.0344,
+      "ci_low": -0.0031,
+      "improved": 5,
+      "level": 0.9875,
+      "mean": 0.0125,
+      "metric": "precision_at_5",
+      "pairs": 64,
+      "verdict": "inconclusive",
+      "worsened": 1
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.1754,
+      "ci_low": -0.0702,
+      "improved": 5,
+      "level": 0.9875,
+      "mean": 0.0526,
+      "metric": "accuracy",
+      "pairs": 57,
+      "verdict": "inconclusive",
+      "worsened": 2
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.0,
+      "ci_low": -0.0938,
+      "improved": 0,
+      "level": 0.9875,
+      "mean": -0.0312,
+      "metric": "answerable_refused",
+      "pairs": 64,
+      "verdict": "inconclusive",
+      "worsened": 2
+    },
+    {
+      "a": "cc",
+      "b": "rrf",
+      "ci_high": 0.0,
+      "ci_low": 0.0,
+      "improved": 0,
+      "level": 0.9875,
+      "mean": 0.0,
+      "metric": "unanswerable_refused",
+      "pairs": 16,
+      "verdict": "inconclusive",
+      "worsened": 0
+    }
+  ],
+  "groups": [
+    {
+      "condition": "dense",
+      "group": "all",
+      "mean": 0.7389,
+      "metric": "recall_at_5",
+      "n": 63
+    },
+    {
+      "condition": "dense",
+      "group": "en",
+      "mean": 0.7734,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "dense",
+      "group": "en/factual",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "en/multi_doc",
+      "mean": 0.675,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "en/summary",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "en/trap",
+      "mean": 0.75,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "ko",
+      "mean": 0.7032,
+      "metric": "recall_at_5",
+      "n": 31
+    },
+    {
+      "condition": "dense",
+      "group": "ko/factual",
+      "mean": 0.8182,
+      "metric": "recall_at_5",
+      "n": 11
+    },
+    {
+      "condition": "dense",
+      "group": "ko/multi_doc",
+      "mean": 0.65,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "ko/summary",
+      "mean": 0.7167,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "ko/trap",
+      "mean": 0.5,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "all",
+      "mean": 0.718,
+      "metric": "ndcg_at_10",
+      "n": 63
+    },
+    {
+      "condition": "dense",
+      "group": "en",
+      "mean": 0.7513,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "dense",
+      "group": "en/factual",
+      "mean": 0.8289,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "en/multi_doc",
+      "mean": 0.6518,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "en/summary",
+      "mean": 0.8819,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "en/trap",
+      "mean": 0.5717,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "ko",
+      "mean": 0.6836,
+      "metric": "ndcg_at_10",
+      "n": 31
+    },
+    {
+      "condition": "dense",
+      "group": "ko/factual",
+      "mean": 0.7727,
+      "metric": "ndcg_at_10",
+      "n": 11
+    },
+    {
+      "condition": "dense",
+      "group": "ko/multi_doc",
+      "mean": 0.6037,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "ko/summary",
+      "mean": 0.7649,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "ko/trap",
+      "mean": 0.5162,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "all",
+      "mean": 0.678,
+      "metric": "accuracy",
+      "n": 59
+    },
+    {
+      "condition": "dense",
+      "group": "en",
+      "mean": 0.7419,
+      "metric": "accuracy",
+      "n": 31
+    },
+    {
+      "condition": "dense",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 11
+    },
+    {
+      "condition": "dense",
+      "group": "en/multi_doc",
+      "mean": 0.6,
+      "metric": "accuracy",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "en/summary",
+      "mean": 0.5,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "en/trap",
+      "mean": 0.75,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "ko",
+      "mean": 0.6071,
+      "metric": "accuracy",
+      "n": 28
+    },
+    {
+      "condition": "dense",
+      "group": "ko/factual",
+      "mean": 0.8889,
+      "metric": "accuracy",
+      "n": 9
+    },
+    {
+      "condition": "dense",
+      "group": "ko/multi_doc",
+      "mean": 0.3333,
+      "metric": "accuracy",
+      "n": 9
+    },
+    {
+      "condition": "dense",
+      "group": "ko/summary",
+      "mean": 0.5,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "ko/trap",
+      "mean": 0.75,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "all",
+      "mean": 0.0635,
+      "metric": "answerable_refused",
+      "n": 63
+    },
+    {
+      "condition": "dense",
+      "group": "en",
+      "mean": 0.0312,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "dense",
+      "group": "en/factual",
+      "mean": 0.0833,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "dense",
+      "group": "en/multi_doc",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "en/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "en/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "dense",
+      "group": "ko",
+      "mean": 0.0968,
+      "metric": "answerable_refused",
+      "n": 31
+    },
+    {
+      "condition": "dense",
+      "group": "ko/factual",
+      "mean": 0.1818,
+      "metric": "answerable_refused",
+      "n": 11
+    },
+    {
+      "condition": "dense",
+      "group": "ko/multi_doc",
+      "mean": 0.1,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "dense",
+      "group": "ko/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "dense",
+      "group": "ko/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "all",
+      "mean": 0.6536,
+      "metric": "recall_at_5",
+      "n": 64
+    },
+    {
+      "condition": "bm25",
+      "group": "en",
+      "mean": 0.8646,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "bm25",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "en/multi_doc",
+      "mean": 0.7667,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "en/summary",
+      "mean": 0.8333,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "bm25",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "ko",
+      "mean": 0.4427,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/factual",
+      "mean": 0.4167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/multi_doc",
+      "mean": 0.5917,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/summary",
+      "mean": 0.0417,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/trap",
+      "mean": 0.75,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "all",
+      "mean": 0.5828,
+      "metric": "ndcg_at_10",
+      "n": 64
+    },
+    {
+      "condition": "bm25",
+      "group": "en",
+      "mean": 0.7691,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "bm25",
+      "group": "en/factual",
+      "mean": 0.8026,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "en/multi_doc",
+      "mean": 0.753,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "en/summary",
+      "mean": 0.6367,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "bm25",
+      "group": "en/trap",
+      "mean": 0.9077,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "ko",
+      "mean": 0.3965,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/factual",
+      "mean": 0.3934,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/multi_doc",
+      "mean": 0.5111,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/summary",
+      "mean": 0.0782,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/trap",
+      "mean": 0.5967,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "all",
+      "mean": 0.74,
+      "metric": "accuracy",
+      "n": 50
+    },
+    {
+      "condition": "bm25",
+      "group": "en",
+      "mean": 0.871,
+      "metric": "accuracy",
+      "n": 31
+    },
+    {
+      "condition": "bm25",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "en/multi_doc",
+      "mean": 0.6,
+      "metric": "accuracy",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "en/summary",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 5
+    },
+    {
+      "condition": "bm25",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "ko",
+      "mean": 0.5263,
+      "metric": "accuracy",
+      "n": 19
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/multi_doc",
+      "mean": 0.375,
+      "metric": "accuracy",
+      "n": 8
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/summary",
+      "mean": 0.0,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 3
+    },
+    {
+      "condition": "bm25",
+      "group": "all",
+      "mean": 0.2188,
+      "metric": "answerable_refused",
+      "n": 64
+    },
+    {
+      "condition": "bm25",
+      "group": "en",
+      "mean": 0.0312,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "bm25",
+      "group": "en/factual",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "en/multi_doc",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "en/summary",
+      "mean": 0.1667,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "bm25",
+      "group": "en/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "bm25",
+      "group": "ko",
+      "mean": 0.4062,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/factual",
+      "mean": 0.6667,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/multi_doc",
+      "mean": 0.2,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/summary",
+      "mean": 0.3333,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "bm25",
+      "group": "ko/trap",
+      "mean": 0.25,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "all",
+      "mean": 0.7445,
+      "metric": "recall_at_5",
+      "n": 64
+    },
+    {
+      "condition": "rrf",
+      "group": "en",
+      "mean": 0.8641,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "en/multi_doc",
+      "mean": 0.725,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "en/summary",
+      "mean": 0.9,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "ko",
+      "mean": 0.625,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/factual",
+      "mean": 0.6667,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/multi_doc",
+      "mean": 0.55,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/summary",
+      "mean": 0.5833,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/trap",
+      "mean": 0.75,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "all",
+      "mean": 0.6813,
+      "metric": "ndcg_at_10",
+      "n": 64
+    },
+    {
+      "condition": "rrf",
+      "group": "en",
+      "mean": 0.819,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "en/factual",
+      "mean": 0.91,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "en/multi_doc",
+      "mean": 0.7329,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "en/summary",
+      "mean": 0.8446,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "en/trap",
+      "mean": 0.7232,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "ko",
+      "mean": 0.5435,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/factual",
+      "mean": 0.6193,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/multi_doc",
+      "mean": 0.5445,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/summary",
+      "mean": 0.3974,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/trap",
+      "mean": 0.5327,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "all",
+      "mean": 0.7018,
+      "metric": "accuracy",
+      "n": 57
+    },
+    {
+      "condition": "rrf",
+      "group": "en",
+      "mean": 0.8125,
+      "metric": "accuracy",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "en/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "en/multi_doc",
+      "mean": 0.5,
+      "metric": "accuracy",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "en/summary",
+      "mean": 0.8333,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "ko",
+      "mean": 0.56,
+      "metric": "accuracy",
+      "n": 25
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 7
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/multi_doc",
+      "mean": 0.2222,
+      "metric": "accuracy",
+      "n": 9
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/summary",
+      "mean": 0.3333,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 3
+    },
+    {
+      "condition": "rrf",
+      "group": "all",
+      "mean": 0.1094,
+      "metric": "answerable_refused",
+      "n": 64
+    },
+    {
+      "condition": "rrf",
+      "group": "en",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "en/factual",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "en/multi_doc",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "en/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "en/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "rrf",
+      "group": "ko",
+      "mean": 0.2188,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/factual",
+      "mean": 0.4167,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/multi_doc",
+      "mean": 0.1,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "rrf",
+      "group": "ko/trap",
+      "mean": 0.25,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "all",
+      "mean": 0.7805,
+      "metric": "recall_at_5",
+      "n": 64
+    },
+    {
+      "condition": "cc",
+      "group": "en",
+      "mean": 0.8953,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "en/multi_doc",
+      "mean": 0.825,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "en/summary",
+      "mean": 0.9,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "ko",
+      "mean": 0.6656,
+      "metric": "recall_at_5",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "ko/factual",
+      "mean": 0.75,
+      "metric": "recall_at_5",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "ko/multi_doc",
+      "mean": 0.6,
+      "metric": "recall_at_5",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "ko/summary",
+      "mean": 0.55,
+      "metric": "recall_at_5",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "ko/trap",
+      "mean": 0.75,
+      "metric": "recall_at_5",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "all",
+      "mean": 0.7445,
+      "metric": "ndcg_at_10",
+      "n": 64
+    },
+    {
+      "condition": "cc",
+      "group": "en",
+      "mean": 0.8302,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "en/multi_doc",
+      "mean": 0.7461,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "en/summary",
+      "mean": 0.8688,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "en/trap",
+      "mean": 0.7232,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "ko",
+      "mean": 0.6588,
+      "metric": "ndcg_at_10",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "ko/factual",
+      "mean": 0.7266,
+      "metric": "ndcg_at_10",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "ko/multi_doc",
+      "mean": 0.6105,
+      "metric": "ndcg_at_10",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "ko/summary",
+      "mean": 0.6131,
+      "metric": "ndcg_at_10",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "ko/trap",
+      "mean": 0.6443,
+      "metric": "ndcg_at_10",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "all",
+      "mean": 0.7627,
+      "metric": "accuracy",
+      "n": 59
+    },
+    {
+      "condition": "cc",
+      "group": "en",
+      "mean": 0.8125,
+      "metric": "accuracy",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "en/factual",
+      "mean": 0.9167,
+      "metric": "accuracy",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "en/multi_doc",
+      "mean": 0.7,
+      "metric": "accuracy",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "en/summary",
+      "mean": 0.6667,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "en/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "ko",
+      "mean": 0.7037,
+      "metric": "accuracy",
+      "n": 27
+    },
+    {
+      "condition": "cc",
+      "group": "ko/factual",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 9
+    },
+    {
+      "condition": "cc",
+      "group": "ko/multi_doc",
+      "mean": 0.5556,
+      "metric": "accuracy",
+      "n": 9
+    },
+    {
+      "condition": "cc",
+      "group": "ko/summary",
+      "mean": 0.3333,
+      "metric": "accuracy",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "ko/trap",
+      "mean": 1.0,
+      "metric": "accuracy",
+      "n": 3
+    },
+    {
+      "condition": "cc",
+      "group": "all",
+      "mean": 0.0781,
+      "metric": "answerable_refused",
+      "n": 64
+    },
+    {
+      "condition": "cc",
+      "group": "en",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "en/factual",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "en/multi_doc",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "en/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "en/trap",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 4
+    },
+    {
+      "condition": "cc",
+      "group": "ko",
+      "mean": 0.1562,
+      "metric": "answerable_refused",
+      "n": 32
+    },
+    {
+      "condition": "cc",
+      "group": "ko/factual",
+      "mean": 0.25,
+      "metric": "answerable_refused",
+      "n": 12
+    },
+    {
+      "condition": "cc",
+      "group": "ko/multi_doc",
+      "mean": 0.1,
+      "metric": "answerable_refused",
+      "n": 10
+    },
+    {
+      "condition": "cc",
+      "group": "ko/summary",
+      "mean": 0.0,
+      "metric": "answerable_refused",
+      "n": 6
+    },
+    {
+      "condition": "cc",
+      "group": "ko/trap",
+      "mean": 0.25,
+      "metric": "answerable_refused",
+      "n": 4
+    }
+  ],
+  "level": 0.9875,
+  "operations": {
+    "bm25": {
+      "answered": 50,
+      "cost_krw_mean": 0.9151,
+      "latency_ms_p50": 4551.0,
+      "latency_ms_p95": 9231.0,
+      "records": 80,
+      "retrieval_ms_p50": 214.0,
+      "retrieval_ms_p95": 472.0,
+      "truncated": 7
+    },
+    "cc": {
+      "answered": 59,
+      "cost_krw_mean": 0.96,
+      "latency_ms_p50": 4350.0,
+      "latency_ms_p95": 20225.0,
+      "records": 80,
+      "retrieval_ms_p50": 182.0,
+      "retrieval_ms_p95": 398.0,
+      "truncated": 9
+    },
+    "dense": {
+      "answered": 59,
+      "cost_krw_mean": 0.9746,
+      "latency_ms_p50": 4725.0,
+      "latency_ms_p95": 7580.0,
+      "records": 79,
+      "retrieval_ms_p50": 209.0,
+      "retrieval_ms_p95": 469.0,
+      "truncated": 8
+    },
+    "rrf": {
+      "answered": 57,
+      "cost_krw_mean": 0.9642,
+      "latency_ms_p50": 3953.0,
+      "latency_ms_p95": 8521.0,
+      "records": 80,
+      "retrieval_ms_p50": 244.0,
+      "retrieval_ms_p95": 446.0,
+      "truncated": 11
+    }
+  },
+  "same_retrieval_refusals": {
+    "bm25": true,
+    "cc": true,
+    "dense": true,
+    "rrf": true
+  }
+}
