@@ -6,6 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from collections.abc import Callable
 
+from app.service.eval.eval_summarizer import LanguageSummary
 from app.schema.eval_schema import EvalRecord, LiveRecord
 from app.service.live.live_judge_worker import sampled
 from app.schema.judge_schema import RecordJudgment
@@ -82,6 +83,7 @@ class LiveSnapshot(BaseModel):
     baseline_run: str | None
     metrics: list[MetricSeries]
     recent: list[RecentQuery]
+    gold: list[LanguageSummary]
 
 
 Extractor = Callable[[EvalRecord, RecordJudgment | None], float | None]
@@ -134,6 +136,7 @@ def build_snapshot(
     config_id: str, live: list[LiveRecord], judged: dict[str, RecordJudgment], threshold: float,
     baseline_run: str | None, baseline_records: list[EvalRecord], baseline_judged: dict[str, RecordJudgment],
     judge_spent_krw: float, judge_limit_krw: float, judge_exhausted: bool, sample_rate: float,
+    gold: list[LanguageSummary] | None = None,
 ) -> LiveSnapshot:
     """live는 오래된 것부터다. 같은 입력이면 같은 집계가 나온다."""
     records = [item.record for item in live]
@@ -151,7 +154,7 @@ def build_snapshot(
         config_id=config_id, records=len(records), answered=sum(r.status == "answered" for r in records),
         judged=sum(1 for r in records if r.record_id in judged and not judged[r.record_id].failed),
         judge_spent_krw=judge_spent_krw, judge_limit_krw=judge_limit_krw, judge_exhausted=judge_exhausted,
-        baseline_run=baseline_run, metrics=metrics, recent=recent,
+        baseline_run=baseline_run, metrics=metrics, recent=recent, gold=gold or [],
     )
 
 

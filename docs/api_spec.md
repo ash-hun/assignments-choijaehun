@@ -176,6 +176,7 @@
 | `metrics[].verdict` | string \| null | 기준선 판정. `within`(기준선이 누적 95% 구간 안), `above`(구간이 기준선보다 위), `below`(아래), `few`(표본 10개 미만이라 판정 보류). 기준선이나 값이 없으면 null |
 | `metrics[].points[]` | object | `n`(표본 수), `cum`(누적 평균), `low`, `high`(95% 구간. 비율은 Wilson, 나머지는 정규 근사이고 0~1 점수는 [0, 1]로 자른다), `window`(최근 50개 평균). 200개를 넘으면 고르게 솎고 마지막 지점은 남긴다 |
 | `recent[]` | object | 최근 100건, 최신이 먼저. `request_id`, `recorded_at`(저장 시각, UTC), `status`, `refusal_stage`, `top_score`, `latency_ms`, `first_token_ms`, `cost_krw`, `judge`(`judged`, `failed`, `pending` 채점 대기, `skipped` 거절이나 표본 밖이나 예산 소진), `unsupported_claim`, `citation_precision`. 질문과 답 원문은 넣지 않는다 |
+| `gold[]` | object | 대시보드 기준선 실행(`baseline_run`)의 언어별 요약. 평가 Report `summary.json`의 `languages`와 같은 형식(`language`, `items`, `retrieval`의 Recall@k, MRR, nDCG와 95% 구간, `unanswerable_refusal`, `answerable_false_refusal`, `judge.accuracy`, `judge.citation_precision`, `ttft_ms`, `latency_ms`, `cost_krw_per_item` 등). 기준선이 없으면 빈 목록. 서버가 처음 계산한 뒤 재사용 |
 
 지표(`group`, 지표명): `refusal_retrieval` Retrieval Refusal Rate(`retrieval`, 전체 질의 중 검색 단계 거절 비율), `near_threshold` Near-Threshold Rate(`retrieval`, 검색 최고 점수가 임계값 ±0.05 안인 비율), `refusal_generation` Generation Refusal Rate(`generation`, 검색 단계를 통과한 질의 중 LLM이 `INSUFFICIENT_CONTEXT`로 거절한 비율), `unsupported_claim` No Unsupported Claim(`generation`, 참고값), `citation_precision` Citation Precision(`generation`, 참고값), `latency_ms` Latency(`ops`, 답한 질의), `ttft_ms` TTFT(`ops`, 답한 스트리밍 질의), `cost_krw` Cost per Query(`ops`).
 

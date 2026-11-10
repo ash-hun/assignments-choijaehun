@@ -35,6 +35,7 @@ make corpus                     # 고정 commit의 uv 문서를 받고 sha256을
 make ingest                     # Qdrant를 띄우고 청크, 임베딩, 색인(CPU 약 5분). 다시 돌려도 같은 상태
 make serve                      # API 서버(http://localhost:8000), 대시보드(http://localhost:8000/dashboard)
 make eval                       # test set 평가와 Judge 판정, reports/<run_id>/에 Report
+make seed-export                # (선택) 질의 내역과 기준선을 data/seed/evaldb_seed.jsonl로 내보내기. 커밋하면 받은 사람의 대시보드에 보인다
 make stop                       # api, qdrant, evaldb 정지
 ```
 
@@ -65,6 +66,7 @@ make stop                       # api, qdrant, evaldb 정지
 
 재현 시 주의:
 
+- `make serve`는 시작할 때 `data/seed/evaldb_seed.jsonl`(질의 내역과 대시보드 기준선 스냅샷)을 평가 저장소에 넣습니다. 그래서 저장소를 받아 띄우면 `make eval`을 돌리지 않아도 대시보드에 기준선과 지금까지의 질의 내역이 보입니다. 이미 있는 행은 건드리지 않아 몇 번 띄워도 같습니다. 대시보드를 보려면 `.env`에 API 키, 답변 모델과 Judge 엔드포인트, `EVAL_DB_PASSWORD`가 있어야 합니다.
 - `make eval`의 run_id는 설정, Gold 파일, 원문, 인덱스 계약, 모델, 프롬프트의 해시입니다. 같은 run_id면 저장소에 기록된 문항과 판정은 다시 부르지 않아 비용이 0이고 같은 Report가 나옵니다.
 - 새 환경에서 처음 돌리면 답변 생성(약 ₩80)과 Judge(약 ₩2,600)를 새로 부릅니다. 두 모델 모두 게이트웨이가 `seed`를 거부해(400) temperature 0으로만 고정했으므로, 생성 문구와 판정이 일부 달라질 수 있습니다. 커밋된 Report(`reports/`)가 이 README의 수치 출처입니다.
 
@@ -152,7 +154,7 @@ RAGAS, ARES, RAGChecker, TruLens를 조사해 지표를 정하고([research/gold
 
 ### 03-4. 실시간 누적 평가
 
-`/v1/query`, `/v1/query/stream` 응답 뒤 기록을 남기고, API 프로세스 안의 백그라운드 Judge가 예산(기본 ₩3,000) 안에서 1회 판정합니다. 대시보드는 지표별 누적 평균, 95% 구간(비율은 Wilson), 최근 50건 이동 평균, 같은 구성의 Gold Set 기준선과 기준선이 누적 구간 안에 있는지(표본 10건 이상부터)를 보여주고, 최근 질의 100건을 10건씩 표로 보여줍니다(질문과 답 원문 제외). 정답이 없는 실시간 질의에서는 채택된 Judge 지표가 없어 Judge 항목은 참고값으로 표시합니다.
+대시보드 상단에서 바로 질의할 수 있고(답을 토큰 단위로 보여 주고 인용 링크를 표시), `/v1/query`, `/v1/query/stream` 응답 뒤 기록을 남기고, API 프로세스 안의 백그라운드 Judge가 예산(기본 ₩3,000) 안에서 1회 판정합니다. 대시보드는 지표별 누적 평균, 95% 구간(비율은 Wilson), 최근 50건 이동 평균, 같은 구성의 Gold Set 기준선과 기준선이 누적 구간 안에 있는지(표본 10건 이상부터)를 보여주고, 최근 질의 100건을 10건씩 표로 보여줍니다(질문과 답 원문 제외). 정답이 없는 실시간 질의에서는 채택된 Judge 지표가 없어 Judge 항목은 참고값으로 표시합니다.
 
 ### 03-5. Part C 개선 실험: 검색 융합 방식 비교
 
@@ -314,6 +316,7 @@ make eval   test set → 같은 질의 경로(스트리밍) → 검색 지표, �
 | 동작하는 파이프라인 코드 | `app/`(api, service, repository, client, schema, common), `tests/` |
 | Eval 스크립트 | `app/cli/eval_run_cli.py`, `judge_check_cli.py`, `fusion_compare_cli.py`, `Makefile`의 `eval`, `validity`, `agreement`, `fusion` |
 | Gold Set 데이터 | `data/gold/`(dev, test 각 영어와 한국어, 사람 라벨) |
+| 질의 내역과 대시보드 기준선 | `data/seed/evaldb_seed.jsonl`(API 시작 시 평가 저장소에 복원) |
 | 실행 결과 | `reports/<run_id>/`, `research/artifacts/` |
 | 비용 또는 컴퓨팅 제약에 따른 모델 선택 | [08. Cost](#08-cost), [05](#05-design-decisions--trade-offs)의 Haiku 행 |
 
