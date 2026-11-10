@@ -21,7 +21,7 @@
 | `health` | Query | 프로세스 생존 확인, 벡터 DB 연결과 인덱스 계약 일치 확인 | `GET /health`, `GET /ready` | 구현됨 |
 | `ingest` | Ingest | 정제, 청크, 임베딩, 인덱스 저장 | `make ingest` (`docker compose run --rm batch app.cli.ingest_cli`) | 구현됨 |
 | `judge_agreement` | Eval | Judge 반복 일치율과 사람 라벨 대비 일치도 측정 | `make label-sheet`, `make agreement` | 구현됨 |
-| `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard` | 구현됨 |
+| `live_eval` | Eval | 실제 질의마다 정답 없이 잴 수 있는 지표를 누적하고 대시보드로 표시. 대시보드에서 바로 질의. 질의 내역과 기준선을 스냅샷으로 저장소에 담아 다른 환경에서 복원 | `GET /v1/metrics`, `GET /v1/metrics/stream`, `GET /dashboard`, `make seed-export` | 구현됨 |
 | `query` | Query | 검색, LLM 답변 생성, Citation 반환 또는 거절 | `POST /v1/query` (`make serve`) | 구현됨(검색 방식 `RETRIEVAL_MODE`, 기본 routed: 영어 질의 CC, 한국어 질의 dense) |
 | `query_stream` | Query | `query`의 SSE 스트리밍 버전 | `POST /v1/query/stream` | 구현됨 |
 | `selection_run` | Eval | 선정 실험 실행 | `make profile`, `make closed-book`, `make closed-book-report`, `make db-bench` | 일부 구현 |
@@ -286,6 +286,9 @@
 | Judge 예산 상한 도달 | 채점만 멈춤. 기록과 Judge 없는 지표는 계속 쌓임 |
 | `GET /v1/metrics`, `/v1/metrics/stream`, `/dashboard` | 집계 JSON, 변경마다 집계를 보내는 SSE, 화면 |
 | `EVAL_DB_PASSWORD` 없음, Judge 엔드포인트 없음, 저장소 연결 실패 | 실시간 평가만 꺼지고 질의 서비스는 뜬다. `/v1/metrics`는 503 |
+| 대시보드 질의 입력 | `/v1/query/stream`으로 답을 흘려 보여 주고 인용을 표시. 기록과 채점은 일반 질의와 같다 |
+| API 시작(실시간 평가 켜짐) | `data/seed/evaldb_seed.jsonl`이 있으면 저장소에 없는 실행, 기록(원래 저장 시각), 판정만 넣는다. 두 번째 시작부터는 0건. 파일이 깨졌으면 넣지 않고 경고만 남긴다 |
+| `make seed-export` | 실시간 기록 전부와, 그 기록들의 구성과 현재 구성의 대시보드 기준선 실행을 판정과 함께 정렬된 JSONL로 쓴다. 채점이 안 된 실시간 기록이 있으면 받은 사람의 크레딧이 쓰이므로 내보내지 않고 종료 코드 1(`--allow-unjudged`로 무시). 저장소 내용이 같으면 같은 파일 |
 
 **처리 흐름**: 라우터가 응답 뒤 `LiveRecorder.record`(BackgroundTask), `LiveJudgeWorker`가 대기열에서 꺼내 `JudgeService.judge`(1회), `LiveSignal.publish`, `metrics_router`가 `LiveMetricService.snapshot`(저장소에서 기록과 현재 Judge 버전의 판정, 기준선을 읽고 `build_snapshot`).
 
@@ -294,25 +297,30 @@
 | 파일 | 층 | 역할 |
 |---|---|---|
 | `app/api/metrics_router.py` | api | `/v1/metrics`, `/v1/metrics/stream`, `/dashboard` |
-| `app/api/static/metrics_dashboard.html` | api | 대시보드 화면(외부 스크립트 없음, SVG 차트, 검색, 생성, 운영 탭, 호버 값, 탭 옆 최근 질의 표와 10건 페이지, 자동 재연결) |
+| `app/api/static/metrics_dashboard.html` | api | 대시보드 화면(외부 스크립트 없음, 상단 질의 입력과 스트리밍 답, SVG 차트, 검색, 생성, 운영, Test set 탭, 호버 값, 탭 옆 최근 질의 표와 10건 페이지, 자동 재연결) |
 | `app/api/query_router.py` | api | 응답 뒤 기록(BackgroundTask) |
 | `app/service/live/live_builder.py` | service | 저장소, Judge, 작업자, 기록기, 집계 조립. 없으면 끈 채로 기동 |
 | `app/service/live/live_recorder.py` | service | 기록 저장, 대기열 추가, 변경 알림. 실패해도 응답에 영향 없음 |
 | `app/service/live/live_judge_worker.py` | service | 크기가 정해진 대기열, 샘플링(기록 id 해시), 예산 상한, 재시작 시 미채점 기록 재처리 |
 | `app/service/live/live_aggregator.py` | service | 누적 평균, Wilson 구간, 정규 근사 구간(0~1 점수는 [0, 1]로 자름), 이동 창, 지점 솎기, 기준선 판정, 최근 질의 요약, 지표 묶음(검색, 생성, 운영) |
-| `app/service/live/live_metric_service.py` | service | 저장소에서 기록, 판정, 기준선을 읽어 집계 |
+| `app/service/live/live_metric_service.py` | service | 저장소에서 기록, 판정, 기준선을 읽어 집계. 기준선 실행의 test set 요약(`summarize_records`, Test set 탭)을 한 번 계산해 재사용 |
 | `app/service/live/live_signal.py` | service | 변경 버전과 대기 |
+| `app/service/live/history_snapshot.py` | service | 질의 내역 스냅샷 내보내기와 가져오기 |
+| `app/cli/history_snapshot_cli.py` | cli | `export`(미채점 기록 확인 후 내보내기) |
+| `app/schema/history_schema.py` | schema | 스냅샷 줄 형식(실행, 기록, 판정) |
 | `app/service/eval/pipeline_identity.py` | service | `config_id`(Gold Set 평가와 공유) |
-| `app/repository/eval_record_repository.py` | repository | `live_records`, `unjudged_live`, `live_judge_tokens`, `latest_gold_run`, `judgments_for` |
+| `app/repository/eval_record_repository.py` | repository | `live_records`, `unjudged_live`, `live_judge_tokens`, `latest_gold_run`, `judgments_for`, `history_runs`, `history_records`, `insert_history`(없는 행만 넣음) |
+| `data/seed/evaldb_seed.jsonl` | 데이터 | 질의 내역과 기준선 스냅샷(질문과 답 원문 포함). compose가 api에 읽기 전용으로 붙인다 |
 
 **테스트**
 
 | 종류 | 파일 |
 |---|---|
 | 단위 | `tests/unit/test_live_eval_live_aggregator.py` |
-| 통합 | `tests/integ/test_live_eval.py`(두 엔드포인트 기록, 같은 요청 id 덮어쓰기, 기본 외 top_k 미기록, 채점과 캐시, 집계, 꺼졌을 때 503과 질의 정상) |
+| 단위 | `tests/unit/test_live_eval_history_snapshot.py` |
+| 통합 | `tests/integ/test_live_eval.py`(두 엔드포인트 기록, 같은 요청 id 덮어쓰기, 기본 외 top_k 미기록, 채점과 캐시, 집계, 꺼졌을 때 503과 질의 정상, 스냅샷 내보내기와 새 저장소로 한 번만 가져오기, 기준선 실행의 test set 요약) |
 
-**제약과 미구현**: 저장소 연결 하나를 요청 사이에 공유한다(psycopg가 순서대로 처리). Judge 작업자는 하나라 판정이 질의보다 느리면 대기열이 밀린다(넘치면 재시작 때 다시 꺼냄). 집계는 매번 최근 2,000개를 저장소에서 다시 읽는다. 예산은 저장된 판정의 토큰으로 세서 캐시에서 받은 판정도 비용으로 센다(실제보다 크게 잡힘). 실시간 질의에는 언어, 유형 라벨이 없다.
+**제약과 미구현**: 저장소 연결 하나를 요청 사이에 공유한다(psycopg가 순서대로 처리). Judge 작업자는 하나라 판정이 질의보다 느리면 대기열이 밀린다(넘치면 재시작 때 다시 꺼냄). 집계는 매번 최근 2,000개를 저장소에서 다시 읽는다. 예산은 저장된 판정의 토큰으로 세서 캐시에서 받은 판정도 비용으로 센다(실제보다 크게 잡힘). 실시간 질의에는 언어, 유형 라벨이 없다. 스냅샷은 내보낸 시점의 상태라, 질의를 더 한 뒤 공유하려면 다시 내보내 커밋해야 한다. 대시보드는 현재 구성(`config_id`)의 기록만 보여, 다른 구성에서 쌓은 실시간 기록은 그 구성으로 띄워야 보인다.
 
 ### query: 질의응답
 

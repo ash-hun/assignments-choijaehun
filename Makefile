@@ -1,4 +1,4 @@
-.PHONY: build corpus ingest serve stop eval validity fusion label-sheet agreement profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
+.PHONY: build corpus ingest serve stop eval validity fusion seed-export label-sheet agreement profile closed-book closed-book-report gold-draft gold-translate gold-check db-bench embed-bench embed-check refusal-calib llm-bench tok-bench chunk-bench test typecheck
 
 # --build: 코드를 고친 뒤 이미지를 다시 빌드하지 않아 예전 코드로 도는 일을 막는다. 캐시를 써서 빠르다.
 BATCH = docker compose run --rm --build batch
@@ -53,6 +53,11 @@ fusion:
 	$(BATCH) app.cli.fusion_compare_cli dev-check
 	$(MAKE) eval CONFIG=configs/fusion_routed.toml || true
 	$(BATCH) app.cli.fusion_compare_cli routed-check
+
+# 질의 내역 스냅샷: 실시간 기록과 대시보드 기준선을 data/seed/evaldb_seed.jsonl로 내보낸다. 커밋하면 저장소를 받은 사람의 API가 시작할 때 넣는다.
+seed-export:
+	docker compose up -d --wait evaldb
+	$(BATCH) app.cli.history_snapshot_cli export
 
 label-sheet:
 	docker compose up -d --wait qdrant evaldb

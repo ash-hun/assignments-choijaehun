@@ -9,6 +9,7 @@ from app.service.live.live_judge_worker import JudgeBudget, LiveJudgeWorker
 from app.repository.eval_record_repository import EvalRecordRepository
 from app.service.live.live_metric_service import LiveMetricService
 from app.service.eval.pipeline_identity import pipeline_config_id
+from app.service.live.history_snapshot import HistorySnapshot
 from app.service.eval.judge_service import JudgeService
 from app.service.live.live_recorder import LiveRecorder
 from app.service.query.query_builder import QueryParts
@@ -56,6 +57,11 @@ async def open_live_eval(settings: Settings, parts: QueryParts) -> AsyncIterator
                       timeout=settings.llm_timeout_seconds, max_retries=settings.llm_max_retries)
     try:
         await repository.ensure_schema()
+        try:
+            await HistorySnapshot(repository).load(settings.history_seed_path)
+        except ValueError as e:
+            # 스냅샷은 다른 환경의 내역을 보여주는 부가 기능이라, 파일이 깨져도 서비스와 평가는 그대로 뜬다.
+            logger.warning("history_load_skipped", error=str(e))
         config_id = pipeline_config_id(settings, settings.default_top_k)
         signal = LiveSignal()
         judge = JudgeService(LlmClient(sdk, settings.judge_llm_model), LlmCache(settings.judge_cache_path), repository,

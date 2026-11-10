@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from app.repository.qdrant_chunk_repository import QdrantChunkRepository
 from app.schema.eval_schema import EvalRecord, LiveRecord, EvalManifest
 from app.repository.eval_record_repository import EvalRecordRepository
+from app.schema.history_schema import HistoryRun, HistoryCounts
 from app.schema.vector_schema import SparseTerms, IndexContract
 from app.client.embedding_client import EmbeddingClient
 from app.common.upstream_error import VectorStoreError
@@ -144,7 +145,8 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
         return [self.judged[k] for k in sorted(self.judged) if k[0] in wanted]
 
     async def live_records(self, config_id: str, limit: int) -> list[LiveRecord]:
-        rows = [r for r in self.rows.values() if r.source == "live" and r.config_id == config_id]
+        rows = sorted((r for r in self.rows.values() if r.source == "live" and r.config_id == config_id),
+                      key=lambda r: (self.created[r.record_id], r.record_id))
         return [LiveRecord(record=r, recorded_at=self.created[r.record_id]) for r in rows[-limit:]]
 
     async def unjudged_live(self, config_id: str, versions: list[str], limit: int) -> list[EvalRecord]:
@@ -161,3 +163,30 @@ class MemoryEvalRecordRepository(EvalRecordRepository):
     async def latest_gold_run(self, config_id: str) -> str | None:
         runs = [run_id for run_id, m in self.runs.items() if m.config_id == config_id and m.config.variant == "none"]
         return runs[-1] if runs else None
+
+    async def history_runs(self, run_ids: list[str]) -> list[HistoryRun]:
+        return [HistoryRun(run_id=r, config_id=self.runs[r].config_id, manifest=self.runs[r].model_dump(mode="json"))
+                for r in sorted(run_ids) if r in self.runs]
+
+    async def history_records(self, run_ids: list[str]) -> list[LiveRecord]:
+        rows = [r for r in self.rows.values() if r.source == "live" or r.run_id in run_ids]
+        return [LiveRecord(record=r, recorded_at=self.created[r.record_id])
+                for r in sorted(rows, key=lambda r: (self.created[r.record_id], r.record_id))]
+
+    async def insert_history(self, runs: list[HistoryRun], records: list[LiveRecord], judgments: list[JudgeResult]) -> HistoryCounts:
+        counts = [0, 0, 0]
+        for run in runs:
+            if run.run_id not in self.runs:
+                self.runs[run.run_id] = EvalManifest.model_validate(run.manifest)
+                counts[0] += 1
+        for item in records:
+            if item.record.record_id not in self.rows:
+                self.rows[item.record.record_id] = item.record
+                self.created[item.record.record_id] = item.recorded_at
+                counts[1] += 1
+        for j in judgments:
+            key = (j.record_id, j.kind, j.sample, j.judge_model, j.prompt_version)
+            if key not in self.judged:
+                self.judged[key] = j
+                counts[2] += 1
+        return HistoryCounts(runs=counts[0], records=counts[1], judgments=counts[2])

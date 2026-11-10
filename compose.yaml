@@ -54,6 +54,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./.cache:/workspace/.cache
+      # 질의 내역 스냅샷(make seed-export). 시작할 때 평가 저장소에 없는 행만 넣는다.
+      - ./data/seed:/workspace/data/seed:ro
     # evaldb는 실시간 평가용이다. 연결하지 못해도 api는 평가만 끄고 뜬다.
     depends_on:
       - qdrant

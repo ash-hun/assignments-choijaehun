@@ -9,11 +9,15 @@ from collections.abc import Iterator, AsyncIterator
 from contextlib import contextmanager, asynccontextmanager
 
 from tests.integ.memory_backend import MemoryChunkRepository, MemoryEmbeddingClient, MemoryEvalRecordRepository
+from app.schema.eval_schema import RankScore, EvalConfig, EvalRecord, EvalManifest
 from app.client.llm_client import LlmDelta, ChatMessage, LlmClient, LlmCompletion
 from app.service.live.live_judge_worker import JudgeBudget, LiveJudgeWorker
 from app.service.live.live_metric_service import LiveMetricService
+from app.schema.judge_schema import JudgeResult, RubricJudgment
 from app.service.query.evidence_checker import EvidenceChecker
+from app.service.live.history_snapshot import HistorySnapshot
 from app.service.query.chunk_retriever import ChunkRetriever
+from app.service.eval.judge_prompt import prompt_version
 from app.service.query.query_service import QueryService
 from app.service.eval.judge_service import JudgeService
 from app.service.live.live_recorder import LiveRecorder
@@ -152,3 +156,49 @@ def test_metrics_are_unavailable_when_live_eval_is_off_but_queries_still_work(tm
     assert answered.status_code == 200 and records.rows == {}
     assert metrics.status_code == 503
     assert page.status_code == 200 and "Elice HR Assignments" in page.text
+
+
+def test_history_snapshot_carries_queries_and_judgments_to_a_fresh_store_once(tmp_path: Path) -> None:
+    with serve(tmp_path) as (client, records, _):
+        client.post("/v1/query", json={"question": "How do I move the uv cache?"}, headers={"X-Request-ID": "req-1"})
+        client.post("/v1/query", json={"question": "Where is the uv cache directory?"}, headers={"X-Request-ID": "req-2"})
+        wait_for(client, "judged", 2)
+    seed = tmp_path / "seed.jsonl"
+
+    exported = asyncio.run(HistorySnapshot(records).export(seed, ["cfg"]))
+    first_file = seed.read_bytes()
+    asyncio.run(HistorySnapshot(records).export(seed, ["cfg"]))
+    fresh = MemoryEvalRecordRepository()
+    loaded = asyncio.run(HistorySnapshot(fresh).load(seed))
+    again = asyncio.run(HistorySnapshot(fresh).load(seed))
+    missing = asyncio.run(HistorySnapshot(fresh).load(tmp_path / "none.jsonl"))
+
+    assert seed.read_bytes() == first_file
+    assert (exported.records, loaded.records, loaded.judgments) == (2, 2, exported.judgments) and exported.judgments > 0
+    assert (again.records, again.judgments, missing.records) == (0, 0, 0)
+    assert fresh.created == records.created and fresh.rows == records.rows
+
+
+def test_metrics_carry_the_test_set_summary_of_the_baseline_run(tmp_path: Path) -> None:
+    rank = RankScore(recall_at_5=1.0, recall_at_10=1.0, precision_at_5=0.2, precision_at_10=0.1, f1_at_5=0.33, f1_at_10=0.18,
+                     reciprocal_rank=1.0, ndcg_at_10=1.0)
+    gold = EvalRecord(record_id="g:1", run_id="g", source="gold", config_id="cfg", item_id="i1", language="en", type="factual",
+                      answerable=True, question="q", status="answered", refusal_stage=None, answer="Set UV_CACHE_DIR [1].",
+                      cited_chunk_ids=[], dropped_citations=0, retrieved_chunk_ids=[], retrieval_scores=[0.8], top_score=0.8,
+                      rank=rank, retrieval_ms=10, first_token_ms=900, latency_ms=2000, input_tokens=10, output_tokens=5, cost_krw=0.5)
+    rubric = RubricJudgment(key_points=[True], rejections=[], unsupported_claim="pass", identifier_accuracy="pass",
+                            interface_separation="na", version_status="na", prior_knowledge="pass", reason="")
+    with serve(tmp_path) as (client, records, _):
+        asyncio.run(records.upsert_run("g", EvalManifest(
+            config=EvalConfig(name="g", gold_files=["t"]), config_id="cfg", gold_hashes={}, corpus_manifest_hash="m",
+            index_contract={}, collection="c", answer_model="a", answer_temperature=0.0, answer_seed=None, answer_max_tokens=10,
+            refusal_threshold=0.3, prompt_hash="p", bootstrap_seed=1, git_commit="x")))
+        asyncio.run(records.upsert_record(gold))
+        asyncio.run(records.upsert_judgment(JudgeResult(record_id="g:1", kind="rubric", sample=0, judge_model="judge",
+                                                        prompt_version=prompt_version("rubric"), ok=True, rubric=rubric,
+                                                        input_tokens=1, output_tokens=1)))
+        snapshot = client.get("/v1/metrics").json()
+
+    summary = snapshot["gold"][0]
+    assert snapshot["baseline_run"] == "g" and summary["language"] == "en"
+    assert summary["retrieval"]["recall_at_5"]["mean"] == 1.0 and summary["judge"]["accuracy"]["mean"] == 1.0

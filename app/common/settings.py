@@ -63,6 +63,8 @@ class Settings(BaseSettings):
     eval_db_user: str = "eval"
     eval_db_password: SecretStr | None = None
     reports_dir: Path = Path("reports")
+    # 실시간 질의 내역과 대시보드 기준선 스냅샷. API가 시작할 때 저장소에 없는 행만 넣는다(make seed-export로 만든다).
+    history_seed_path: Path = Path("data/seed/evaldb_seed.jsonl")
     # Judge 모델(research/gold_metric_selection.md). 답변 모델과 계열이 다르다. 엔드포인트가 없으면 LLM_CANDIDATE_URLS에서 찾는다.
     judge_llm_model: str = "gemini-3.8-flash"
     judge_llm_base_url: str | None = None

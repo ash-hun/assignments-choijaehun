@@ -3,6 +3,7 @@ from psycopg import AsyncConnection
 from psycopg.types.json import Jsonb
 
 from app.schema.eval_schema import EvalRecord, LiveRecord, EvalManifest
+from app.schema.history_schema import HistoryRun, HistoryCounts
 from app.schema.judge_schema import JudgeResult
 
 # 스키마는 코드가 맞춘다. 몇 번 실행해도 같은 테이블과 인덱스가 된다.
@@ -127,6 +128,47 @@ class EvalRecordRepository:
         )
         row = await cursor.fetchone()
         return (int(row[0]), int(row[1])) if row else (0, 0)
+
+    async def history_runs(self, run_ids: list[str]) -> list[HistoryRun]:
+        """실행 id 목록의 실행. run_id 순."""
+        cursor = await self._conn.execute(
+            "SELECT run_id, config_id, manifest FROM eval_run WHERE run_id = ANY(%s) ORDER BY run_id", (run_ids,),
+        )
+        return [HistoryRun(run_id=r[0], config_id=r[1], manifest=r[2]) for r in await cursor.fetchall()]
+
+    async def history_records(self, run_ids: list[str]) -> list[LiveRecord]:
+        """실시간 기록 전부와 주어진 실행의 기록을 저장 시각과 함께. 오래된 것부터."""
+        cursor = await self._conn.execute(
+            "SELECT body, created_at FROM eval_record WHERE source = 'live' OR run_id = ANY(%s) ORDER BY created_at, record_id",
+            (run_ids,),
+        )
+        return [LiveRecord(record=EvalRecord.model_validate(body), recorded_at=at) for body, at in await cursor.fetchall()]
+
+    async def insert_history(self, runs: list[HistoryRun], records: list[LiveRecord], judgments: list[JudgeResult]) -> HistoryCounts:
+        """이미 있는 행은 건드리지 않고 없는 행만 넣는다. 몇 번 넣어도 같은 상태이고, 이 환경에서 새로 쌓은 기록도 덮어쓰지 않는다."""
+        counts = [0, 0, 0]
+        for run in runs:
+            cursor = await self._conn.execute(
+                "INSERT INTO eval_run (run_id, config_id, manifest) VALUES (%s, %s, %s) ON CONFLICT (run_id) DO NOTHING",
+                (run.run_id, run.config_id, Jsonb(run.manifest)),
+            )
+            counts[0] += cursor.rowcount
+        for item in records:
+            r = item.record
+            cursor = await self._conn.execute(
+                "INSERT INTO eval_record (record_id, run_id, source, config_id, item_id, status, body, created_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (record_id) DO NOTHING",
+                (r.record_id, r.run_id, r.source, r.config_id, r.item_id, r.status, Jsonb(r.model_dump(mode="json")), item.recorded_at),
+            )
+            counts[1] += cursor.rowcount
+        for j in judgments:
+            cursor = await self._conn.execute(
+                "INSERT INTO judge_result (record_id, kind, sample, judge_model, prompt_version, ok, body) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s) ON CONFLICT (record_id, kind, sample, judge_model, prompt_version) DO NOTHING",
+                (j.record_id, j.kind, j.sample, j.judge_model, j.prompt_version, j.ok, Jsonb(j.model_dump(mode="json"))),
+            )
+            counts[2] += cursor.rowcount
+        return HistoryCounts(runs=counts[0], records=counts[1], judgments=counts[2])
 
     async def latest_gold_run(self, config_id: str) -> str | None:
         """같은 구성의 변형 없는 Gold Set 실행 중 가장 최근 것. 대시보드 기준선으로 쓴다."""
