@@ -226,3 +226,7 @@ elice_project_2026.pdf
 data/corpus/raw/
 .cache/
 CLAUDE.md
+
+# 로컬 전용 최종 보고서 초안과 이미지
+FINAL_REPORT.md
+docs/images/
