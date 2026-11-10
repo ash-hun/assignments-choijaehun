@@ -114,7 +114,7 @@
 │   ├── schema/eval_schema.py
 │   └── common/logger.py, settings.py, content_hasher.py, text_tokenizer.py
 ├── prompts/                     # answer_v1.md, judge_faithfulness_v1.md 등. 해시를 결과에 기록
-├── configs/                     # baseline.toml, hybrid.toml
+├── configs/                     # baseline.toml, validity_*.toml, fusion_*.toml
 ├── reports/<run_id>/            # make eval 결과: manifest.json, results.jsonl, summary.json, summary.md
 ├── data/
 │   ├── corpus/manifest.json     # 원문 URL, 고정 버전, 파일별 sha256
@@ -154,7 +154,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 |---|---|---|---|
 | 엘리스 ML API (OpenAI 호환) | Query, Eval | 답변 생성, Judge, Gold 초안 | 타임아웃 60초, 재시도 3회, 키는 `SecretStr` 환경변수. 확인된 제약: `gpt-6.1-terra`는 temperature 기본값(1)만 허용, 비스트리밍 호출은 `max_completion_tokens` 2000 이하, `max_tokens` 대신 `max_completion_tokens` 사용, JSON Schema 구조화 출력 지원 |
 | 로컬 임베딩 모델(fastembed, ONNX) | Ingest, Query | Chunk와 질의 벡터화. `Qwen/Qwen3-Embedding-0.6B`(엘리스 모델 라이브러리에 임베딩 모델이 없어 로컬 실행) | 외부 호출 없음. 모델 파일은 `.cache/models`에 받아 재사용. 청크 길이도 이 모델의 토크나이저로 잰다 |
-| Qdrant | Ingest(쓰기), Query(읽기) | dense, sparse(IDF) 저장과 검색, RRF 결합 검색 | gRPC 연결(REST는 응답마다 약 45ms 지연 관찰), compose 내부 네트워크, Ingest 시 `ensure_collection` |
+| Qdrant | Ingest(쓰기), Query(읽기) | dense, sparse(IDF) 저장과 검색. 융합(RRF, CC)은 코드에서 한다 | gRPC 연결(REST는 응답마다 약 45ms 지연 관찰), compose 내부 네트워크, Ingest 시 `ensure_collection` |
 | Corpus 원천 | Ingest | 다운로드 | 허용 URL은 manifest에만. 사용자 입력 URL 호출 없음 |
 
 ## 핵심 설계 결정
@@ -165,7 +165,7 @@ LLM 캐시는 운영 Query 경로에서는 끈다. 운영에서 같은 질문에
 - **LangGraph 미도입**: 분기 없는 고정 순서 파이프라인이라 에이전트가 아니다.
 - **거절 두 단계**: dense 최고 점수가 임계값 미만이면 LLM을 부르지 않는다. 넘으면 프롬프트의 근거 부족 토큰으로 판정한다. hybrid 검색에서도 1차 판정은 dense 점수로 한다. RRF 점수는 순위 기반이라 임계값을 둘 수 없고, 검색 방식을 바꿀 때 거절 동작이 함께 바뀌지 않게 하기 위해서다. 임계값은 dev set 점수 분포로 보정한다.
 - **Citation 검증**: 모델이 낸 `[n]` 중 실제 제공한 근거 번호만 인정하고, 버린 개수를 `meta.dropped_citations`로 기록한다.
-- **Hybrid 검색은 설정 스위치**: `retrieval.mode: dense | hybrid`. Before/After 비교의 변인을 하나로 유지한다.
+- **검색 방식은 설정 스위치**: `RETRIEVAL_MODE: dense | bm25 | rrf | cc | routed`(기본 routed: 한국어 질의는 dense, 영어 질의는 CC). 평가는 설정 파일의 `retrieval_mode`로 고르고, 두 융합 방식은 같은 후보(dense 40, BM25 40)를 코드에서 합쳐 Before/After 비교의 변인을 융합식 하나로 유지한다. 근거는 `project_planning/experiments/12_hybrid_fusion.md`.
 - **선정 실험은 파이프라인 재사용**: 선정 실험 전용 검색, 임베딩 코드를 따로 두지 않는다. 같은 모듈을 설정만 바꿔 돌려야 선정 결과가 실제 서비스에 그대로 옮겨진다.
 
 ## 선정 결과에 따라 확정되는 지점

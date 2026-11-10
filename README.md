@@ -4,7 +4,7 @@
 
 Citation 기반 RAG QA 서비스와 Eval Harness를 구축한 후 분석된 부분에 대한 개선 실험 및 report를 작성하여 통합 제출하는 HR Assignments 입니다.
 
-uv(Python 패키지 관리자) 공식 문서를 근거로 질문에 답하고, 답의 문장마다 출처를 붙이며, 근거가 없으면 답하지 않는 질의응답 서비스입니다. 같은 저장소에 구성 요소를 고른 선정 실험(1~9단계), Gold Set 기반 평가(10, 11단계), 실제 질의를 누적해 보여주는 실시간 평가 대시보드가 함께 있습니다.
+uv(Python 패키지 관리자) 공식 문서를 근거로 질문에 답하고, 답의 문장마다 출처를 붙이며, 근거가 없으면 답하지 않는 질의응답 서비스입니다. 같은 저장소에 구성 요소를 고른 선정 실험(1~9단계), Gold Set 기반 평가(10, 11단계), 실제 질의를 누적해 보여주는 실시간 평가 대시보드, 검색 융합 방식을 비교한 개선 실험(12단계, Part C)이 함께 있습니다.
 
 | 카테고리 | 세부 설정 값 | 비고 |
 | :----: | :-------: | :-:|
@@ -15,6 +15,7 @@ uv(Python 패키지 관리자) 공식 문서를 근거로 질문에 답하고, �
 | Vector DB | Qdrant `v1.20.0` | BM25 IDF와 RRF 결합을 서버가 제공. [03](project_planning/experiments/03_database.md) |
 | Tokenizer | 청크 길이: Qwen3 토큰 / BM25: `word` | [05](project_planning/experiments/05_tokenizer.md) |
 | Chunking | 문서 구조 분할, 512토큰, 겹침 77토큰(`structure-512-77`) | [06](project_planning/experiments/06_chunking.md) |
+| 검색 | 영어 질의: dense + BM25 Convex Combination(α 0.5), 한국어 질의: dense. 상위 5개 | Part C 결과로 정한 질의 언어별 선택(`routed`). [12](project_planning/experiments/12_hybrid_fusion.md) |
 | 거절 임계값 | dense 최고 점수 0.6375 | dev set 오거절 0%에서 가장 낮은 값. [08](project_planning/experiments/08_prompt_and_refusal.md) |
 | QA Set | dev set 38문항(선정용), test set 40문항(평가용), 각각 한국어 번역 묶음 | 근거 구절을 공유하는 문항 없음. [data/gold/README.md](data/gold/README.md) |
 | 평가 기록 저장소 | PostgreSQL `17.6-alpine` | Gold Set 평가와 실시간 질의 기록 |
@@ -43,6 +44,7 @@ make stop                       # api, qdrant, evaldb 정지
 |---|---|
 | `make test`, `make typecheck` | 네트워크를 끊은 컨테이너에서 pytest(외부 API는 모두 mock), mypy strict |
 | `make validity` | 일부러 망가뜨린 변형 5종으로 지표가 실제로 떨어지는지 검증 |
+| `make fusion` | Part C: BM25 단독, RRF, CC, routed를 평가하고 기준선과 짝지어 비교, dev set 검색 확인 |
 | `make label-sheet`, `make agreement` | 사람 라벨 시트 생성, 사람 라벨 대비 Judge 일치율과 Cohen's kappa |
 | `make gold-draft SPLIT=test`, `make gold-translate SPLIT=test`, `make gold-check SPLIT=test LANG_CODE=en` | Gold Set 초안, 번역 묶음, 검증 |
 
@@ -59,6 +61,7 @@ make stop                       # api, qdrant, evaldb 정지
 | `API_KEY` | 아니오 | 설정하면 `/v1/*` 요청에 `X-API-Key`가 필요하다 |
 | `GITHUB_TOKEN` | 아니오 | GitHub API 호출 한도를 넘을 때만 |
 | `LOG_FORMAT` | 아니오 | `console`(개발) 또는 `json`(운영) |
+| `RETRIEVAL_MODE` | 아니오 | 검색 방식 `routed`(기본), `dense`, `bm25`, `rrf`, `cc`. 평가는 `configs/*.toml`의 `retrieval_mode`가 정한다 |
 
 재현 시 주의:
 
@@ -86,7 +89,7 @@ curl -s localhost:8000/v1/query -H 'Content-Type: application/json' \
   "status": "answered",
   "answer": "Set the UV_CACHE_DIR environment variable ... [1]",
   "citations": [{"ref": 1, "doc_id": "concepts/cache.md", "title": "...", "url": "https://github.com/astral-sh/uv/blob/5ce34500b8a3/docs/concepts/cache.md", "chunk_id": "...", "snippet": "..."}],
-  "meta": {"model": "claude-haiku-5-5", "retrieval_scores": [0.81, ...], "dropped_citations": 0, "latency_ms": 4613, "retrieval_ms": 143, "first_token_ms": null, "usage": {"input_tokens": 3952, "output_tokens": 599}}
+  "meta": {"model": "claude-haiku-5-5", "retrieval_scores": [1.0, 0.86, ...], "top_dense_score": 0.75, "dropped_citations": 0, "latency_ms": 4613, "retrieval_ms": 143, "first_token_ms": null, "usage": {"input_tokens": 3952, "output_tokens": 599}}
 }
 ```
 
@@ -111,7 +114,7 @@ curl -s localhost:8000/v1/query -H 'Content-Type: application/json' \
 
 ### 03-2. 성능 평가(test set, 기준선)
 
-평가 대상은 API와 같은 조립의 실제 질의 경로이고, `make eval` 한 번으로 돕니다. Report: [reports/baseline-4e6abaee3113/summary.md](reports/baseline-4e6abaee3113/summary.md)
+평가 대상은 API와 같은 조립의 실제 질의 경로이고, `make eval` 한 번으로 돕니다. Report: [reports/baseline-4e6abaee3113/summary.md](reports/baseline-4e6abaee3113/summary.md). 이 절의 수치는 Part C 이전 기준선(dense 검색)이고, 현재 서비스 기본값(routed)의 수치는 03-5에 있습니다.
 
 | 지표 | 영어 | 한국어 |
 |---|---|---|
@@ -269,14 +272,15 @@ make eval   test set → 같은 질의 경로(스트리밍) → 검색 지표, �
 - **TPOT**: 1~2ms로 측정돼 생성 속도보다 빠릅니다. 게이트웨이가 스트림을 묶어 보내는 것으로 추정하며, 생성 속도가 아니라 전달 속도에 가깝습니다.
 - **Judge 지표**: Citation Precision과 품질 항목은 검증 조건을 통과하지 못해 참고값입니다. 사람 라벨은 작성자 한 명의 20건이라 라벨러 사이 일치도는 재지 않았습니다.
 - **한국어 평가**: 한국어 묶음은 질문만 번역했고 정답 기준은 영어입니다.
+- **검색 방식 선택**: 질의에 한글이 한 글자라도 있으면 dense를 씁니다. 영문 식별자가 섞인 한국어 질의는 CC의 이득을 받지 못합니다. 이 구성은 사전 채택 규칙이 아니라 결과를 본 뒤 범위 확인, dev set 확인, test set 재실행을 거쳐 정했습니다([12](project_planning/experiments/12_hybrid_fusion.md) "결정").
 - **실시간 평가**: 저장소 연결 하나와 Judge 작업자 하나로 동작합니다. API를 여러 워커로 띄우면 연결 풀과 작업자 분리가 필요합니다. 동시 처리량(Throughput)은 재지 않았습니다.
 - **재현성**: LLM `seed`를 쓸 수 없어 저장소와 캐시 없이 새로 돌리면 생성과 판정이 일부 달라질 수 있습니다.
 
 ## 07. Future Work
 
-- Part C 후속: 한국어 질의 번역 후 Hybrid, 질의 언어별 검색 방식 선택(영어 CC), 한국어 질의의 영문 식별자만 BM25에 넣기([12](project_planning/experiments/12_hybrid_fusion.md) Next Steps)
-- 생성 출력 상한 조정과 답 길이 지시(잘림 14% 해소)
-- 한국어 질의 번역 후 검색(한국어 오거절 0.097, 검색 손해)
+- 한국어 질의를 영어로 번역한 뒤 CC 검색(한국어 오거절 0.097, BM25가 통하지 않는 원인이 언어 불일치), 한국어 질의의 영문 식별자만 BM25에 넣기([12](project_planning/experiments/12_hybrid_fusion.md) Next Steps)
+- 생성 출력 상한 조정과 답 길이 지시(잘림 14% 해소, 정확성 비교의 잡음 제거)
+- dev set에서 CC의 α 조정, 한글 유무보다 정교한 질의 언어 판별
 - 문서 단위 증분 Ingest API(비동기 작업, 인증, 동시 Ingest 잠금)
 - CI 회귀 게이트: PR마다 캐시와 함께 test set 일부를 돌려 기준 Report와 bootstrap 구간으로 비교
 - 사람 라벨 확대(라벨러 2인 이상)와 Judge 문구 재검증으로 품질 항목 재채택
@@ -296,6 +300,24 @@ make eval   test set → 같은 질의 경로(스트리밍) → 검색 지표, �
 임베딩은 로컬 모델이라 비용이 없습니다. 비용 때문에 답변 모델은 품질 하한을 넘는 후보 중 가장 저렴한 모델을, Judge 표본은 Gold Set 3회, 변형과 실시간 1회로 정했습니다.
 
 ## 09. Basic Ruleset
+
+제출 요건과 이 저장소에서 해당 내용이 있는 위치입니다.
+
+| 요건 | 위치 |
+|---|---|
+| 재현 가능한 실행 방법(설치, Ingest, 서버 실행, Eval 실행)과 환경변수 | [02-1. Install](#02-1-install) |
+| 데이터셋, 모델, 기술 스택 선정 근거 | [01. Overview](#01-overview), [03-1](#03-1-선정-실험dev-set), `project_planning/experiments/01~09` |
+| 시스템 아키텍처 개요 | [04. Architecture](#04-architecture), `project_planning/architecture.md` |
+| Design Decision과 Trade-off | [05. Design Decisions & Trade-offs](#05-design-decisions--trade-offs) |
+| 한계, 알려진 이슈, 향후 과제 | [06](#06-limitations--known-issues), [07](#07-future-work) |
+| Part C 개선 실험(Hypothesis, Result, Analysis, Next Steps) | [03-5](#03-5-part-c-개선-실험-검색-융합-방식-비교), `project_planning/experiments/12_hybrid_fusion.md` |
+| 동작하는 파이프라인 코드 | `app/`(api, service, repository, client, schema, common), `tests/` |
+| Eval 스크립트 | `app/cli/eval_run_cli.py`, `judge_check_cli.py`, `fusion_compare_cli.py`, `Makefile`의 `eval`, `validity`, `agreement`, `fusion` |
+| Gold Set 데이터 | `data/gold/`(dev, test 각 영어와 한국어, 사람 라벨) |
+| 실행 결과 | `reports/<run_id>/`, `research/artifacts/` |
+| 비용 또는 컴퓨팅 제약에 따른 모델 선택 | [08. Cost](#08-cost), [05](#05-design-decisions--trade-offs)의 Haiku 행 |
+
+아래는 과제 안내 원문입니다.
 
 기본적으로 GitHub 공개 Repository 링크를 제출해야하며, 아래 항목들을 포함해야 한다.
 
